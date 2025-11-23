@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA-Replikations-Simulator</title>
+    <!-- Tailwind CSS (für Styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #34495E;
+        }
+        /* Custom Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out; }
+        
+        /* Utility styles */
+        .dna-strand-path { transition: all 0.5s ease; }
+        .btn-hover:hover { transform: scale(1.05); }
+        
+        /* Slider Customization */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #2C3E50;
+            cursor: pointer;
+            margin-top: -6px; 
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #BDC3C7;
+            border-radius: 2px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-[#ECF0F1] min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="bg-[#2C3E50] text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button id="nav-home-btn" class="hidden hover:bg-white/10 p-2 rounded-full transition-colors" aria-label="Zurück zur Übersicht">
+                    <!-- Icon Back -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="flex flex-col">
+                    <h1 class="text-lg md:text-xl font-bold leading-tight">DNA-Replikations-Simulator</h1>
+                    <span id="header-subtitle" class="text-xs text-gray-400 font-normal hidden md:inline">Biologie Gymnasium Q11/12</span>
+                </div>
+            </div>
+            
+            <button onclick="toggleGlossary(true)" class="flex items-center gap-2 bg-[#16A085] hover:bg-[#1ABC9C] px-4 py-2 rounded-md transition-colors text-sm font-semibold shadow-md">
+                <!-- Icon Book -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="hidden sm:inline">Glossar</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main id="app-content" class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+        <!-- Content will be injected here by JavaScript -->
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-6 text-center text-sm text-gray-400 mt-auto">
+        <p>&copy; <span id="year"></span> BioLearn - DNA Replikation Educational Tool</p>
+    </footer>
+
+    <!-- GLOSSARY OVERLAY -->
+    <div id="glossary-backdrop" onclick="toggleGlossary(false)" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity"></div>
+    <div id="glossary-sidebar" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="flex items-center justify-between p-4 border-b bg-[#2C3E50] text-white">
+            <div class="flex items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <h2 class="text-xl font-bold">Glossar</h2>
+            </div>
+            <button onclick="toggleGlossary(false)" class="p-1 hover:bg-white/10 rounded-full transition-colors">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div id="glossary-content" class="p-4 overflow-y-auto h-[calc(100%-64px)] bg-[#ECF0F1] space-y-4">
+            <!-- Glossary items injected here -->
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. DATA & CONSTANTS ---
+        const COLORS = {
+            primary: '#2C3E50', secondary: '#16A085', secondaryHover: '#1ABC9C',
+            strand1: '#9B59B6', strand2: '#E67E22', newStrand1: '#D7BDE2', newStrand2: '#F5CBA7',
+            helicase: '#F39C12', primase: '#E74C3C', polymerase: '#27AE60', ligase: '#3498DB',
+            primer: '#C0392B', background: '#ECF0F1', text: '#34495E', success: '#2ECC71', error: '#E74C3C',
+        };
+
+        const GLOSSARY = [
+            { term: 'Antiparallel', definition: "Die beiden DNA-Stränge verlaufen in entgegengesetzter Richtung: Ein Strang in 5'→3'-Richtung, der andere in 3'→5'-Richtung." },
+            { term: 'DNA-Ligase', definition: "Enzym, das DNA-Stränge verknüpft, indem es Phosphodiesterbindungen bildet. 'Kleber' der DNA." },
+            { term: 'DNA-Polymerase', definition: "Zentrales Enzym, das neue DNA-Stränge synthetisiert (5'→3'). Benötigt einen Primer." },
+            { term: 'Folgestrang', definition: "Der DNA-Strang, der diskontinuierlich in Okazaki-Fragmenten synthetisiert wird." },
+            { term: 'Helikase', definition: "Enzym, das die DNA-Doppelhelix entwindet und die Stränge trennt." },
+            { term: 'Leitstrang', definition: "Der DNA-Strang, der kontinuierlich in Richtung der Replikationsgabel synthetisiert wird." },
+            { term: 'Matrizenstrang', definition: "Der Elternstrang, der als Kopiervorlage dient." },
+            { term: 'Okazaki-Fragmente', definition: "Kurze DNA-Abschnitte am Folgestrang, die später verknüpft werden." },
+            { term: 'Primase', definition: "Enzym, das kurze RNA-Primer als Startpunkt synthetisiert." },
+            { term: 'Primer', definition: "Kurze RNA-Sequenz, Startpunkt für die DNA-Polymerase." },
+            { term: 'Semikonservativ', definition: "Replikationsmechanismus: Jede Tochter-DNA besteht aus einem alten und einem neuen Strang." },
+            { term: "5'→3'-Richtung", definition: "Syntheserichtung der DNA-Polymerase. Sie kann nur am 3'-Ende anbauen." },
+        ];
+
+        const QUIZ_QUESTIONS = [
+            { id: 1, question: "Was bewies das Meselson-Stahl-Experiment?", options: [{id:'A', text:"Die DNA ist eine Doppelhelix"}, {id:'B', text:"Die Replikation verläuft semikonservativ"}, {id:'C', text:"DNA-Polymerase benötigt einen Primer"}, {id:'D', text:"Okazaki-Fragmente existieren"}], correctAnswer: 'B', feedbackCorrect: "✅ Korrekt! Das Experiment zeigte, dass nach der ersten Replikation alle DNA-Moleküle hybrid waren.", feedbackWrong: "❌ Nicht ganz. Es ging um den Beweis, dass jeder alte Strang als Matrize dient (semikonservativ)." },
+            { id: 2, question: "Welche Funktion hat die Helikase?", options: [{id:'A', text:"Verknüpft Okazaki-Fragmente"}, {id:'B', text:"Synthetisiert RNA-Primer"}, {id:'C', text:"Trennt die DNA-Stränge"}, {id:'D', text:"Fügt Nukleotide hinzu"}], correctAnswer: 'C', feedbackCorrect: "✅ Richtig! Die Helikase öffnet die Doppelhelix.", feedbackWrong: "❌ Die Helikase ist der 'Reißverschluss-Öffner' am Anfang." },
+            { id: 3, question: "In welcher Richtung synthetisiert die DNA-Polymerase?", options: [{id:'A', text:"3'→5'"}, {id:'B', text:"5'→3'"}, {id:'C', text:"Beide Richtungen"}, {id:'D', text:"Variabel"}], correctAnswer: 'B', feedbackCorrect: "✅ Korrekt! Immer von 5' nach 3'.", feedbackWrong: "❌ Die Chemie erlaubt nur das Anfügen an das 3'-OH Ende." },
+            { id: 4, question: "Warum ist ein RNA-Primer notwendig?", options: [{id:'A', text:"RNA ist stabiler"}, {id:'B', text:"Polymerase kann nicht eigenständig beginnen"}, {id:'C', text:"Verhindert Fehler"}, {id:'D', text:"Markiert das Ende"}], correctAnswer: 'B', feedbackCorrect: "✅ Genau! Die Polymerase braucht ein freies 3'-Ende zum Starten.", feedbackWrong: "❌ Die Polymerase kann nicht 'aus dem Nichts' starten." },
+            { id: 5, question: "Warum wird der Leitstrang kontinuierlich synthetisiert?", options: [{id:'A', text:"Er ist kürzer"}, {id:'B', text:"Syntheserichtung stimmt mit Gabelbewegung überein"}, {id:'C', text:"Braucht keine Primer"}, {id:'D', text:"Er ist wichtiger"}], correctAnswer: 'B', feedbackCorrect: "✅ Richtig! Die Polymerase läuft hinter der Helikase her.", feedbackWrong: "❌ Es liegt an der Richtung. Die Gabel öffnet sich in Syntheserichtung." },
+            { id: 6, question: "Was sind Okazaki-Fragmente?", options: [{id:'A', text:"Primer am Leitstrang"}, {id:'B', text:"Kurze DNA-Stücke am Folgestrang"}, {id:'C', text:"Fehler bei der Replikation"}, {id:'D', text:"Enzyme"}], correctAnswer: 'B', feedbackCorrect: "✅ Korrekt! Entstehen durch diskontinuierliche Synthese.", feedbackWrong: "❌ Das sind die 'Stückchen' am Folgestrang." },
+            { id: 7, question: "Welche Funktion hat die DNA-Ligase?", options: [{id:'A', text:"Öffnet Helix"}, {id:'B', text:"Fügt Nukleotide hinzu"}, {id:'C', text:"Verknüpft Fragmente"}, {id:'D', text:"Macht Primer"}], correctAnswer: 'C', feedbackCorrect: "✅ Richtig! Sie ist der molekulare Kleber.", feedbackWrong: "❌ Sie verbindet die Okazaki-Fragmente." },
+            { id: 8, question: "Warum gibt es Leit- und Folgestrang?", options: [{id:'A', text:"Weil DNA eine Doppelhelix ist"}, {id:'B', text:"Antiparallele Stränge + 5'→3' Zwang"}, {id:'C', text:"Unterschiedliche Enzyme"}, {id:'D', text:"Zufall"}], correctAnswer: 'B', feedbackCorrect: "✅ Exzellent! Kombination aus Struktur und Enzym-Chemie.", feedbackWrong: "❌ Die DNA ist antiparallel, aber die Polymerase funktioniert nur in eine Richtung." },
+            { id: 9, question: "Was passiert mit den RNA-Primern?", options: [{id:'A', text:"Bleiben erhalten"}, {id:'B', text:"Werden entfernt und durch DNA ersetzt"}, {id:'C', text:"Werden Proteine"}, {id:'D', text:"Markieren das Ende"}], correctAnswer: 'B', feedbackCorrect: "✅ Korrekt! Die fertige DNA darf keine RNA enthalten.", feedbackWrong: "❌ Sie werden ausgetauscht." },
+            { id: 10, question: "Was bedeutet 'semikonservativ'?", options: [{id:'A', text:"Zur Hälfte repliziert"}, {id:'B', text:"Elternstränge bleiben zusammen"}, {id:'C', text:"1 alter + 1 neuer Strang pro Molekül"}, {id:'D', text:"Nur an bestimmten Stellen"}], correctAnswer: 'C', feedbackCorrect: "✅ Perfekt! Die Hälfte bleibt erhalten.", feedbackWrong: "❌ Jeder neue Doppelstrang enthält einen alten Strang als Vorlage." }
+        ];
+
+        const MS_STEPS = [
+            { title: "Schritt 1: Ausgangssituation", desc: "E. coli-Bakterien werden in einem Medium mit schwerem Stickstoff (¹⁵N) kultiviert. Die gesamte DNA ist schwer.", label: "Gen 0: 100% ¹⁵N (schwer)", comp: {heavy:100, hybrid:0, light:0} },
+            { title: "Schritt 2: Transfer", desc: "Die Bakterien werden in ein Medium mit normalem Stickstoff (¹⁴N) überführt. Ab jetzt wird nur noch leichter Stickstoff eingebaut.", label: "Transfer in ¹⁴N-Medium", comp: {heavy:100, hybrid:0, light:0} },
+            { title: "Schritt 3: Generation 1", desc: "Nach einer Replikation besteht jedes DNA-Molekül aus einem alten (¹⁵N) und einem neuen (¹⁴N) Strang.", label: "Gen 1: 100% Hybrid-DNA", comp: {heavy:0, hybrid:100, light:0} },
+            { title: "Schritt 4: Generation 2", desc: "Die Hybrid-DNA repliziert sich erneut. Es entstehen zur Hälfte Hybrid-Moleküle und zur Hälfte reine leichte Moleküle.", label: "Gen 2: 50% Hybrid, 50% Leicht", comp: {heavy:0, hybrid:50, light:50} },
+            { title: "Schritt 5: Interpretation", desc: "Das Ergebnis widerlegt das konservative und dispersive Modell. Die DNA-Replikation ist semikonservativ.", label: "Beweis: Semikonservativ", comp: {heavy:0, hybrid:50, light:50} }
+        ];
+
+        const SIM_STEPS = [
+            { id: 0, text: "Ausgangssituation: Die DNA liegt als geschlossene Doppelhelix vor. Die Replikation beginnt am Origin." },
+            { id: 1, text: "Die Helikase (gelb) bindet und öffnet die Wasserstoffbrücken. Die Replikationsgabel entsteht." },
+            { id: 2, text: "Einzelstränge liegen frei als Matrizen vor. Beachte die 5' und 3' Enden." },
+            { id: 3, text: "Leitstrang (unten): Die Primase (rot) synthetisiert einen RNA-Primer (5'→3')." },
+            { id: 4, text: "Leitstrang: DNA-Polymerase (grün) verlängert den Primer kontinuierlich in Gabelrichtung." },
+            { id: 5, text: "Folgestrang (oben): Primase synthetisiert einen Primer. Achtung: Synthese muss rückwärts laufen!" },
+            { id: 6, text: "Folgestrang: DNA-Polymerase synthetisiert das erste Okazaki-Fragment." },
+            { id: 7, text: "Folgestrang: Weitere Primer und Okazaki-Fragmente werden gebildet (diskontinuierlich)." },
+            { id: 8, text: "Aufräumen: Enzyme entfernen die RNA-Primer und füllen Lücken mit DNA auf." },
+            { id: 9, text: "Die DNA-Ligase (blau) verknüpft die Fragmente zu einem durchgehenden Strang." },
+            { id: 10, text: "Abschluss: Zwei identische DNA-Doppelstränge sind entstanden (semikonservativ)." },
+        ];
+
+        // --- 2. STATE MANAGEMENT ---
+        const state = {
+            view: 'HOME', // HOME, MESELSON, SIMULATOR, COMPARISON, QUIZ
+            msStep: 0,
+            simStep: 0,
+            simPlaying: false,
+            simSpeed: 1,
+            simConfig: { helicase: true, primase: true, polymerase: true, ligase: true, labels: true },
+            compActive: false,
+            quiz: { index: 0, selected: null, answered: false, score: 0, finished: false }
+        };
+
+        let simInterval = null;
+
+        // --- 3. ICONS (SVG Strings) ---
+        const ICONS = {
+            flask: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${COLORS.secondary}" stroke-width="2"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`,
+            dna: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${COLORS.secondary}" stroke-width="2"><path d="M2 12h20"/><path d="M20 12v6"/><path d="M4 18v-6"/><path d="M20 12c0-3.31-2.69-6-6-6"/><path d="M4 12c0 3.31 2.69 6 6 6"/><path d="M14 6c-3.31 0-6 2.69-6 6"/><path d="M10 18c3.31 0 6-2.69 6-6"/></svg>`,
+            compare: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${COLORS.secondary}" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>`,
+            quiz: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${COLORS.secondary}" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
+            play: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+            pause: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`,
+            arrowLeft: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`,
+            arrowRight: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`,
+            rotate: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
+            check: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+            x: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+        };
+
+        // --- 4. RENDER FUNCTIONS ---
+        
+        function renderGlossaryContent() {
+            const container = document.getElementById('glossary-content');
+            container.innerHTML = GLOSSARY.map(item => `
+                <div class="bg-white p-4 rounded-lg shadow-sm border-l-4" style="border-left-color: ${COLORS.secondary}">
+                    <h3 class="font-bold text-[#2C3E50] text-lg mb-1">${item.term}</h3>
+                    <p class="text-[#34495E] leading-relaxed">${item.definition}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderHome() {
+            return `
+                <div class="text-center mb-10 max-w-2xl mx-auto animate-fade-in">
+                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-4">Willkommen!</h2>
+                    <p class="text-lg text-gray-600 leading-relaxed">
+                        Entdecke, wie die genetische Information bei der Zellteilung verdoppelt wird. 
+                        Starte mit dem historischen Experiment oder tauche direkt in die Simulation ein.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto animate-fade-in-up">
+                    ${renderMenuCard('Meselson-Stahl', 'Der historische Beweis für die semikonservative Replikation.', ICONS.flask, 'MESELSON')}
+                    ${renderMenuCard('Simulator', 'Interaktive Simulation des Replikationsprozesses Schritt für Schritt.', ICONS.dna, 'SIMULATOR')}
+                    ${renderMenuCard('Leit- vs. Folgestrang', 'Warum ist die Synthese unterschiedlich? Der direkte Vergleich.', ICONS.compare, 'COMPARISON')}
+                    ${renderMenuCard('Abschluss-Quiz', 'Teste dein Wissen zur DNA-Replikation.', ICONS.quiz, 'QUIZ')}
+                </div>
+            `;
+        }
+
+        function renderMenuCard(title, desc, icon, targetView) {
+            return `
+            <button onclick="changeView('${targetView}')" class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 text-left border-l-4 group w-full" style="border-left-color: ${COLORS.secondary}">
+                <div class="flex justify-between items-start mb-4">
+                    ${icon}
+                    <div class="bg-gray-100 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-gray-500">
+                        <svg class="rotate-180" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-[#2C3E50] mb-2">${title}</h3>
+                <p class="text-[#34495E]">${desc}</p>
+            </button>`;
+        }
+
+        function renderMeselsonStahl() {
+            const s = MS_STEPS[state.msStep];
+            
+            // SVG Logic helpers
+            const tubeGradient = `<defs><linearGradient id="liquid" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#e0f7fa" stopOpacity="0.5" /><stop offset="100%" stopColor="#b2ebf2" stopOpacity="0.8" /></linearGradient><linearGradient id="hybridGradient"><stop offset="0%" stopColor="${COLORS.strand1}" /><stop offset="100%" stopColor="${COLORS.strand2}" /></linearGradient></defs>`;
+            const tubePath = `<path d="M10,10 L10,130 Q10,145 30,145 Q50,145 50,130 L50,10" fill="url(#liquid)" stroke="#aaa" stroke-width="2" />`;
+            
+            let bands = '';
+            if (s.comp.light > 0) bands += `<rect x="12" y="30" width="36" height="8" fill="${COLORS.strand2}" opacity="0.9" rx="2" />`;
+            if (s.comp.hybrid > 0) bands += `<rect x="12" y="70" width="36" height="8" fill="url(#hybridGradient)" opacity="0.9" rx="2" />`;
+            if (s.comp.heavy > 0) bands += `<rect x="12" y="110" width="36" height="8" fill="${COLORS.strand1}" opacity="0.9" rx="2" />`;
+
+            // DNA Strands visual
+            const getStrand = (type) => {
+                const c1 = type === 'light' ? COLORS.strand2 : COLORS.strand1;
+                const c2 = type === 'heavy' ? COLORS.strand1 : COLORS.strand2;
+                return `<svg viewBox="0 0 100 40" class="w-32 h-12"><path d="M0,10 Q25,30 50,10 T100,10" fill="none" stroke="${c1}" stroke-width="4" /><path d="M0,30 Q25,10 50,30 T100,30" fill="none" stroke="${c2}" stroke-width="4" /></svg>`;
+            }
+            
+            let molecules = '';
+            if (state.msStep === 0 || state.msStep === 1) molecules = getStrand('heavy') + getStrand('heavy');
+            else if (state.msStep === 2) molecules = getStrand('hybrid') + getStrand('hybrid');
+            else molecules = getStrand('hybrid') + getStrand('hybrid') + getStrand('light') + getStrand('light');
+
+            const transferWarning = state.msStep === 1 ? `<div class="text-sm bg-yellow-100 p-2 rounded text-yellow-800 border border-yellow-300 animate-pulse mt-2">Transfer in ¹⁴N Medium...</div>` : '';
+            const tubeLabel = state.msStep <= 1 ? "Unten (Schwer)" : state.msStep === 2 ? "Mitte (Hybrid)" : "Mitte & Oben";
+
+            let table = '';
+            if (state.msStep === 4) {
+                table = `
+                <div class="mt-4 overflow-x-auto animate-fade-in-up">
+                    <table class="w-full text-sm text-left text-gray-700">
+                        <thead class="text-xs uppercase bg-gray-100"><tr><th class="px-4 py-2">Modell</th><th class="px-4 py-2">Gen 1</th><th class="px-4 py-2">Gen 2</th></tr></thead>
+                        <tbody>
+                            <tr class="border-b bg-red-50 opacity-50"><td class="px-4 py-2 font-medium">Konservativ</td><td class="px-4 py-2">50% schwer, 50% leicht</td><td class="px-4 py-2">25% schwer, 75% leicht</td></tr>
+                            <tr class="border-b bg-green-50 font-bold border-l-4 border-l-[#2ECC71]"><td class="px-4 py-2">Semikonservativ</td><td class="px-4 py-2">100% hybrid</td><td class="px-4 py-2">50% hybrid, 50% leicht</td></tr>
+                            <tr class="bg-red-50 opacity-50"><td class="px-4 py-2 font-medium">Dispersiv</td><td class="px-4 py-2">100% hybrid</td><td class="px-4 py-2">100% hybrid (leichter)</td></tr>
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            return `
+            <div class="flex flex-col gap-6 max-w-4xl mx-auto animate-fade-in">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4" style="border-color: ${COLORS.secondary}">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-[#2C3E50]">Meselson-Stahl-Experiment</h2>
+                        <span class="text-sm font-medium bg-gray-100 px-3 py-1 rounded-full">Schritt ${state.msStep + 1} / 5</span>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-8 items-center justify-center min-h-[300px] bg-[#ECF0F1] rounded-lg p-8">
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="font-bold text-[#2C3E50] mb-2">DNA-Moleküle</div>
+                            <div class="flex flex-wrap justify-center gap-2 w-64 h-32 content-center">${molecules}</div>
+                            ${transferWarning}
+                        </div>
+                        <div class="h-48 w-[1px] bg-gray-300 hidden md:block"></div>
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="font-bold text-[#2C3E50] mb-2">Zentrifuge</div>
+                            <svg viewBox="0 0 60 150" class="w-24 h-48 drop-shadow-lg">${tubeGradient}${tubePath}${bands}</svg>
+                            <div class="text-sm font-medium text-center text-gray-600">${tubeLabel}</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold mb-2">${s.title}</h3>
+                        <p class="text-[#34495E] leading-relaxed">${s.desc}</p>
+                        <div class="mt-2 font-semibold text-[#16A085]">${s.label}</div>
+                    </div>
+                    ${table}
+
+                    <div class="flex justify-between mt-8 pt-4 border-t">
+                        <button onclick="updateMsStep('reset')" class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-[#2C3E50] transition-colors">${ICONS.rotate} Reset</button>
+                        <div class="flex gap-4">
+                            <button onclick="updateMsStep('prev')" class="flex items-center gap-2 px-6 py-2 rounded-md transition-colors ${state.msStep === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-[#2C3E50] hover:bg-gray-300'}" ${state.msStep === 0 ? 'disabled' : ''}>${ICONS.arrowLeft} Zurück</button>
+                            <button onclick="updateMsStep('next')" class="flex items-center gap-2 px-6 py-2 rounded-md text-white transition-colors ${state.msStep === MS_STEPS.length - 1 ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#2C3E50] hover:bg-[#34495E]'}" ${state.msStep === MS_STEPS.length - 1 ? 'disabled' : ''}>Weiter ${ICONS.arrowRight}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderSimulator() {
+            const step = state.simStep;
+            
+            // --- SVG Generation Logic (Complex) ---
+            const forkX = step === 0 ? 50 : 100 + (step * 50);
+            const clampedForkX = Math.min(forkX, 600);
+            const startY = 200, openTopY = 100, openBotY = 300;
+            
+            // Paths
+            const topStrandPath = `M 0,${openTopY} L ${clampedForkX - 50},${openTopY} C ${clampedForkX},${openTopY} ${clampedForkX},${startY} ${clampedForkX},${startY}`;
+            const botStrandPath = `M 0,${openBotY} L ${clampedForkX - 50},${openBotY} C ${clampedForkX},${openBotY} ${clampedForkX},${startY} ${clampedForkX},${startY}`;
+            const closedPath = step < 10 ? `<path d="M ${clampedForkX},${startY} L 800,${startY}" fill="none" stroke="#7f8c8d" stroke-width="16" stroke-opacity="0.3" />` : '';
+            
+            // Labels
+            let labels = '';
+            if (state.simConfig.labels) {
+                labels = `
+                <text x="10" y="${openTopY - 15}" fill="${COLORS.strand1}" font-size="14" font-weight="bold">3'</text>
+                <text x="10" y="${openBotY + 25}" fill="${COLORS.strand2}" font-size="14" font-weight="bold">5'</text>
+                ${step > 1 ? `<text x="20" y="${openTopY - 35}" fill="#555" font-size="12">Folgestrang-Matrize</text>` : ''}
+                ${step > 1 ? `<text x="20" y="${openBotY + 45}" fill="#555" font-size="12">Leitstrang-Matrize</text>` : ''}
+                `;
+            }
+
+            // Elements
+            let helicase = '', leading = '', lagging = '', ligase = '', primase = '';
+
+            // Helicase
+            if (step >= 1 && step < 10 && state.simConfig.helicase) {
+                helicase = `
+                <g transform="translate(${clampedForkX}, ${startY})">
+                    <polygon points="-20,-30 20,-30 40,0 20,30 -20,30 -40,0" fill="${COLORS.helicase}" opacity="0.9">
+                        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="4s" repeatCount="indefinite" />
+                    </polygon>
+                    <text x="-15" y="5" fill="white" font-size="10" font-weight="bold">Hel</text>
+                </g>`;
+            }
+
+            // Leading (Bottom)
+            if (step >= 3) leading += `<line x1="50" y1="${openBotY - 15}" x2="100" y2="${openBotY - 15}" stroke="${COLORS.primer}" stroke-width="6" />`;
+            if (step >= 4) {
+                leading += `<line x1="100" y1="${openBotY - 15}" x2="${clampedForkX - 80}" y2="${openBotY - 15}" stroke="${COLORS.newStrand2}" stroke-width="6" />`;
+                if (state.simConfig.polymerase) leading += `<circle cx="${clampedForkX - 80}" cy="${openBotY - 15}" r="15" fill="${COLORS.polymerase}" />`;
+            }
+
+            // Lagging (Top)
+            if (step >= 5) lagging += `<line x1="${clampedForkX - 150}" y1="${openTopY + 15}" x2="${clampedForkX - 200}" y2="${openTopY + 15}" stroke="${step === 8 ? COLORS.newStrand1 : COLORS.primer}" stroke-width="6" />`;
+            if (step >= 6) lagging += `<line x1="${clampedForkX - 200}" y1="${openTopY + 15}" x2="${clampedForkX - 300}" y2="${openTopY + 15}" stroke="${COLORS.newStrand1}" stroke-width="6" />`;
+            if (step >= 7) {
+                lagging += `<line x1="${clampedForkX - 50}" y1="${openTopY + 15}" x2="${clampedForkX - 100}" y2="${openTopY + 15}" stroke="${step === 8 ? COLORS.newStrand1 : COLORS.primer}" stroke-width="6" />`;
+                lagging += `<line x1="${clampedForkX - 100}" y1="${openTopY + 15}" x2="${clampedForkX - 150}" y2="${openTopY + 15}" stroke="${COLORS.newStrand1}" stroke-width="6" />`;
+            }
+
+            // Ligase & Primase
+            if (step >= 9 && state.simConfig.ligase) ligase = `<rect x="${clampedForkX - 150}" y="${openTopY}" width="20" height="20" fill="${COLORS.ligase}" transform="rotate(45, ${clampedForkX - 150}, ${openTopY})" />`;
+            
+            if ((step === 3 || step === 5 || step === 7) && state.simConfig.primase) {
+                const cx = step === 3 ? 75 : step === 5 ? clampedForkX - 175 : clampedForkX - 75;
+                const cy = step === 3 ? openBotY - 15 : openTopY + 15;
+                primase = `<ellipse cx="${cx}" cy="${cy}" rx="15" ry="10" fill="${COLORS.primase}" />`;
+            }
+
+            return `
+            <div class="flex flex-col gap-4 animate-fade-in">
+                <!-- Controls -->
+                <div class="bg-white p-4 rounded-lg shadow border-b-2 border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                        <button onclick="updateSimStep('reset')" class="p-2 hover:bg-white rounded shadow-sm">${ICONS.rotate}</button>
+                        <button onclick="updateSimStep('prev')" class="p-2 hover:bg-white rounded shadow-sm">${ICONS.arrowLeft}</button>
+                        <div class="px-3 font-mono font-bold w-12 text-center">${step}</div>
+                        <button onclick="updateSimStep('next')" class="p-2 hover:bg-white rounded shadow-sm">${ICONS.arrowRight}</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleSimPlay()" class="flex items-center gap-2 px-4 py-2 rounded-md font-bold text-white transition-colors ${state.simPlaying ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-[#16A085] hover:bg-[#1ABC9C]'}">
+                            ${state.simPlaying ? ICONS.pause + ' Pause' : ICONS.play + ' Auto'}
+                        </button>
+                        <div class="flex flex-col items-center w-24">
+                            <label class="text-xs text-gray-500">Tempo: ${state.simSpeed}x</label>
+                            <input type="range" min="0.5" max="2" step="0.5" value="${state.simSpeed}" onchange="updateSimSpeed(this.value)" class="w-full h-1 bg-gray-200 rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="relative bg-white rounded-lg shadow-inner overflow-hidden border border-gray-200 h-[400px]">
+                    <svg viewBox="0 0 800 400" class="w-full h-full">
+                        <defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/></pattern></defs>
+                        <rect width="800" height="400" fill="url(#grid)" />
+                        <g class="dna-strand-path">
+                            <path d="${topStrandPath}" fill="none" stroke="${COLORS.strand1}" stroke-width="8" stroke-linecap="round" />
+                            <path d="${botStrandPath}" fill="none" stroke="${COLORS.strand2}" stroke-width="8" stroke-linecap="round" />
+                            ${closedPath}
+                            ${labels}
+                            ${helicase}
+                            ${leading}
+                            ${lagging}
+                            ${ligase}
+                            ${primase}
+                        </g>
+                    </svg>
+                    <!-- Legend -->
+                    <div class="absolute top-2 right-2 bg-white/90 p-2 rounded text-xs border border-gray-200">
+                        <div class="font-bold mb-1">Legende</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-[#F39C12]"></div> Helikase</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-[#E74C3C]"></div> Primase</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-[#27AE60]"></div> Polymerase</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-[#3498DB]"></div> Ligase</div>
+                    </div>
+                </div>
+
+                <!-- Text -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <h3 class="font-bold text-[#2C3E50] mb-1">Schritt ${step}:</h3>
+                    <p class="text-[#34495E]">${SIM_STEPS[step]?.text}</p>
+                </div>
+
+                <!-- Toggles -->
+                <div class="flex flex-wrap gap-4 text-sm p-4 bg-gray-50 rounded-lg">
+                    <span class="font-bold text-gray-500">Anzeigen:</span>
+                    ${Object.keys(state.simConfig).map(k => `
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" ${state.simConfig[k] ? 'checked' : ''} onchange="toggleSimConfig('${k}')" class="accent-[#16A085]">
+                            <span class="capitalize">${k}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>`;
+        }
+
+        function renderComparison() {
+            const active = state.compActive;
+            return `
+            <div class="space-y-6 animate-fade-in">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-[#2C3E50] mb-4">Leitstrang vs. Folgestrang</h2>
+                    <p class="mb-6 text-gray-600">Warum ist die Replikation so kompliziert? Das liegt an zwei Faktoren: 1. DNA-Stränge sind <strong>antiparallel</strong>. 2. Die DNA-Polymerase funktioniert nur in <strong>5'→3'</strong> Richtung.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Leitstrang -->
+                        <div class="border rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                            <div class="bg-green-50 p-4 border-b border-green-100"><h3 class="text-xl font-bold text-green-800 flex items-center gap-2">${ICONS.arrowRight} Leitstrang</h3><p class="text-sm text-green-700">Kontinuierliche Synthese</p></div>
+                            <div class="p-4 relative h-40 bg-gray-50 flex items-center justify-center overflow-hidden">
+                                <svg viewBox="0 0 300 100" class="w-full h-full">
+                                    <defs><marker id="arrowHeadGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="${COLORS.polymerase}" /></marker></defs>
+                                    <path d="M 0,80 L 300,80" stroke="${COLORS.strand2}" stroke-width="4" /><text x="5" y="95" font-size="10" fill="${COLORS.strand2}">5'</text><text x="280" y="95" font-size="10" fill="${COLORS.strand2}">3'</text>
+                                    <path d="M 0,60 L ${active ? 250 : 100},60" stroke="${COLORS.newStrand2}" stroke-width="4" style="transition: all 2s linear" />
+                                    <line x1="0" y1="60" x2="20" y2="60" stroke="${COLORS.primer}" stroke-width="4" />
+                                    <line x1="20" y1="40" x2="${active ? 250 : 100}" y2="40" stroke="${COLORS.polymerase}" stroke-width="2" marker-end="url(#arrowHeadGreen)" style="transition: all 2s linear" />
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Folgestrang -->
+                        <div class="border rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                            <div class="bg-red-50 p-4 border-b border-red-100"><h3 class="text-xl font-bold text-red-800 flex items-center gap-2">${ICONS.arrowLeft} Folgestrang</h3><p class="text-sm text-red-700">Diskontinuierliche Synthese</p></div>
+                            <div class="p-4 relative h-40 bg-gray-50 flex items-center justify-center overflow-hidden">
+                                <svg viewBox="0 0 300 100" class="w-full h-full">
+                                    <path d="M 0,20 L 300,20" stroke="${COLORS.strand1}" stroke-width="4" /><text x="5" y="15" font-size="10" fill="${COLORS.strand1}">3'</text><text x="280" y="15" font-size="10" fill="${COLORS.strand1}">5'</text>
+                                    <line x1="50" y1="40" x2="100" y2="40" stroke="${COLORS.newStrand1}" stroke-width="4" />
+                                    <line x1="100" y1="40" x2="110" y2="40" stroke="${COLORS.primer}" stroke-width="4" />
+                                    <g opacity="${active ? 1 : 0.3}" style="transition: opacity 1s">
+                                        <line x1="150" y1="40" x2="200" y2="40" stroke="${COLORS.newStrand1}" stroke-width="4" />
+                                        <line x1="200" y1="40" x2="210" y2="40" stroke="${COLORS.primer}" stroke-width="4" />
+                                    </g>
+                                    <line x1="100" y1="55" x2="60" y2="55" stroke="${COLORS.polymerase}" stroke-width="2" marker-end="url(#arrowHeadGreen)" />
+                                    <line x1="200" y1="55" x2="160" y2="55" stroke="${COLORS.polymerase}" stroke-width="2" opacity="${active ? 1 : 0.3}" marker-end="url(#arrowHeadGreen)" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-center">
+                        <button onclick="toggleCompActive()" class="flex items-center gap-2 bg-[#2C3E50] text-white px-6 py-3 rounded-full hover:bg-[#34495E] transition-transform active:scale-95">
+                            ${ICONS.rotate} ${active ? "Reset" : "Animation starten"}
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderQuiz() {
+            if (state.quiz.finished) {
+                const score = state.quiz.score;
+                return `
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg text-center animate-fade-in">
+                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-6">Quiz Ergebnis</h2>
+                    <div class="text-6xl font-bold mb-4" style="color: ${score > 7 ? COLORS.success : COLORS.helicase}">${score} / ${QUIZ_QUESTIONS.length}</div>
+                    <p class="text-xl mb-8">${score === 10 ? "🎉 Perfekt! Du bist ein DNA-Experte!" : score >= 7 ? "👍 Gut gemacht! Das meiste hast du verstanden." : "📚 Übung macht den Meister."}</p>
+                    <button onclick="resetQuiz()" class="bg-[#2C3E50] text-white px-8 py-3 rounded-lg hover:bg-[#34495E] transition-colors flex items-center gap-2 mx-auto">${ICONS.rotate} Quiz wiederholen</button>
+                </div>`;
+            }
+
+            const q = QUIZ_QUESTIONS[state.quiz.index];
+            const progress = ((state.quiz.index + 1) / QUIZ_QUESTIONS.length) * 100;
+
+            return `
+            <div class="max-w-3xl mx-auto animate-fade-in">
+                <div class="mb-6 flex justify-between items-center text-gray-500">
+                    <span>Frage ${state.quiz.index + 1} von ${QUIZ_QUESTIONS.length}</span>
+                    <span>Score: ${state.quiz.score}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-8"><div class="bg-[#16A085] h-2.5 rounded-full transition-all duration-300" style="width: ${progress}%"></div></div>
+                
+                <div class="bg-white p-6 md:p-8 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl md:text-2xl font-bold text-[#2C3E50] mb-6">${q.question}</h3>
+                    <div class="space-y-4">
+                        ${q.options.map(opt => {
+                            let cls = "w-full text-left p-4 rounded-lg border-2 transition-all ";
+                            if (state.quiz.answered) {
+                                if (opt.id === q.correctAnswer) cls += "border-green-500 bg-green-50 text-green-800";
+                                else if (state.quiz.selected === opt.id) cls += "border-red-500 bg-red-50 text-red-800";
+                                else cls += "border-gray-100 opacity-50";
+                            } else {
+                                cls += "border-gray-200 hover:border-[#16A085] hover:bg-gray-50";
+                            }
+                            return `<button onclick="handleQuizAnswer('${opt.id}')" ${state.quiz.answered ? 'disabled' : ''} class="${cls}"><span class="font-bold mr-2">${opt.id})</span> ${opt.text}</button>`;
+                        }).join('')}
+                    </div>
+                </div>
+
+                ${state.quiz.answered ? `
+                <div class="p-4 rounded-lg mb-6 flex gap-4 ${state.quiz.selected === q.correctAnswer ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} animate-fade-in-up">
+                    <div class="mt-1">${state.quiz.selected === q.correctAnswer ? ICONS.check : ICONS.x}</div>
+                    <div><div class="font-bold mb-1">${state.quiz.selected === q.correctAnswer ? "Richtig!" : "Falsch!"}</div><p>${state.quiz.selected === q.correctAnswer ? q.feedbackCorrect : q.feedbackWrong}</p></div>
+                </div>` : ''}
+
+                <div class="flex justify-end">
+                    <button onclick="nextQuizQuestion()" ${!state.quiz.answered ? 'disabled' : ''} class="px-8 py-3 rounded-lg font-bold transition-colors ${state.quiz.answered ? 'bg-[#2C3E50] text-white hover:bg-[#34495E]' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}">
+                        ${state.quiz.index === QUIZ_QUESTIONS.length - 1 ? "Ergebnis anzeigen" : "Nächste Frage"}
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        // --- 5. LOGIC & CONTROLLERS ---
+
+        function changeView(newView) {
+            state.view = newView;
+            // Stop simulator if leaving
+            if (newView !== 'SIMULATOR' && state.simPlaying) toggleSimPlay();
+            render();
+        }
+
+        function toggleGlossary(show) {
+            const backdrop = document.getElementById('glossary-backdrop');
+            const sidebar = document.getElementById('glossary-sidebar');
+            if (show) {
+                backdrop.classList.remove('hidden');
+                setTimeout(() => sidebar.classList.remove('translate-x-full'), 10); // Simple delay for transition
+            } else {
+                sidebar.classList.add('translate-x-full');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        // Meselson Stahl Logic
+        function updateMsStep(action) {
+            if (action === 'next') state.msStep = Math.min(MS_STEPS.length - 1, state.msStep + 1);
+            if (action === 'prev') state.msStep = Math.max(0, state.msStep - 1);
+            if (action === 'reset') state.msStep = 0;
+            render();
+        }
+
+        // Simulator Logic
+        function updateSimStep(action) {
+            if (action === 'next') state.simStep = Math.min(10, state.simStep + 1);
+            if (action === 'prev') state.simStep = Math.max(0, state.simStep - 1);
+            if (action === 'reset') state.simStep = 0;
+            if (state.simStep === 10) state.simPlaying = false;
+            render();
+        }
+
+        function toggleSimPlay() {
+            if (state.simPlaying) {
+                clearInterval(simInterval);
+                state.simPlaying = false;
+            } else {
+                state.simPlaying = true;
+                if (state.simStep >= 10) state.simStep = 0; // restart
+                simInterval = setInterval(() => {
+                    if (state.simStep < 10) {
+                        state.simStep++;
+                        render();
+                    } else {
+                        toggleSimPlay(); // stop
+                    }
+                }, 3000 / state.simSpeed);
+            }
+            render();
+        }
+
+        function updateSimSpeed(val) {
+            state.simSpeed = parseFloat(val);
+            if (state.simPlaying) {
+                toggleSimPlay(); // restart to apply speed
+                toggleSimPlay();
+            }
+        }
+
+        function toggleSimConfig(key) {
+            state.simConfig[key] = !state.simConfig[key];
+            render();
+        }
+
+        // Comparison Logic
+        function toggleCompActive() {
+            state.compActive = !state.compActive;
+            render();
+        }
+
+        // Quiz Logic
+        function handleQuizAnswer(id) {
+            if (state.quiz.answered) return;
+            state.quiz.selected = id;
+            state.quiz.answered = true;
+            if (id === QUIZ_QUESTIONS[state.quiz.index].correctAnswer) {
+                state.quiz.score++;
+            }
+            render();
+        }
+
+        function nextQuizQuestion() {
+            if (state.quiz.index < QUIZ_QUESTIONS.length - 1) {
+                state.quiz.index++;
+                state.quiz.selected = null;
+                state.quiz.answered = false;
+            } else {
+                state.quiz.finished = true;
+            }
+            render();
+        }
+
+        function resetQuiz() {
+            state.quiz = { index: 0, selected: null, answered: false, score: 0, finished: false };
+            render();
+        }
+
+        // --- 6. MAIN RENDER ---
+        function render() {
+            const root = document.getElementById('app-content');
+            const navBtn = document.getElementById('nav-home-btn');
+            const subtitle = document.getElementById('header-subtitle');
+
+            // Header state
+            if (state.view === 'HOME') {
+                navBtn.classList.add('hidden');
+                subtitle.classList.remove('hidden');
+                subtitle.classList.add('md:inline');
+                root.innerHTML = renderHome();
+            } else {
+                navBtn.classList.remove('hidden');
+                navBtn.onclick = () => changeView('HOME');
+                subtitle.classList.add('hidden');
+                subtitle.classList.remove('md:inline');
+                
+                if (state.view === 'MESELSON') root.innerHTML = renderMeselsonStahl();
+                else if (state.view === 'SIMULATOR') root.innerHTML = renderSimulator();
+                else if (state.view === 'COMPARISON') root.innerHTML = renderComparison();
+                else if (state.view === 'QUIZ') root.innerHTML = renderQuiz();
+            }
+        }
+
+        // --- 7. INIT ---
+        document.getElementById('year').textContent = new Date().getFullYear();
+        renderGlossaryContent();
+        render(); // Initial Render
+
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
