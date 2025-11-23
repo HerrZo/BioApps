@@ -53,7 +53,6 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-[#ECF0F1] min-h-screen flex flex-col">
 
@@ -243,8 +242,9 @@
             const s = MS_STEPS[state.msStep];
             
             // SVG Logic helpers
-            const tubeGradient = `<defs><linearGradient id="liquid" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#e0f7fa" stopOpacity="0.5" /><stop offset="100%" stopColor="#b2ebf2" stopOpacity="0.8" /></linearGradient><linearGradient id="hybridGradient"><stop offset="0%" stopColor="${COLORS.strand1}" /><stop offset="100%" stopColor="${COLORS.strand2}" /></linearGradient></defs>`;
-            const tubePath = `<path d="M10,10 L10,130 Q10,145 30,145 Q50,145 50,130 L50,10" fill="url(#liquid)" stroke="#aaa" stroke-width="2" />`;
+            // FIX: Removed liquid gradient and changed tube fill to white to prevent rendering issues on some screens
+            const tubeGradient = `<defs><linearGradient id="hybridGradient"><stop offset="0%" stopColor="${COLORS.strand1}" /><stop offset="100%" stopColor="${COLORS.strand2}" /></linearGradient></defs>`;
+            const tubePath = `<path d="M10,10 L10,130 Q10,145 30,145 Q50,145 50,130 L50,10" fill="white" stroke="#aaa" stroke-width="2" />`;
             
             let bands = '';
             if (s.comp.light > 0) bands += `<rect x="12" y="30" width="36" height="8" fill="${COLORS.strand2}" opacity="0.9" rx="2" />`;
@@ -687,6 +687,5 @@
         render(); // Initial Render
 
     </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
