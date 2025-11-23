@@ -1,5 +1,0 @@
-{
-  "name": "DNA-Replikations-Simulator",
-  "description": "Eine interaktive WebApp zur Visualisierung und Simulation der DNA-Replikation bei Eukaryoten, inklusive Meselson-Stahl-Experiment und Quiz.",
-  "requestFramePermissions": []
-}
