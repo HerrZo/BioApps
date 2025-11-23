@@ -1,2 +1,160 @@
-# BioApps
-Apps für den Biologieunterricht
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biologie Lern-Apps</title>
+    <!-- Tailwind CSS für schnelles, modernes Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter für eine klare Lesbarkeit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        bio: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FAFAFA; /* Sehr helles Grau für weniger Augenbelastung als reines Weiß */
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+        }
+        /* Subtiler Hintergrund-Gradient */
+        .bg-gradient-mesh {
+            background-image: radial-gradient(at 0% 0%, hsla(142, 69%, 92%, 1) 0, transparent 50%), 
+                              radial-gradient(at 100% 0%, hsla(160, 60%, 94%, 1) 0, transparent 50%);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col bg-gradient-mesh">
+
+    <!-- Header Section -->
+    <header class="w-full pt-20 pb-12 px-6 text-center">
+        <div class="max-w-4xl mx-auto">
+            <span class="inline-block py-1 px-3 rounded-full bg-bio-100 text-bio-900 text-xs font-semibold tracking-wide uppercase mb-4">
+                Bildung & Wissenschaft
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4">
+                Biologie Lern-Apps
+            </h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto font-light leading-relaxed">
+                Eine Sammlung interaktiver Werkzeuge und Visualisierungen zum Verständnis komplexer biologischer Prozesse. Open Source und frei verfügbar.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content: App Grid -->
+    <main class="flex-grow px-6 pb-20">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="app-grid">
+            <!-- Apps werden hier per JavaScript eingefügt -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-8 border-t border-slate-200 bg-white/50 backdrop-blur-sm">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-sm text-slate-500">
+                &copy; <span id="year"></span> Biologie Lern-Apps.
+            </div>
+            <a href="https://github.com/DeinGitHubName" target="_blank" rel="noopener noreferrer" 
+               class="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="font-medium">GitHub Profil</span>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // Aktuelles Jahr im Footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ---------------------------------------------------------
+        // KONFIGURATION: Hier deine Apps eintragen
+        // ---------------------------------------------------------
+        const projects = [
+            {
+                title: "Zell-Simulator",
+                description: "Erkunde den Aufbau von tierischen und pflanzlichen Zellen in einer interaktiven Umgebung.",
+                link: "https://github.com/DeinName/zell-simulator", // Hier deinen echten Link einfügen
+                tag: "Zytologie",
+                icon: `<svg class="w-6 h-6 text-bio-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>`
+            },
+            {
+                title: "Genetik Rechner",
+                description: "Mendelsche Regeln visualisieren und Punnett-Quadrate automatisch generieren.",
+                link: "https://github.com/DeinName/genetik-rechner",
+                tag: "Genetik",
+                icon: `<svg class="w-6 h-6 text-bio-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>`
+            },
+            {
+                title: "Botanik Bestimmung",
+                description: "Ein digitaler Schlüssel zur Bestimmung heimischer Baum- und Pflanzenarten.",
+                link: "https://github.com/DeinName/botanik-app",
+                tag: "Botanik",
+                icon: `<svg class="w-6 h-6 text-bio-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`
+            },
+            {
+                title: "Ökosystem Simulation",
+                description: "Beobachte Räuber-Beute-Beziehungen und Energieflüsse in einem geschlossenen System.",
+                link: "https://github.com/DeinName/oekosystem-sim",
+                tag: "Ökologie",
+                icon: `<svg class="w-6 h-6 text-bio-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+            }
+        ];
+
+        // Rendering Funktion
+        const grid = document.getElementById('app-grid');
+
+        projects.forEach(project => {
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl p-6 border border-slate-100 card-hover flex flex-col h-full";
+            
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-bio-50 rounded-xl">
+                        ${project.icon}
+                    </div>
+                    <span class="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                        ${project.tag}
+                    </span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">${project.title}</h3>
+                <p class="text-slate-500 mb-6 flex-grow leading-relaxed">
+                    ${project.description}
+                </p>
+                <a href="${project.link}" 
+                   class="inline-flex items-center justify-center w-full px-4 py-3 text-sm font-semibold text-white transition-colors bg-slate-900 rounded-xl hover:bg-slate-700 group">
+                    App öffnen
+                    <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>
