@@ -146,8 +146,8 @@
         const MS_STEPS = [
             { title: "Schritt 1: Ausgangssituation", desc: "E. coli-Bakterien werden in einem Medium mit schwerem Stickstoff (¹⁵N) kultiviert. Die gesamte DNA ist schwer.", label: "Gen 0: 100% ¹⁵N (schwer)", comp: {heavy:100, hybrid:0, light:0} },
             { title: "Schritt 2: Transfer", desc: "Die Bakterien werden in ein Medium mit normalem Stickstoff (¹⁴N) überführt. Ab jetzt wird nur noch leichter Stickstoff eingebaut.", label: "Transfer in ¹⁴N-Medium", comp: {heavy:100, hybrid:0, light:0} },
-            { title: "Schritt 3: Generation 1", desc: "Nach einer Replikation besteht jedes DNA-Molekül aus einem alten (¹⁵N) und einem neuen (¹⁴N) Strang.", label: "Gen 1: 100% Hybrid-DNA", comp: {heavy:0, hybrid:100, light:0} },
-            { title: "Schritt 4: Generation 2", desc: "Die Hybrid-DNA repliziert sich erneut. Es entstehen zur Hälfte Hybrid-Moleküle und zur Hälfte reine leichte Moleküle.", label: "Gen 2: 50% Hybrid, 50% Leicht", comp: {heavy:0, hybrid:50, light:50} },
+            { title: "Schritt 3: Generation 1", desc: "Nach einer Replikation besteht jedes DNA-Molekül aus einem alten (¹⁵N) und einem neuen (¹⁴N) Strang.", label: "Gen 1: 100% Mittelschwer-DNA", comp: {heavy:0, hybrid:100, light:0} },
+            { title: "Schritt 4: Generation 2", desc: "Die Hybrid-DNA repliziert sich erneut. Es entstehen zur Hälfte Hybrid-Moleküle und zur Hälfte reine leichte Moleküle.", label: "Gen 2: 50% Mittelschwer, 50% Leicht", comp: {heavy:0, hybrid:50, light:50} },
             { title: "Schritt 5: Interpretation", desc: "Das Ergebnis widerlegt das konservative und dispersive Modell. Die DNA-Replikation ist semikonservativ.", label: "Beweis: Semikonservativ", comp: {heavy:0, hybrid:50, light:50} }
         ];
 
@@ -274,8 +274,8 @@
                         <thead class="text-xs uppercase bg-gray-100"><tr><th class="px-4 py-2">Modell</th><th class="px-4 py-2">Gen 1</th><th class="px-4 py-2">Gen 2</th></tr></thead>
                         <tbody>
                             <tr class="border-b bg-red-50 opacity-50"><td class="px-4 py-2 font-medium">Konservativ</td><td class="px-4 py-2">50% schwer, 50% leicht</td><td class="px-4 py-2">25% schwer, 75% leicht</td></tr>
-                            <tr class="border-b bg-green-50 font-bold border-l-4 border-l-[#2ECC71]"><td class="px-4 py-2">Semikonservativ</td><td class="px-4 py-2">100% hybrid</td><td class="px-4 py-2">50% hybrid, 50% leicht</td></tr>
-                            <tr class="bg-red-50 opacity-50"><td class="px-4 py-2 font-medium">Dispersiv</td><td class="px-4 py-2">100% hybrid</td><td class="px-4 py-2">100% hybrid (leichter)</td></tr>
+                            <tr class="border-b bg-green-50 font-bold border-l-4 border-l-[#2ECC71]"><td class="px-4 py-2">Semikonservativ</td><td class="px-4 py-2">100% Mittelschwer</td><td class="px-4 py-2">50% Mittelschwer, 50% leicht</td></tr>
+                            <tr class="bg-red-50 opacity-50"><td class="px-4 py-2 font-medium">Dispersiv</td><td class="px-4 py-2">100% Mittelschwer</td><td class="px-4 py-2">100% Mittelschwer (leichter)</td></tr>
                         </tbody>
                     </table>
                 </div>`;
