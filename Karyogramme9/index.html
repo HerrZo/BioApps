@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genetik: Organisation der DNA</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    /* Custom Slider Styling */
+    input[type=range] {
+        -webkit-appearance: none; 
+        background: transparent; 
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        background: #16a34a; /* green-600 */
+        cursor: pointer;
+        margin-top: -10px; 
+        box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        cursor: pointer;
+        background: #d1d5db;
+        border-radius: 2px;
+    }
+</style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-green-50 text-gray-900 min-h-screen font-sans">
+<div id="root"></div>
+
+<script type="text/babel">
+    // --- 1. GLOBALS & UTILS ---
+    const { useState, useEffect, useMemo, useRef } = React;
+    
+    // --- 2. ICONS ---
+    const IconDNA = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12c0-4 4-8 10-8s10 4 10 8-4 8-10 8-10-4-10-8z"></path><path d="M12 4v16"></path></svg>;
+    const IconCheck = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
+    const IconX = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+    const IconBook = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>;
+    const IconMicroscope = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>;
+
+    // --- 3. DATEN ---
+
+    const MODULES = {
+        KNOWLEDGE: 'Wissen',
+        CELLCHECK: 'Zell-Check',
+        DNAPACKER: 'DNA-Packer',
+        DETECTIVE: 'Karyotyp-Detektive',
+        QUIZ: 'Quiz'
+    };
+
+    const CELL_CHECK_DATA = [
+        { id: 1, q: "Prokaryoten besitzen einen Zellkern.", a: false, exp: "Falsch. Prokaryoten (z.B. Bakterien) haben keinen membranumhüllten Zellkern. Die DNA schwimmt frei im Plasma." },
+        { id: 2, q: "Plasmide sind kleine DNA-Ringe in Bakterien.", a: true, exp: "Richtig. Neben dem Hauptchromosom besitzen Bakterien oft kleine ringförmige DNA-Moleküle, die Plasmide." },
+        { id: 3, q: "Tierzellen gehören zu den Eukaryoten.", a: true, exp: "Richtig. Tiere, Pflanzen und Pilze sind Eukaryoten und besitzen einen echten Zellkern." },
+        { id: 4, q: "Die DNA von Prokaryoten ist linear.", a: false, exp: "Falsch. Das Bakterienchromosom ist in der Regel ringförmig geschlossen." },
+        { id: 5, q: "Mitochondrien findet man hauptsächlich in Procyten.", a: false, exp: "Falsch. Mitochondrien sind Organellen der Eucyten (Eukaryoten)." },
+        { id: 6, q: "Die Chromosomenanzahl in diploiden Körperzellen ist in der Regel gerade.", a: true, exp: "Richtig. Da Chromosomen paarweise auftreten (2n), ist die Summe meist gerade. Ungerade Zahlen deuten auf Mutationen (z.B. Trisomie) oder sterile Hybriden hin." },
+        { id: 7, q: "Je mehr Chromosomen ein Lebewesen hat, desto intelligenter ist es.", a: false, exp: "Falsch. Die Natternzunge (Farn) hat über 500, ist aber nicht intelligenter als ein Mensch." },
+        { id: 8, q: "Die Anzahl der Chromosomen ist artspezifisch.", a: true, exp: "Richtig. Jede Art hat eine charakteristische Anzahl (z.B. Mensch 46)." },
+        { id: 9, q: "Alle Körperzellen enthalten den kompletten Chromosomensatz.", a: true, exp: "Richtig. Ausgenommen sind die Keimzellen (Spermien/Eizellen), die nur den halben Satz und rote Blutkörperchen (kein Kern)." }
+    ];
+
+    const REFERENCE_TABLE = [
+        { name: "Pferdespulwurm", count: 2 },
+        { name: "Taufliege", count: 8 },
+        { name: "Tomate", count: 24 },
+        { name: "Katze", count: 38 },
+        { name: "Mensch", count: 46 },
+        { name: "Schimpanse", count: 48 },
+        { name: "Hund", count: 78 },
+        { name: "Amsel", count: 80 },
+        { name: "Goldfisch", count: 94 },
+        { name: "Natternzunge (Farn)", count: 520 },
+    ];
+
+    const DETECTIVE_CASES = [
+        { id: 1, text: "Zelle mit 46 Chromosomen, Gonosomen XY.", correct: "Mensch (Mann)", options: ["Mensch (Mann)", "Mensch (Frau)", "Schimpanse", "Katze"] },
+        { id: 2, text: "Zelle mit 48 Chromosomen.", correct: "Schimpanse", options: ["Mensch", "Gorilla", "Schimpanse", "Kartoffel"] },
+        { id: 3, text: "Zelle mit 8 Chromosomen.", correct: "Taufliege", options: ["Pferdespulwurm", "Taufliege", "Erbse", "Tomate"] },
+        { id: 4, text: "Zelle mit 46 Chromosomen, Gonosomen XX.", correct: "Mensch (Frau)", options: ["Mensch (Mann)", "Mensch (Frau)", "Schimpanse", "Goldfisch"] },
+        { id: 5, text: "Rekordhalter mit 520 Chromosomen.", correct: "Natternzunge", options: ["Elefant", "Natternzunge", "Amsel", "Riesenmammutbaum"] },
+        { id: 6, text: "Zelle mit 38 Chromosomen.", correct: "Katze", options: ["Hund", "Katze", "Maus", "Löwe"] },
+    ];
+
+    const QUIZ_DATA = [
+        { q: "Was unterscheidet Eukaryoten wesentlich von Prokaryoten?", options: ["Zellwand", "Zellkern", "DNA", "Ribosomen"], correct: 1 },
+        { q: "Wie nennt man die verdichtete Form der DNA für den Transport?", options: ["Arbeitsform", "Transportform", "Replikationsform", "Mutation"], correct: 1 },
+        { q: "Wie viele Chromosomen hat ein gesunder Mensch in einer Hautzelle?", options: ["23", "44", "46", "92"], correct: 2 },
+        { q: "Was sind Histone?", options: ["Zuckerbausteine", "Proteine zum Verpacken der DNA", "Teile der Zellmembran", "Enzyme"], correct: 1 },
+        { q: "Welches Geschlechtschromosomen-Paar hat ein biologischer Mann?", options: ["XX", "XY", "YY", "X0"], correct: 1 }
+    ];
+
+    // --- 4. SUB-KOMPONENTEN ---
+
+    const Header = ({ setModule }) => (
+        <header className="bg-green-600 text-white p-4 shadow-lg sticky top-0 z-50">
+            <div className="max-w-4xl mx-auto flex justify-between items-center">
+                <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setModule(MODULES.KNOWLEDGE)}>
+                    <IconDNA className="w-8 h-8" />
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight">Genetik: Organisation & Zellen</h1>
+                </div>
+                <a href="https://herrzo.github.io/BioApps/" target="_blank" rel="noopener noreferrer" 
+                   className="text-xs md:text-sm bg-green-700 hover:bg-green-800 text-white px-3 py-1.5 rounded-full transition-colors font-medium border border-green-500">
+                    Sammlung
+                </a>
+            </div>
+        </header>
+    );
+
+    const Navigation = ({ current, setModule }) => (
+        <nav className="bg-white shadow-sm border-b border-green-100 overflow-x-auto">
+            <div className="max-w-4xl mx-auto flex p-2 space-x-2 md:justify-center min-w-max">
+                {Object.values(MODULES).map(mod => (
+                    <button 
+                        key={mod} 
+                        onClick={() => setModule(mod)}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${current === mod ? 'bg-green-100 text-green-700 ring-2 ring-green-500' : 'text-gray-600 hover:bg-gray-100 hover:text-green-600'}`}
+                    >
+                        {mod}
+                    </button>
+                ))}
+            </div>
+        </nav>
+    );
+
+    // --- TEIL A: WISSENS-HUB ---
+    const KnowledgeHub = () => {
+        return (
+            <div className="space-y-8 animate-fade-in p-4 pb-12">
+                <div className="grid md:grid-cols-2 gap-6">
+                    {/* Karte 1: Prokaryoten vs Eukaryoten */}
+                    <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+                        <h2 className="text-xl font-bold text-green-800 mb-4 flex items-center"><IconMicroscope className="w-6 h-6 mr-2"/> Prokaryoten vs. Eukaryoten</h2>
+                        <div className="space-y-4 text-sm md:text-base">
+                            <div className="bg-orange-50 p-3 rounded-lg">
+                                <strong className="block text-orange-800 mb-1">Prokaryoten (Procyten)</strong>
+                                <ul className="list-disc list-inside text-gray-700 space-y-1">
+                                    <li>Kein Zellkern</li>
+                                    <li>DNA als Ringchromosom & Plasmide</li>
+                                    <li>Keine membranumhüllten Organellen</li>
+                                    <li>Beispiel: Bakterien</li>
+                                </ul>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                                <strong className="block text-blue-800 mb-1">Eukaryoten (Eucyten)</strong>
+                                <ul className="list-disc list-inside text-gray-700 space-y-1">
+                                    <li>Echter Zellkern (Doppelmembran)</li>
+                                    <li>DNA in Chromosomen organisiert</li>
+                                    <li>Viele Organellen (z.B. Mitochondrien)</li>
+                                    <li>Beispiel: Tiere, Pflanzen, Pilze</li>
+                                </ul>
+                            </div>
+                            <p className="text-xs text-gray-500 italic mt-2">Evolution: Procyten sind erdgeschichtlich viel älter!</p>
+                        </div>
+                    </div>
+
+                    {/* Karte 2: Verpackung */}
+                    <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+                        <h2 className="text-xl font-bold text-green-800 mb-4 flex items-center"><IconBook className="w-6 h-6 mr-2"/> Verpackung der DNA</h2>
+                        <div className="space-y-3 text-sm md:text-base text-gray-700">
+                            <div>
+                                <span className="font-bold text-green-700">Arbeitsform:</span>
+                                <p>Langgestreckter Faden. Wichtig für das Ablesen der Gene (Transkription).</p>
+                            </div>
+                            <div>
+                                <span className="font-bold text-green-700">Transportform:</span>
+                                <p>Maximal verkürzt (Faktor 10.000) für die Zellteilung.</p>
+                            </div>
+                            <div className="bg-gray-100 p-3 rounded text-xs font-mono mt-2">
+                                Ablauf:<br/>
+                                Doppelstrang &rarr; Wicklung um Histone &rarr; Perlenkette &rarr; Spiralisierung &rarr; Chromosom
+                            </div>
+                            <p className="text-xs">
+                                <strong>Struktur:</strong> Ein Chromosom besteht vor der Teilung aus zwei identischen Schwesterchromatiden, verbunden am Zentromer.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Karte 3: Karyogramm (Breit) */}
+                <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500 hover:shadow-lg transition">
+                    <h2 className="text-xl font-bold text-purple-800 mb-4">Chromosomen & Karyogramm</h2>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm md:text-base text-gray-700">
+                        <div>
+                            <ul className="space-y-2">
+                                <li><strong>Karyogramm:</strong> Geordnete Darstellung aller Chromosomen einer Zelle.</li>
+                                <li><strong>Homologe Chromosomen:</strong> Immer als Paare (eins von Mama, eins von Papa). Gleiche Form, gleiche Gene (aber ggf. verschiedene Allele).</li>
+                                <li><strong>Diploider Satz:</strong> Doppelter Satz in allen Körperzellen (2n).</li>
+                            </ul>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                            <h3 className="font-bold text-purple-900 mb-2">Typen:</h3>
+                            <ul className="list-disc list-inside space-y-1">
+                                <li><strong>Autosomen:</strong> Körperchromosomen (Mensch: Paar 1-22).</li>
+                                <li><strong>Gonosomen:</strong> Geschlechtschromosomen (Paar 23).
+                                    <span className="block ml-5 text-gray-600">XX = Frau</span>
+                                    <span className="block ml-5 text-gray-600">XY = Mann</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- TEIL B: ZELL-CHECK ---
+    const CellCheck = () => {
+        const [index, setIndex] = useState(0);
+        const [answered, setAnswered] = useState(false);
+        const [selected, setSelected] = useState(null);
+        const [score, setScore] = useState(0);
+
+        const currentQ = CELL_CHECK_DATA[index];
+
+        const handleAnswer = (choice) => {
+            if (answered) return;
+            setSelected(choice);
+            setAnswered(true);
+            if (choice === currentQ.a) setScore(s => s + 1);
+        };
+
+        const next = () => {
+            setIndex(i => i + 1);
+            setAnswered(false);
+            setSelected(null);
+        };
+
+        if (index >= CELL_CHECK_DATA.length) {
+            return (
+                <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-xl shadow-lg text-center animate-fade-in">
+                    <h2 className="text-2xl font-bold mb-4 text-green-700">Check Abgeschlossen!</h2>
+                    <p className="text-lg mb-6">Du hast {score} von {CELL_CHECK_DATA.length} richtig.</p>
+                    <button onClick={() => { setIndex(0); setScore(0); setAnswered(false); }} className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition">Neu starten</button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="max-w-2xl mx-auto mt-8 p-4 animate-fade-in">
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                    <div className="bg-green-600 p-4 text-white flex justify-between">
+                        <span className="font-bold">Frage {index + 1} / {CELL_CHECK_DATA.length}</span>
+                        <span>Score: {score}</span>
+                    </div>
+                    <div className="p-8 text-center">
+                        <h3 className="text-xl md:text-2xl font-semibold mb-8 text-gray-800 leading-relaxed">"{currentQ.q}"</h3>
+                        
+                        {!answered ? (
+                            <div className="flex justify-center gap-6">
+                                <button onClick={() => handleAnswer(true)} className="flex-1 max-w-[150px] bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-xl font-bold transition transform hover:scale-105 border-2 border-green-300">
+                                    WAHR
+                                </button>
+                                <button onClick={() => handleAnswer(false)} className="flex-1 max-w-[150px] bg-red-100 hover:bg-red-200 text-red-800 py-3 rounded-xl font-bold transition transform hover:scale-105 border-2 border-red-300">
+                                    FALSCH
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="animate-fade-in">
+                                <div className={`p-4 rounded-lg mb-6 ${selected === currentQ.a ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    <div className="flex items-center justify-center gap-2 mb-2">
+                                        {selected === currentQ.a ? <IconCheck className="w-8 h-8"/> : <IconX className="w-8 h-8"/>}
+                                        <span className="font-bold text-lg">{selected === currentQ.a ? "Korrekt!" : "Leider falsch."}</span>
+                                    </div>
+                                    <p className="text-gray-700">{currentQ.exp}</p>
+                                </div>
+                                <button onClick={next} className="bg-gray-800 text-white px-8 py-2 rounded-full hover:bg-gray-900 transition">Weiter &rarr;</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- TEIL C: DNA-PRESSE (VISUALIZER) ---
+    const DNAPacker = () => {
+        const [val, setVal] = useState(0);
+        const [info, setInfo] = useState(null);
+
+        // Feedback Text Logic
+        let feedback = "Arbeitsform (Ablesbar)";
+        let color = "text-blue-600";
+        if (val > 10 && val < 80) {
+            feedback = "Verdichtung läuft...";
+            color = "text-orange-500";
+        }
+        if (val >= 80) {
+            feedback = "Transportform (Transportfähig)";
+            color = "text-green-600";
+        }
+
+        // SVG Visual Logic
+        // Phase 1: Wavy Lines (Chromatin) -> Fade Out as val goes 0 -> 50
+        const opacityChromatin = Math.max(0, 1 - (val / 40));
+        
+        // Phase 2: Beads on String (Histones) -> Fade In 20 -> 50, Fade Out 50 -> 80
+        let opacityBeads = 0;
+        if (val > 20 && val <= 50) opacityBeads = (val - 20) / 30;
+        if (val > 50 && val < 90) opacityBeads = 1 - ((val - 50) / 40);
+
+        // Phase 3: Chromosome -> Fade In 60 -> 100, Scale up slightly
+        const opacityChrom = Math.max(0, (val - 60) / 40);
+        const scaleChrom = 0.5 + (val / 200); // 0.5 to 1.0
+
+        // Pointer Events logic to allow clicking only visible elements
+        const peChromatin = opacityChromatin > 0.1 ? 'auto' : 'none';
+        const peBeads = opacityBeads > 0.1 ? 'auto' : 'none';
+        const peChrom = opacityChrom > 0.1 ? 'auto' : 'none';
+
+        const showInfo = (type) => {
+            if (type === 'chromatin') setInfo({ 
+                title: "Chromatin (Arbeitsform)", 
+                text: "Die DNA liegt als extrem langer, dünner Faden vor (ca. 2m pro Zelle!). In diesem entspannten Zustand können Enzyme an die DNA andocken, um Gene abzulesen (Transkription) oder die DNA zu verdoppeln (Replikation). Es ist wie ein offenes Buch." 
+            });
+            if (type === 'histone') setInfo({ 
+                title: "Histone (Verpackung)", 
+                text: "Um Platz zu sparen, wickelt sich der DNA-Faden um spezielle Proteinkomplexe, die Histone. Das funktioniert wie Nähgarn auf einer Spule. Die entstehende Kette aus DNA-Protein-Komplexen nennt man Nukleosomen-Kette ('Perlenkette')." 
+            });
+            if (type === 'chromosome') setInfo({ 
+                title: "Chromosom (Transportform)", 
+                text: "Für die Zellteilung wird die DNA maximal verdichtet (kondensiert). Durch vielfaches Falten und Spiralisieren verkürzt sich der Strang um den Faktor 10.000. So können die Erbanlagen bei der Teilung sicher transportiert werden, ohne zu verheddern." 
+            });
+        };
+
+        return (
+            <div className="max-w-3xl mx-auto mt-8 p-4 animate-fade-in">
+                <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">DNA-Presse</h2>
+                    <p className="text-gray-500 mb-8">Ziehe den Regler, um die DNA für die Zellteilung zu verpacken. <br/><span className="text-green-600 font-semibold text-sm">Tipp: Klicke auf die DNA-Strukturen für Erklärungen!</span></p>
+
+                    {/* Visualization Window */}
+                    <div className="relative h-64 w-full bg-gray-900 rounded-xl mb-8 overflow-hidden flex items-center justify-center border-4 border-gray-200 shadow-inner group">
+                        
+                        {/* Hover hint */}
+                        {!info && <div className="absolute top-2 right-2 text-white/50 text-xs pointer-events-none group-hover:text-white/80 transition-colors">Interaktiv</div>}
+
+                        <svg viewBox="0 0 400 300" className="w-full h-full">
+                            {/* Layer 1: Chromatin (Arbeitsform) - Chaos lines */}
+                            <g 
+                                onClick={() => showInfo('chromatin')}
+                                style={{ opacity: opacityChromatin, transition: 'opacity 0.2s', cursor: 'pointer', pointerEvents: peChromatin }}
+                            >
+                                <rect x="0" y="0" width="400" height="300" fill="transparent" /> {/* Hit area */}
+                                <path d="M10,150 Q50,100 90,150 T170,150 T250,150 T330,150 T410,150" fill="none" stroke="#60A5FA" strokeWidth="2" />
+                                <path d="M10,160 Q50,210 90,160 T170,160 T250,160 T330,160 T410,160" fill="none" stroke="#93C5FD" strokeWidth="2" />
+                                <path d="M10,140 Q40,140 70,170 T130,140 T200,180" fill="none" stroke="#3B82F6" strokeWidth="1" opacity="0.6"/>
+                                <text x="200" y="280" fill="white" fontSize="14" textAnchor="middle" opacity="0.7">Lange, dünne Fäden</text>
+                            </g>
+
+                            {/* Layer 2: Histones (Beads) */}
+                            <g 
+                                onClick={() => showInfo('histone')}
+                                style={{ opacity: opacityBeads, transition: 'opacity 0.2s', cursor: 'pointer', pointerEvents: peBeads }}
+                            >
+                                <rect x="0" y="120" width="400" height="60" fill="transparent" /> {/* Hit area */}
+                                <line x1="20" y1="150" x2="380" y2="150" stroke="#F59E0B" strokeWidth="4" />
+                                {/* Histone cores */}
+                                {[50, 100, 150, 200, 250, 300, 350].map(x => (
+                                    <circle key={x} cx={x} cy="150" r="16" fill="#FCD34D" />
+                                ))}
+                                <text x="200" y="280" fill="#FCD34D" fontSize="14" textAnchor="middle">Wicklung um Histone</text>
+                            </g>
+
+                            {/* Layer 3: Chromosome (Transportform) */}
+                            <g 
+                                onClick={() => showInfo('chromosome')}
+                                style={{ opacity: opacityChrom, transform: `scale(${scaleChrom})`, transformOrigin: 'center', transition: 'all 0.3s', cursor: 'pointer', pointerEvents: peChrom }}
+                            >
+                                {/* X Shape */}
+                                <path d="M140 50 L180 150 L140 250" stroke="#22C55E" strokeWidth="35" strokeLinecap="round" />
+                                <path d="M260 50 L220 150 L260 250" stroke="#22C55E" strokeWidth="35" strokeLinecap="round" />
+                                {/* Centromere */}
+                                <circle cx="200" cy="150" r="15" fill="#15803D" />
+                                <text x="200" y="280" fill="#4ADE80" fontSize="20" fontWeight="bold" textAnchor="middle">Chromosom</text>
+                            </g>
+                        </svg>
+
+                        {/* Info Modal Overlay */}
+                        {info && (
+                            <div className="absolute inset-0 z-20 bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setInfo(null)}>
+                                <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full relative border-l-4 border-green-500" onClick={(e) => e.stopPropagation()}>
+                                    <button 
+                                        onClick={() => setInfo(null)}
+                                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1"
+                                    >
+                                        <IconX className="w-5 h-5" />
+                                    </button>
+                                    <h3 className="text-xl font-bold text-green-800 mb-2">{info.title}</h3>
+                                    <p className="text-gray-700 leading-relaxed text-sm md:text-base">{info.text}</p>
+                                    <p className="text-center mt-4 text-xs text-gray-400 uppercase tracking-widest cursor-pointer hover:text-green-600" onClick={() => setInfo(null)}>Schließen</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative pt-6 pb-2">
+                         <div className={`text-xl font-bold mb-4 transition-colors duration-300 ${color}`}>
+                            {feedback}
+                        </div>
+                        <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={val} 
+                            onChange={(e) => setVal(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 mt-2 font-mono">
+                            <span>0% (Lose)</span>
+                            <span>50% (Histone)</span>
+                            <span>100% (X-Form)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- TEIL D: DETEKTIVE ---
+    const Detective = () => {
+        const [showTable, setShowTable] = useState(false);
+        const [caseIdx, setCaseIdx] = useState(0);
+        const [score, setScore] = useState(0);
+        const [feedback, setFeedback] = useState(null); // { type: 'success'|'error', msg: '' }
+
+        const currentCase = DETECTIVE_CASES[caseIdx];
+
+        const checkAnswer = (ans) => {
+            if (feedback) return; // already answered
+            const correct = ans === currentCase.correct;
+            if (correct) {
+                setScore(s => s + 1);
+                setFeedback({ type: 'success', msg: 'Richtig kombiniert!' });
+            } else {
+                setFeedback({ type: 'error', msg: `Falsch! Es war: ${currentCase.correct}` });
+            }
+        };
+
+        const nextCase = () => {
+            setFeedback(null);
+            if (caseIdx < DETECTIVE_CASES.length - 1) {
+                setCaseIdx(c => c + 1);
+            } else {
+                setCaseIdx(-1); // Finished state
+            }
+        };
+
+        if (caseIdx === -1) {
+            return (
+                 <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-xl shadow-lg text-center animate-fade-in">
+                    <h2 className="text-3xl font-bold mb-4 text-purple-700">Fall gelöst!</h2>
+                    <p className="text-lg mb-6">Ergebnis: {score} von {DETECTIVE_CASES.length} Fällen korrekt.</p>
+                    <button onClick={() => { setCaseIdx(0); setScore(0); setFeedback(null); }} className="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition">Neue Ermittlung</button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="max-w-4xl mx-auto mt-6 p-4 animate-fade-in flex flex-col md:flex-row gap-6">
+                
+                {/* Game Area */}
+                <div className="flex-1">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                        <div className="bg-purple-700 text-white p-4 flex justify-between items-center">
+                            <h3 className="font-bold text-lg flex items-center gap-2">
+                                <span className="text-2xl">🕵️‍♂️</span> Akte #{caseIdx + 1}
+                            </h3>
+                            <span className="bg-purple-900 px-3 py-1 rounded text-sm">Punkte: {score}</span>
+                        </div>
+                        
+                        <div className="p-8">
+                            {/* Visual Representation of Chromosomes (Abstract) */}
+                            <div className="flex justify-center mb-6 space-x-1 h-16 items-end">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="w-2 bg-purple-500 rounded-t animate-pulse" style={{height: `${40 + Math.random()*60}%`, animationDelay: `${i*0.1}s`}}></div>
+                                ))}
+                                <div className="text-3xl self-center mx-2 text-gray-400">...</div>
+                                <div className="w-3 h-full flex items-center justify-center">
+                                    <IconDNA className="text-purple-600 w-8 h-8" />
+                                </div>
+                            </div>
+
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
+                                <h4 className="font-bold text-yellow-800 uppercase text-xs mb-1">Laborbericht:</h4>
+                                <p className="text-xl font-medium text-gray-800">{currentCase.text}</p>
+                            </div>
+
+                            {!feedback ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    {currentCase.options.map(opt => (
+                                        <button 
+                                            key={opt} 
+                                            onClick={() => checkAnswer(opt)}
+                                            className="bg-gray-50 hover:bg-purple-100 border border-gray-200 hover:border-purple-300 text-gray-700 py-3 rounded-lg transition font-medium"
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center animate-fade-in">
+                                    <div className={`p-4 rounded-lg mb-4 ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        <strong>{feedback.msg}</strong>
+                                    </div>
+                                    <button onClick={nextCase} className="bg-purple-600 text-white px-8 py-2 rounded-full hover:bg-purple-700 shadow-md">
+                                        Nächster Fall &rarr;
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reference Table Side Panel */}
+                <div className="md:w-1/3 flex flex-col">
+                    <button 
+                        onClick={() => setShowTable(!showTable)} 
+                        className="w-full mb-4 bg-gray-200 hover:bg-gray-300 py-2 rounded text-gray-700 font-bold transition-colors flex items-center justify-center gap-2"
+                    >
+                        <IconBook className="w-4 h-4" />
+                        {showTable ? "Referenztabelle verbergen" : "Referenztabelle zeigen"}
+                    </button>
+
+                    {showTable && (
+                        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden animate-fade-in">
+                            <div className="bg-gray-100 p-3 font-bold text-gray-700 border-b">Referenz-Datenbank</div>
+                            <div className="max-h-[400px] overflow-y-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th className="px-4 py-2">Lebewesen</th>
+                                            <th className="px-4 py-2 text-right">2n</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {REFERENCE_TABLE.map((row, i) => (
+                                            <tr key={i} className="border-b hover:bg-gray-50">
+                                                <td className="px-4 py-2 font-medium">{row.name}</td>
+                                                <td className="px-4 py-2 text-right font-mono text-purple-700">{row.count}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+            </div>
+        );
+    };
+
+    // --- TEIL E: FINAL QUIZ ---
+    const FinalQuiz = () => {
+        const [qIdx, setQIdx] = useState(0);
+        const [score, setScore] = useState(0);
+        const [finished, setFinished] = useState(false);
+        const [feedback, setFeedback] = useState(null); 
+
+        const current = QUIZ_DATA[qIdx];
+
+        const handleChoice = (idx) => {
+            if (feedback) return;
+            const isCorrect = idx === current.correct;
+            
+            if (isCorrect) {
+                setScore(s => s + 1);
+                setFeedback({ correct: true, selected: idx });
+            } else {
+                setFeedback({ correct: false, selected: idx });
+            }
+
+            setTimeout(() => {
+                if (qIdx < QUIZ_DATA.length - 1) {
+                    setQIdx(q => q + 1);
+                    setFeedback(null);
+                } else {
+                    setFinished(true);
+                }
+            }, 1500); // 1.5s delay to see result
+        };
+
+        if (finished) {
+            return (
+                <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-2xl shadow-xl text-center animate-fade-in border-t-8 border-green-500">
+                    <h2 className="text-3xl font-extrabold mb-4 text-gray-800">Quiz beendet!</h2>
+                    <div className="text-6xl font-bold text-green-600 mb-4">{Math.round((score/QUIZ_DATA.length)*100)}%</div>
+                    <p className="text-lg text-gray-600 mb-8">Du hast {score} von {QUIZ_DATA.length} Fragen richtig beantwortet.</p>
+                    <button 
+                        onClick={() => { setQIdx(0); setScore(0); setFinished(false); setFeedback(null); }} 
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition shadow-lg transform hover:-translate-y-1"
+                    >
+                        Nochmal spielen
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="max-w-2xl mx-auto mt-8 p-4 animate-fade-in">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-200 h-2">
+                        <div className="bg-green-500 h-2 transition-all duration-300" style={{width: `${((qIdx)/QUIZ_DATA.length)*100}%`}}></div>
+                    </div>
+                    
+                    <div className="p-8">
+                        <span className="text-xs font-bold text-green-600 uppercase tracking-wide">Frage {qIdx + 1} von {QUIZ_DATA.length}</span>
+                        <h3 className="text-xl font-bold mt-2 mb-6 text-gray-800">{current.q}</h3>
+                        
+                        <div className="space-y-3">
+                            {current.options.map((opt, i) => {
+                                let btnClass = "bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700";
+                                if (feedback) {
+                                    if (i === current.correct) btnClass = "bg-green-500 border-green-600 text-white shadow-md scale-[1.02]";
+                                    else if (i === feedback.selected && !feedback.correct) btnClass = "bg-red-500 border-red-600 text-white opacity-50";
+                                    else btnClass = "opacity-50 bg-gray-100";
+                                }
+
+                                return (
+                                    <button 
+                                        key={i} 
+                                        onClick={() => handleChoice(i)}
+                                        className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 font-medium ${btnClass}`}
+                                        disabled={!!feedback}
+                                    >
+                                        {opt}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- 3. HAUPTKOMPONENTE ---
+    const App = () => {
+         const [currentModule, setModule] = useState(MODULES.KNOWLEDGE);
+
+         const renderContent = () => {
+             switch(currentModule) {
+                case MODULES.KNOWLEDGE: return <KnowledgeHub />;
+                case MODULES.CELLCHECK: return <CellCheck />;
+                case MODULES.DNAPACKER: return <DNAPacker />;
+                case MODULES.DETECTIVE: return <Detective />;
+                case MODULES.QUIZ: return <FinalQuiz />;
+                default: return <KnowledgeHub />;
+             }
+         }
+
+         return (
+            <div className="min-h-screen pb-10">
+                <Header setModule={setModule} />
+                <Navigation current={currentModule} setModule={setModule} />
+                
+                <main className="container mx-auto max-w-5xl">
+                    {renderContent()}
+                </main>
+            </div>
+         ); 
+    };
+
+    // --- 4. RENDER ---
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
