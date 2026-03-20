@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Karyo-Labor</title>
     <meta name="theme-color" content="#166534">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,23 +15,71 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeIn 0.3s ease-out; }
         * { box-sizing: border-box; }
+        .chrom-selectable { cursor: pointer; transition: filter 0.15s, transform 0.15s; }
+        .chrom-selectable:hover { filter: brightness(1.25); transform: scale(1.12); }
+        .chrom-selected { filter: drop-shadow(0 0 6px #f59e0b) brightness(1.3); transform: scale(1.15); }
+        .slot-highlight { box-shadow: 0 0 0 3px #f59e0b inset; background: #fef9c3 !important; }
+        .slot-filled { background: #dcfce7 !important; }
     </style>
 </head>
 <body class="bg-green-50 min-h-screen text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
+        /* ─────────────────────────────────────────────
+           SYNDROME DATA (with molecular "Warum?" section)
+        ───────────────────────────────────────────── */
         const SYNDROME_INFO = {
-            "healthy": { title: "Unauffälliger Karyotyp", desc: "Es liegen 46 Chromosomen vor. Die Autosomen 1-22 liegen als homologe Paare vor. Die Gonosomen entsprechen dem phänotypischen Geschlecht (46,XX oder 46,XY).", symptoms: "Keine genetischen Auffälligkeiten im Karyogramm." },
-            "trisomy21": { title: "Trisomie 21 (Down-Syndrom)", desc: "Das Chromosom 21 liegt dreifach vor (freie Trisomie). Dies entsteht meist durch eine Fehlverteilung (Nondisjunction) während der Meiose. Das Risiko für eine Trisomie 21 steigt mit dem Alter der Mutter.", symptoms: "Charakteristische Gesichtszüge (schräge Lidachsen, Epikanthusfalte), flaches Profil, vergrößerte Zunge, Vierfingerfurche in der Handinnenfläche, Muskelschwäche (Hypotonie), Herzfehler, unterschiedliche Grade der geistigen Beeinträchtigung." },
-            "trisomy13": { title: "Trisomie 13 (Pätau-Syndrom)", desc: "Das Chromosom 13 liegt dreifach vor. Es handelt sich um eine sehr schwere Entwicklungsstörung. Die Lebenserwartung ist meist stark verkürzt.", symptoms: "Lippen-Kiefer-Gaumenspalte, Polydaktylie (Vielfingrigkeit), kleine Augen (Mikrophthalmie), Fehlbildungen des Vorderhirns, Herzfehler, Nierenfehlbildungen." },
-            "trisomy18": { title: "Trisomie 18 (Edwards-Syndrom)", desc: "Das Chromosom 18 liegt dreifach vor. Es ist nach der Trisomie 21 die zweithäufigste autosomale Trisomie bei Neugeborenen.", symptoms: "Typische Fingerstellung (Überlagerung der Finger), Wiegenkufenfüße, tiefsitzende Ohren, kleiner Unterkiefer, schwerer Wachstumsrückstand, Herzfehler." },
-            "turner": { title: "Turner-Syndrom (45, X)", desc: "Monosomie X: Es ist nur ein X-Chromosom vorhanden. Dies ist die einzige lebensfähige Monosomie beim Menschen. Betrifft phänotypisch weibliche Personen.", symptoms: "Kleinwuchs, Ausbleiben der Pubertät (Unfruchtbarkeit), Pterygium colli (seitliche Halsfalten), tiefer Haaransatz, lymphatische Ödeme, meist normale Intelligenz." },
-            "klinefelter": { title: "Klinefelter-Syndrom (47, XXY)", desc: "Männer mit einem zusätzlichen X-Chromosom. Die Ursache ist eine Nondisjunction der Gonosomen bei einem Elternteil.", symptoms: "Hochwuchs mit langen Extremitäten, Hodenunterfunktion (Hypogonadismus), verminderte Testosteronproduktion, oft Unfruchtbarkeit, eventuell Brustentwicklung (Gynäkomastie)." },
-            "triplex": { title: "Triple-X-Syndrom (47, XXX)", desc: "Frauen mit einem zusätzlichen X-Chromosom ('Super-Female'). In den Zellen finden sich zwei Barr-Körperchen.", symptoms: "Oft klinisch unauffällig. Mögliche Merkmale: Hochwuchs, leichte Verzögerung der motorischen und sprachlichen Entwicklung, normale Fertilität." },
-            "diploy": { title: "Diplo-Y-Syndrom (47, XYY)", desc: "Männer mit einem zusätzlichen Y-Chromosom. Entsteht durch Nondisjunction in der Spermatogenese.", symptoms: "Überdurchschnittlicher Hochwuchs, normale sexuelle Entwicklung und Fertilität. Keine erhöhte Aggressivität, evtl. leichte Lernschwierigkeiten." }
+            "healthy": {
+                title: "Unauffälliger Karyotyp",
+                desc: "Es liegen 46 Chromosomen vor. Die Autosomen 1–22 liegen als homologe Paare vor. Die Gonosomen entsprechen dem phänotypischen Geschlecht (46,XX oder 46,XY).",
+                symptoms: "Keine genetischen Auffälligkeiten im Karyogramm.",
+                warum: null
+            },
+            "trisomy21": {
+                title: "Trisomie 21 (Down-Syndrom)",
+                desc: "Das Chromosom 21 liegt dreifach vor (freie Trisomie). Dies entsteht meist durch eine Fehlverteilung (Nondisjunction) während der Meiose. Das Risiko steigt mit dem Alter der Mutter.",
+                symptoms: "Charakteristische Gesichtszüge (schräge Lidachsen, Epikanthusfalte), flaches Profil, vergrößerte Zunge, Vierfingerfurche, Muskelschwäche (Hypotonie), Herzfehler, unterschiedliche Grade der geistigen Beeinträchtigung.",
+                warum: "Ein zusätzliches Chromosom 21 → ca. 300 Gene werden 1,5× überexprimiert → Entwicklungsstörungen in Gehirn, Herz und Immunsystem. Die Gen-Dosis-Überexpression betrifft u. a. das APP-Gen (Alzheimer-Risiko) und SOD1 (oxidativer Stress)."
+            },
+            "trisomy13": {
+                title: "Trisomie 13 (Pätau-Syndrom)",
+                desc: "Das Chromosom 13 liegt dreifach vor. Es handelt sich um eine sehr schwere Entwicklungsstörung mit stark verkürzter Lebenserwartung.",
+                symptoms: "Lippen-Kiefer-Gaumenspalte, Polydaktylie (Vielfingrigkeit), kleine Augen (Mikrophthalmie), Fehlbildungen des Vorderhirns, Herzfehler, Nierenfehlbildungen.",
+                warum: "Trisomie 13 führt zur Überexpression von Genen auf Chromosom 13, darunter ZIC2 (Vorderhirnentwicklung) und EDNRB (Herz-/Darmentwicklung). Die massive Gen-Dosis-Störung beeinträchtigt grundlegende Entwicklungsprozesse der Embryogenese."
+            },
+            "trisomy18": {
+                title: "Trisomie 18 (Edwards-Syndrom)",
+                desc: "Das Chromosom 18 liegt dreifach vor. Es ist nach der Trisomie 21 die zweithäufigste autosomale Trisomie bei Neugeborenen.",
+                symptoms: "Typische Fingerstellung (Überlagerung der Finger), Wiegenkufenfüße, tiefsitzende Ohren, kleiner Unterkiefer, schwerer Wachstumsrückstand, Herzfehler.",
+                warum: "Überexpression von Genen auf Chromosom 18 stört die Signalwege der Embryogenese. Das TGIF1-Gen und weitere Transkriptionsfaktoren auf Chr. 18 sind dosierungssensitiv – ein drittes Allel verursacht schwere Fehlbildungen der Organsysteme."
+            },
+            "turner": {
+                title: "Turner-Syndrom (45, X)",
+                desc: "Monosomie X: Es ist nur ein X-Chromosom vorhanden. Dies ist die einzige lebensfähige Monosomie beim Menschen. Betrifft phänotypisch weibliche Personen.",
+                symptoms: "Kleinwuchs, Ausbleiben der Pubertät (Unfruchtbarkeit), Pterygium colli (seitliche Halsfalten), tiefer Haaransatz, lymphatische Ödeme, meist normale Intelligenz.",
+                warum: "Nur ein X-Chromosom → wichtige Gene auf dem 2. X fehlen → Gonadenentwicklung gestört. Normalerweise entgehen einige Gene der X-Inaktivierung (PAR-Gene); ohne das 2. X sind diese Genprodukte halbiert, was Kleinwuchs und Gonadendysgenesie verursacht."
+            },
+            "klinefelter": {
+                title: "Klinefelter-Syndrom (47, XXY)",
+                desc: "Männer mit einem zusätzlichen X-Chromosom. Die Ursache ist eine Nondisjunction der Gonosomen bei einem Elternteil.",
+                symptoms: "Hochwuchs mit langen Extremitäten, Hodenunterfunktion (Hypogonadismus), verminderte Testosteronproduktion, oft Unfruchtbarkeit, eventuell Brustentwicklung (Gynäkomastie).",
+                warum: "Zusätzliches X bei Männern → XIST-Gen inaktiviert es → aber einige Gene entkommen der Inaktivierung. Diese 'escapees' (z. B. KDM6A, SHOX) werden doppelt exprimiert. Der gestörte Hormonspiegel entsteht durch Atrophie der Leydig-Zellen im Hoden."
+            },
+            "triplex": {
+                title: "Triple-X-Syndrom (47, XXX)",
+                desc: "Frauen mit einem zusätzlichen X-Chromosom. In den Zellen finden sich zwei Barr-Körperchen.",
+                symptoms: "Oft klinisch unauffällig. Mögliche Merkmale: Hochwuchs, leichte Verzögerung der motorischen und sprachlichen Entwicklung, normale Fertilität.",
+                warum: "Zwei der drei X-Chromosomen werden durch XIST inaktiviert, jedoch entkommen ~15 % der Gene der Inaktivierung. Diese leichte Überexpression von PAR- und anderen Escape-Genen erklärt die meist milden Phänotypmerkmale."
+            },
+            "diploy": {
+                title: "Diplo-Y-Syndrom (47, XYY)",
+                desc: "Männer mit einem zusätzlichen Y-Chromosom. Entsteht durch Nondisjunction in der Spermatogenese.",
+                symptoms: "Überdurchschnittlicher Hochwuchs, normale sexuelle Entwicklung und Fertilität. Keine erhöhte Aggressivität, evtl. leichte Lernschwierigkeiten.",
+                warum: "Das Y-Chromosom enthält nur ~70 Gene; das zweite Y erhöht deren Dosis. Das SHOX-Gen auf dem Y erklärt den Hochwuchs. Da das Y-Chromosom keine Inaktivierung kennt, werden alle Gene auf dem zusätzlichen Y exprimiert."
+            }
         };
 
         const DIAGNOSIS_OPTIONS = [
@@ -45,6 +93,108 @@
             { value: 'diploy', label: 'Diplo-Y-Syndrom (47,XYY)' },
         ];
 
+        /* ─────────────────────────────────────────────
+           CHROMOSOME SVG COMPONENT
+        ───────────────────────────────────────────── */
+        const Chromosome = ({ pairNum, rotation = 0, variant = 1, isSex = false, small = false }) => {
+            let scale = 1;
+            if (pairNum <= 22) scale = 1 - ((pairNum - 1) * 0.035);
+            else if (pairNum === 23) scale = 0.8;
+            else if (pairNum === 24) scale = 0.35;
+            scale = Math.max(0.3, scale);
+            if (small) scale = scale * 0.7;
+
+            const baseW = 16;
+            const baseH = 90;
+            const w = baseW * Math.max(0.75, scale);
+            const h = baseH * scale;
+
+            let pArmRatio = 0.35;
+            if ([1, 3, 16, 19, 20].includes(pairNum)) pArmRatio = 0.46;
+            else if ([13, 14, 15, 21, 22, 24].includes(pairNum)) pArmRatio = 0.13;
+
+            const centromereY = h * pArmRatio;
+            const constriction = 3;
+
+            const bands = useMemo(() => {
+                const b = [];
+                const numBands = Math.floor(h / 3);
+                for (let i = 0; i < numBands; i++) {
+                    const y = i * 3;
+                    if (y > centromereY - constriction - 4 && y < centromereY + constriction + 4) continue;
+                    const seed = (pairNum * 1337 + i * 31 + variant * 7) % 100;
+                    if (seed > 65) {
+                        const bandHeight = (seed % 3) + 1.5;
+                        b.push(<rect key={`d-${i}`} x={0} y={y} width={w} height={bandHeight} fill={isSex ? "rgba(124, 58, 237, 0.55)" : "rgba(15, 118, 110, 0.6)"} />);
+                    } else if (seed < 25) {
+                        b.push(<rect key={`l-${i}`} x={0} y={y} width={w} height={1} fill="rgba(255,255,255,0.4)" />);
+                    }
+                }
+                return b;
+            }, [h, w, centromereY, pairNum, variant, isSex]);
+
+            const pHeight = Math.max(0, centromereY - (constriction / 2));
+            const qY = centromereY + (constriction / 2);
+            const qHeight = Math.max(0, h - qY);
+            const radius = w / 2;
+
+            const gradStart = isSex ? "#c4b5fd" : "#5eead4";
+            const gradMid = isSex ? "#7c3aed" : "#0f766e";
+            const gradId = `grad-${pairNum}-${variant}-${isSex ? 'sex' : 'auto'}`;
+            const clipId = `clip-${pairNum}-${variant}-${isSex ? 'sex' : 'auto'}`;
+
+            return (
+                <div className="relative flex items-center justify-center"
+                    style={{ width: baseW * 2.5, height: baseH + 20, transform: `rotate(${rotation}deg)` }}>
+                    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible drop-shadow-sm">
+                        <defs>
+                            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor={gradStart} />
+                                <stop offset="20%" stopColor={gradStart} />
+                                <stop offset="50%" stopColor={gradMid} />
+                                <stop offset="80%" stopColor={gradStart} />
+                                <stop offset="100%" stopColor={gradStart} />
+                            </linearGradient>
+                        </defs>
+                        <clipPath id={clipId}>
+                            {pArmRatio > 0.15 ? (
+                                <rect x="0" y="0" width={w} height={pHeight} rx={radius} />
+                            ) : (
+                                <rect x={w / 4} y={0} width={w / 2} height={pHeight} />
+                            )}
+                            <rect x="0" y={qY} width={w} height={qHeight} rx={radius} />
+                        </clipPath>
+
+                        {pArmRatio > 0.15 ? (
+                            <path d={`M 0 ${radius} A ${radius} ${radius} 0 0 1 ${w} ${radius} V ${pHeight - 2} Q ${w / 2} ${pHeight + 3} 0 ${pHeight - 2} Z`}
+                                fill={`url(#${gradId})`} stroke={isSex ? "#5b21b6" : "#0f766e"} strokeWidth="0.5" />
+                        ) : (
+                            <g>
+                                <line x1={w / 3} y1={pHeight} x2={w / 3} y2={pHeight / 2} stroke={isSex ? "#4c1d95" : "#115e59"} strokeWidth="1.5" />
+                                <line x1={w * 2 / 3} y1={pHeight} x2={w * 2 / 3} y2={pHeight / 2} stroke={isSex ? "#4c1d95" : "#115e59"} strokeWidth="1.5" />
+                                <circle cx={w / 3} cy={pHeight / 3} r={w / 4} fill={`url(#${gradId})`} stroke={isSex ? "#5b21b6" : "#0f766e"} strokeWidth="0.5" />
+                                <circle cx={w * 2 / 3} cy={pHeight / 3} r={w / 4} fill={`url(#${gradId})`} stroke={isSex ? "#5b21b6" : "#0f766e"} strokeWidth="0.5" />
+                            </g>
+                        )}
+
+                        <path d={`M 0 ${qY + 2} Q ${w / 2} ${qY - 3} ${w} ${qY + 2} V ${h - radius} A ${radius} ${radius} 0 0 1 0 ${h - radius} Z`}
+                            fill={`url(#${gradId})`} stroke={isSex ? "#5b21b6" : "#0f766e"} strokeWidth="0.5" />
+
+                        <g clipPath={`url(#${clipId})`} style={{ mixBlendMode: 'multiply' }}>{bands}</g>
+
+                        <ellipse cx={w / 2} cy={centromereY} rx={w / 2.5} ry={constriction}
+                            fill={isSex ? "#2e1065" : "#134e4a"} opacity="0.3" />
+
+                        <path d={`M ${w * 0.3} ${radius} V ${h - radius}`} stroke="white" strokeWidth="2"
+                            strokeOpacity="0.15" strokeLinecap="round" fill="none" style={{ filter: 'blur(1px)' }} />
+                    </svg>
+                </div>
+            );
+        };
+
+        /* ─────────────────────────────────────────────
+           KARYOGRAM DISPLAY (read-only view)
+        ───────────────────────────────────────────── */
         const generateChromosomes = (syndrome) => {
             const chromosomes = [];
             let sex = Math.random() > 0.5 ? 'XX' : 'XY';
@@ -70,7 +220,6 @@
 
             const xCount = (sex.match(/X/g) || []).length;
             const yCount = (sex.match(/Y/g) || []).length;
-
             for (let x = 0; x < xCount; x++) {
                 chromosomes.push({ id: `sex-x-${x}`, pairNum: 23, type: 'sex', rotation: Math.random() * 10 - 5, variant: Math.floor(Math.random() * 5) });
             }
@@ -81,103 +230,12 @@
             const totalCount = chromosomes.length;
             let genderLabel = sex.includes('Y') ? 'Männlich' : 'Weiblich';
             chromosomes.sort((a, b) => a.pairNum - b.pairNum);
-
             return { chromosomes, diagnosisKey: syndrome, totalCount, sex, genderLabel };
         };
 
         const getRandomCase = () => {
             const syndromes = ['healthy', 'healthy', 'healthy', 'trisomy21', 'trisomy21', 'turner', 'klinefelter', 'trisomy13', 'trisomy18', 'triplex', 'diploy'];
             return generateChromosomes(syndromes[Math.floor(Math.random() * syndromes.length)]);
-        };
-
-        const Chromosome = ({ pairNum, rotation = 0, variant = 1 }) => {
-            let scale = 1;
-            if (pairNum <= 22) scale = 1 - ((pairNum - 1) * 0.035);
-            else if (pairNum === 23) scale = 0.8;
-            else if (pairNum === 24) scale = 0.35;
-            scale = Math.max(0.3, scale);
-
-            const baseW = 16;
-            const baseH = 90;
-            const w = baseW * Math.max(0.75, scale);
-            const h = baseH * scale;
-
-            let pArmRatio = 0.35;
-            if ([1, 3, 16, 19, 20].includes(pairNum)) pArmRatio = 0.46;
-            else if ([13, 14, 15, 21, 22, 24].includes(pairNum)) pArmRatio = 0.13;
-
-            const centromereY = h * pArmRatio;
-            const constriction = 3;
-
-            const bands = useMemo(() => {
-                const b = [];
-                const numBands = Math.floor(h / 3);
-                for (let i = 0; i < numBands; i++) {
-                    const y = i * 3;
-                    if (y > centromereY - constriction - 4 && y < centromereY + constriction + 4) continue;
-                    const seed = (pairNum * 1337 + i * 31 + variant * 7) % 100;
-                    if (seed > 65) {
-                        const bandHeight = (seed % 3) + 1.5;
-                        b.push(<rect key={`d-${i}`} x={0} y={y} width={w} height={bandHeight} fill="rgba(15, 118, 110, 0.6)" />);
-                    } else if (seed < 25) {
-                        b.push(<rect key={`l-${i}`} x={0} y={y} width={w} height={1} fill="rgba(255,255,255,0.4)" />);
-                    }
-                }
-                return b;
-            }, [h, w, centromereY, pairNum, variant]);
-
-            const pHeight = Math.max(0, centromereY - (constriction / 2));
-            const qY = centromereY + (constriction / 2);
-            const qHeight = Math.max(0, h - qY);
-            const radius = w / 2;
-            const gradId = `grad-${pairNum}-${variant}`;
-            const clipId = `clip-${pairNum}-${variant}`;
-
-            return (
-                <div className="relative flex items-center justify-center transition-transform duration-300 hover:scale-110 cursor-pointer group"
-                    style={{ width: baseW * 2.5, height: baseH + 20, transform: `rotate(${rotation}deg)` }}>
-                    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible drop-shadow-sm">
-                        <defs>
-                            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor="#5eead4" />
-                                <stop offset="20%" stopColor="#2dd4bf" />
-                                <stop offset="50%" stopColor="#0f766e" />
-                                <stop offset="80%" stopColor="#2dd4bf" />
-                                <stop offset="100%" stopColor="#14b8a6" />
-                            </linearGradient>
-                        </defs>
-                        <clipPath id={clipId}>
-                            {pArmRatio > 0.15 ? (
-                                <rect x="0" y="0" width={w} height={pHeight} rx={radius} />
-                            ) : (
-                                <rect x={w / 4} y={0} width={w / 2} height={pHeight} />
-                            )}
-                            <rect x="0" y={qY} width={w} height={qHeight} rx={radius} />
-                        </clipPath>
-
-                        {pArmRatio > 0.15 ? (
-                            <path d={`M 0 ${radius} A ${radius} ${radius} 0 0 1 ${w} ${radius} V ${pHeight - 2} Q ${w / 2} ${pHeight + 3} 0 ${pHeight - 2} Z`}
-                                fill={`url(#${gradId})`} stroke="#0f766e" strokeWidth="0.5" />
-                        ) : (
-                            <g>
-                                <line x1={w / 3} y1={pHeight} x2={w / 3} y2={pHeight / 2} stroke="#115e59" strokeWidth="1.5" />
-                                <line x1={w * 2 / 3} y1={pHeight} x2={w * 2 / 3} y2={pHeight / 2} stroke="#115e59" strokeWidth="1.5" />
-                                <circle cx={w / 3} cy={pHeight / 3} r={w / 4} fill={`url(#${gradId})`} stroke="#0f766e" strokeWidth="0.5" />
-                                <circle cx={w * 2 / 3} cy={pHeight / 3} r={w / 4} fill={`url(#${gradId})`} stroke="#0f766e" strokeWidth="0.5" />
-                            </g>
-                        )}
-
-                        <path d={`M 0 ${qY + 2} Q ${w / 2} ${qY - 3} ${w} ${qY + 2} V ${h - radius} A ${radius} ${radius} 0 0 1 0 ${h - radius} Z`}
-                            fill={`url(#${gradId})`} stroke="#0f766e" strokeWidth="0.5" />
-
-                        <g clipPath={`url(#${clipId})`} style={{ mixBlendMode: 'multiply' }}>{bands}</g>
-
-                        <ellipse cx={w / 2} cy={centromereY} rx={w / 2.5} ry={constriction} fill="#134e4a" opacity="0.3" />
-
-                        <path d={`M ${w * 0.3} ${radius} V ${h - radius}`} stroke="white" strokeWidth="2" strokeOpacity="0.15" strokeLinecap="round" fill="none" style={{ filter: 'blur(1px)' }} />
-                    </svg>
-                </div>
-            );
         };
 
         const Karyogram = ({ chromosomes }) => {
@@ -187,11 +245,12 @@
 
             const renderPair = (num, label) => {
                 const pairChromos = pairs[num] || [];
+                const isSexPair = num >= 23;
                 return (
-                    <div key={num} className="flex flex-col items-center p-1 bg-white/50 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={num} className={`flex flex-col items-center p-1 rounded-lg border shadow-sm hover:shadow-md transition-shadow ${isSexPair ? 'bg-violet-50/60 border-violet-200' : 'bg-white/50 border-slate-100'}`}>
                         <div className="flex items-end justify-center gap-1 min-h-[90px] w-full">
                             {pairChromos.map(c => (
-                                <Chromosome key={c.id} pairNum={c.pairNum} rotation={c.rotation} variant={c.variant} />
+                                <Chromosome key={c.id} pairNum={c.pairNum} rotation={c.rotation} variant={c.variant} isSex={isSexPair} />
                             ))}
                             {pairChromos.length === 0 && <div className="text-xs text-slate-300 italic self-center">Fehlt</div>}
                         </div>
@@ -204,7 +263,7 @@
                 <div className="bg-white rounded-xl shadow-inner p-4 border border-slate-200">
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                         {Array.from({ length: 22 }, (_, i) => i + 1).map(num => renderPair(num, num.toString()))}
-                        <div className="col-span-2 md:col-span-2 flex justify-center gap-4 bg-green-50/50 rounded-xl border-2 border-dashed border-green-100 p-2">
+                        <div className="col-span-2 md:col-span-2 flex justify-center gap-4 bg-violet-50/50 rounded-xl border-2 border-dashed border-violet-200 p-2">
                             {renderPair(23, 'X')}
                             {renderPair(24, 'Y')}
                         </div>
@@ -213,6 +272,9 @@
             );
         };
 
+        /* ─────────────────────────────────────────────
+           INFO MODAL (shown after correct diagnosis)
+        ───────────────────────────────────────────── */
         const InfoModal = ({ content, onClose }) => {
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in">
@@ -221,26 +283,29 @@
                         <button onClick={onClose} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-full transition-colors">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
-                        <div className="mt-2">
+                        <div className="mt-2 overflow-y-auto pr-1">
                             <h3 className="text-2xl font-bold text-slate-800 mb-1">{content.title}</h3>
                             <div className="h-1 w-16 bg-green-500 rounded-full mb-4"></div>
-                            <div className="space-y-4 overflow-y-auto pr-2">
+                            <div className="space-y-4">
                                 <div>
                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Beschreibung</h4>
-                                    <p className="text-slate-700 leading-relaxed text-lg">{content.desc}</p>
+                                    <p className="text-slate-700 leading-relaxed">{content.desc}</p>
                                 </div>
+                                {content.warum && (
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                                        <strong className="text-blue-800 block mb-2 text-sm uppercase tracking-wide">Molekularer Mechanismus (Warum?)</strong>
+                                        <p className="text-slate-700 text-sm leading-relaxed">{content.warum}</p>
+                                    </div>
+                                )}
                                 {content.symptoms && (
                                     <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                                        <strong className="text-green-800 block mb-2 text-sm uppercase tracking-wide flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            Klinische Merkmale
-                                        </strong>
-                                        <span className="text-slate-700">{content.symptoms}</span>
+                                        <strong className="text-green-800 block mb-2 text-sm uppercase tracking-wide">Klinische Merkmale</strong>
+                                        <span className="text-slate-700 text-sm">{content.symptoms}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
-                        <div className="mt-8 pt-4 border-t border-slate-100">
+                        <div className="mt-6 pt-4 border-t border-slate-100">
                             <button onClick={onClose} className="w-full bg-slate-800 text-white font-medium py-3 rounded-lg hover:bg-slate-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 Verstanden
                             </button>
@@ -250,7 +315,529 @@
             );
         };
 
+        /* ─────────────────────────────────────────────
+           LEXICON MODAL
+        ───────────────────────────────────────────── */
+        const LexiconModal = ({ initialKey, onClose }) => {
+            const [lexiconKey, setLexiconKey] = useState(initialKey || 'healthy');
+            const info = SYNDROME_INFO[lexiconKey];
+            return (
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in">
+                    <div className="bg-white w-full max-w-4xl h-[85vh] rounded-2xl overflow-hidden flex shadow-2xl">
+                        <div className="w-1/3 bg-green-50 border-r border-slate-200 overflow-y-auto flex flex-col">
+                            <div className="p-4 bg-green-100 border-b border-green-200 sticky top-0 z-10">
+                                <h3 className="font-bold text-green-700">Syndrome-Lexikon</h3>
+                            </div>
+                            {DIAGNOSIS_OPTIONS.map(opt => (
+                                <button key={opt.value} onClick={() => setLexiconKey(opt.value)}
+                                    className={`w-full text-left p-3 border-b border-slate-100 transition hover:bg-green-50 text-sm ${lexiconKey === opt.value ? 'bg-green-100 text-green-900 font-bold border-l-4 border-l-green-500' : 'text-slate-600'}`}>
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="w-2/3 p-6 overflow-y-auto relative">
+                            <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-red-100 hover:text-red-500 transition">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                            {info && (
+                                <div>
+                                    <h2 className="text-2xl font-bold text-green-700 mb-1">{info.title}</h2>
+                                    <div className="h-1 w-12 bg-green-400 rounded mb-4"></div>
+                                    <p className="text-slate-800 leading-relaxed mb-4">{info.desc}</p>
+
+                                    {info.warum && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                                            <h4 className="font-bold text-blue-800 mb-2 text-sm uppercase tracking-wider">Molekularer Mechanismus — Warum?</h4>
+                                            <p className="text-slate-700 leading-relaxed text-sm">{info.warum}</p>
+                                        </div>
+                                    )}
+
+                                    {info.symptoms && (
+                                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
+                                            <h4 className="font-bold text-slate-700 mb-2 text-sm uppercase tracking-wider">Symptome & Merkmale</h4>
+                                            <p className="text-slate-600 text-sm leading-relaxed">{info.symptoms}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 flex gap-2 flex-wrap">
+                                        <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full uppercase tracking-wide font-bold">Genetik</span>
+                                        <span className="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full uppercase tracking-wide font-bold">Medizin</span>
+                                        {info.warum && <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full uppercase tracking-wide font-bold">Molekularbiologie</span>}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ─────────────────────────────────────────────
+           SORTIER-LABOR (drag & drop via click)
+           Shows 10 chromosome pairs (1,2,3,5,8,13,17,21,22 + X/Y)
+        ───────────────────────────────────────────── */
+        const SORT_PAIRS = [1, 2, 3, 5, 8, 13, 17, 21, 22, 'X', 'Y'];
+
+        // Helper: label → display label
+        const sortPairLabel = (p) => {
+            if (p === 'X') return 'X';
+            if (p === 'Y') return 'Y';
+            return String(p);
+        };
+        const sortPairNum = (p) => {
+            if (p === 'X') return 23;
+            if (p === 'Y') return 24;
+            return p;
+        };
+        const sortIsSex = (p) => p === 'X' || p === 'Y';
+
+        const buildSortPieces = (withSolution) => {
+            // Each piece: id, pairLabel, pairNum, isSex, variant, rotation
+            const pieces = [];
+            SORT_PAIRS.forEach((p, idx) => {
+                const num = sortPairNum(p);
+                const isSex = sortIsSex(p);
+                // Two chromosomes per pair (one pair)
+                for (let c = 0; c < 2; c++) {
+                    pieces.push({
+                        id: `sort-${p}-${c}`,
+                        pairLabel: p,
+                        pairNum: num,
+                        isSex,
+                        variant: (idx * 3 + c * 7) % 5,
+                        rotation: withSolution ? 0 : (Math.random() * 30 - 15)
+                    });
+                }
+            });
+            if (!withSolution) {
+                // Fisher-Yates shuffle
+                for (let i = pieces.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+                }
+            }
+            return pieces;
+        };
+
+        const SortierLabor = () => {
+            const [pieces, setPieces] = useState(() => buildSortPieces(false));
+            const [slots, setSlots] = useState({}); // pairLabel → [pieceId, ...]
+            const [selected, setSelected] = useState(null); // pieceId
+            const [solved, setSolved] = useState(false);
+            const [showSolution, setShowSolution] = useState(false);
+
+            const reset = () => {
+                setPieces(buildSortPieces(false));
+                setSlots({});
+                setSelected(null);
+                setSolved(false);
+                setShowSolution(false);
+            };
+
+            const autoSolve = () => {
+                const newSlots = {};
+                SORT_PAIRS.forEach(p => {
+                    newSlots[p] = pieces.filter(pc => pc.pairLabel === p).map(pc => pc.id);
+                });
+                setSlots(newSlots);
+                setShowSolution(true);
+                setSolved(true);
+            };
+
+            // IDs placed in any slot
+            const placedIds = Object.values(slots).flat();
+            const unplacedPieces = pieces.filter(pc => !placedIds.includes(pc.id));
+
+            const handlePieceClick = (id) => {
+                if (solved) return;
+                setSelected(prev => prev === id ? null : id);
+            };
+
+            const handleSlotClick = (pairLabel) => {
+                if (solved || !selected) return;
+                const piece = pieces.find(pc => pc.id === selected);
+                if (!piece) return;
+
+                const currentInSlot = slots[pairLabel] || [];
+                if (currentInSlot.length >= 2) return; // slot full
+
+                setSlots(prev => ({
+                    ...prev,
+                    [pairLabel]: [...(prev[pairLabel] || []), selected]
+                }));
+                setSelected(null);
+
+                // Check if all slots correctly filled
+                setTimeout(() => {
+                    setSlots(current => {
+                        let allCorrect = true;
+                        SORT_PAIRS.forEach(p => {
+                            const inSlot = current[p] || [];
+                            if (inSlot.length !== 2) { allCorrect = false; return; }
+                            inSlot.forEach(id => {
+                                const pc = pieces.find(x => x.id === id);
+                                if (!pc || pc.pairLabel !== p) allCorrect = false;
+                            });
+                        });
+                        if (allCorrect) setSolved(true);
+                        return current;
+                    });
+                }, 100);
+            };
+
+            const handleRemoveFromSlot = (pairLabel, pieceId) => {
+                if (solved) return;
+                setSlots(prev => ({
+                    ...prev,
+                    [pairLabel]: (prev[pairLabel] || []).filter(id => id !== pieceId)
+                }));
+            };
+
+            const slotCorrectness = (pairLabel) => {
+                const inSlot = slots[pairLabel] || [];
+                if (inSlot.length === 0) return 'empty';
+                const allCorrect = inSlot.every(id => {
+                    const pc = pieces.find(x => x.id === id);
+                    return pc && pc.pairLabel === pairLabel;
+                });
+                return allCorrect ? (inSlot.length === 2 ? 'correct' : 'partial') : 'wrong';
+            };
+
+            const sizeHint = (p) => {
+                if (p === 'Y') return 'kleinste';
+                if (p === 1) return 'größte';
+                if (p === 2) return '2.-größte';
+                if (p === 22) return '2.-kleinste';
+                return null;
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                        <div className="flex justify-between items-start flex-wrap gap-3 mb-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800">Sortier-Labor</h2>
+                                <p className="text-sm text-slate-500 mt-1">Klicke ein Chromosom (unten) → dann den richtigen Ziel-Slot. Jeder Slot nimmt genau 2 Chromosomen auf.</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                                <button onClick={autoSolve} className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition shadow">
+                                    Automatisch sortieren
+                                </button>
+                                <button onClick={reset} className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-bold px-4 py-2 rounded-lg transition shadow">
+                                    Neu mischen
+                                </button>
+                            </div>
+                        </div>
+
+                        {solved && (
+                            <div className={`p-3 rounded-xl mb-4 text-center font-bold text-lg ${showSolution ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-green-50 text-green-800 border border-green-200'}`}>
+                                {showSolution ? 'Lösung angezeigt – so wäre die korrekte Sortierung!' : 'Perfekt sortiert! Alle Chromosomenpaare korrekt zugeordnet!'}
+                            </div>
+                        )}
+
+                        {/* Legend */}
+                        <div className="flex gap-4 mb-4 flex-wrap text-xs">
+                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-teal-500 inline-block"></span> Autosom (grau/grün)</span>
+                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-violet-500 inline-block"></span> Geschlechtschromosom</span>
+                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-300 inline-block"></span> Ausgewählt</span>
+                        </div>
+
+                        {/* Target slots */}
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-6">
+                            {SORT_PAIRS.map(p => {
+                                const inSlot = slots[p] || [];
+                                const correctness = slotCorrectness(p);
+                                const hint = sizeHint(p);
+                                const isSex = sortIsSex(p);
+                                const isActive = selected !== null;
+
+                                let borderClass = 'border-slate-200';
+                                if (correctness === 'correct') borderClass = 'border-green-400';
+                                else if (correctness === 'wrong') borderClass = 'border-red-400';
+                                else if (correctness === 'partial') borderClass = 'border-yellow-400';
+
+                                let bgClass = isSex ? 'bg-violet-50' : 'bg-slate-50';
+                                if (isActive && inSlot.length < 2 && !solved) bgClass += ' slot-highlight cursor-pointer';
+
+                                return (
+                                    <div key={String(p)}
+                                        onClick={() => isActive && !solved && handleSlotClick(p)}
+                                        className={`rounded-xl border-2 ${borderClass} ${bgClass} p-2 flex flex-col items-center min-h-[110px] transition-all relative`}
+                                    >
+                                        <span className="text-xs font-bold text-slate-500 mb-1">
+                                            {sortPairLabel(p)}
+                                            {hint && <span className="ml-1 text-slate-400 font-normal">({hint})</span>}
+                                        </span>
+                                        <div className="flex gap-1 items-end flex-1 w-full justify-center">
+                                            {inSlot.map(id => {
+                                                const pc = pieces.find(x => x.id === id);
+                                                if (!pc) return null;
+                                                return (
+                                                    <div key={id} className="relative group">
+                                                        <Chromosome pairNum={pc.pairNum} rotation={0} variant={pc.variant} isSex={pc.isSex} small />
+                                                        {!solved && (
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleRemoveFromSlot(p, id); }}
+                                                                className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                                                                title="Entfernen"
+                                                            >×</button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                            {inSlot.length < 2 && (
+                                                <div className={`border-2 border-dashed rounded-lg flex items-center justify-center text-slate-300 text-xs ${inSlot.length === 0 ? 'w-full h-16' : 'w-8 h-16'}`}>
+                                                    {inSlot.length === 0 ? '+ +' : '+'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {correctness === 'correct' && <span className="text-xs text-green-600 font-bold mt-1">✓</span>}
+                                        {correctness === 'wrong' && <span className="text-xs text-red-500 font-bold mt-1">✗</span>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Unplaced chromosome pool */}
+                        <div className="border-t border-slate-200 pt-4">
+                            <p className="text-sm font-semibold text-slate-600 mb-3">Chromosomen-Pool (unplatziert: {unplacedPieces.length})</p>
+                            <div className="flex flex-wrap gap-2 min-h-[80px] bg-slate-50 rounded-xl p-3 border border-slate-200">
+                                {unplacedPieces.map(pc => (
+                                    <div
+                                        key={pc.id}
+                                        onClick={() => handlePieceClick(pc.id)}
+                                        className={`chrom-selectable rounded-lg p-1 border-2 transition-all ${selected === pc.id ? 'chrom-selected border-amber-400 bg-amber-50' : 'border-transparent bg-white hover:border-slate-300'}`}
+                                        title={`Chromosom ${pc.pairLabel}`}
+                                    >
+                                        <Chromosome pairNum={pc.pairNum} rotation={pc.rotation} variant={pc.variant} isSex={pc.isSex} small />
+                                        <div className="text-center text-xs text-slate-400 mt-1">{pc.pairLabel}</div>
+                                    </div>
+                                ))}
+                                {unplacedPieces.length === 0 && (
+                                    <div className="text-slate-400 text-sm italic self-center w-full text-center">Alle Chromosomen wurden platziert!</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ─────────────────────────────────────────────
+           FORENSIK-MODUS (Eltern-Kind)
+        ───────────────────────────────────────────── */
+        const FORENSIK_CASES = [
+            {
+                id: 1,
+                title: "Fall 1: Trisomie-21-Elternteil",
+                description: "Elternteil A hat Trisomie 21 (47,XX, +21). Elternteil B ist genetisch unauffällig (46,XY). Welchen Chromosomensatz kann ein Kind dieser Eltern haben?",
+                parentA: { label: "Elternteil A", karyotype: "47,XX,+21", sex: "weiblich", annotation: "Trisomie 21", chromosomeSummary: "44 Autosomen + XX + extra Chromosom 21" },
+                parentB: { label: "Elternteil B", karyotype: "46,XY", sex: "männlich", annotation: "Unauffällig", chromosomeSummary: "44 Autosomen + XY" },
+                options: [
+                    { id: "a", label: "46,XY (unauffällig, männlich)", correct: true, explanation: "Möglich! Elternteil A gibt bei normaler Meiose eine Keimzelle mit 23 Chromosomen (inkl. X und je 1× Chromosom 21). Kind erhält 46 Chromosomen – unauffällig." },
+                    { id: "b", label: "47,XY,+21 (Trisomie 21, männlich)", correct: true, explanation: "Möglich! Wenn Elternteil A eine Keimzelle mit 2× Chromosom 21 bildet (Nondisjunction), erhält das Kind 3× Chromosom 21." },
+                    { id: "c", label: "45,X (Turner-Syndrom)", correct: false, explanation: "Nicht direkt durch die Trisomie 21 verursacht. Turner-Syndrom entsteht durch Verlust des X-Chromosoms – ein separates Ereignis, das hier nicht gefragt ist." },
+                    { id: "d", label: "48,XXYY (Doppelte Gonosomie)", correct: false, explanation: "Nicht möglich in diesem Szenario. Elternteil B hat normalen XY-Satz, keine Nondisjunction der Gonosomen." }
+                ],
+                didyouknow: "Bei einem Elternteil mit Trisomie 21 besteht bei jeder Schwangerschaft eine ca. 50%ige Wahrscheinlichkeit, dass das Kind ebenfalls Trisomie 21 hat – abhängig davon, welche Keimzelle verwendet wird."
+            },
+            {
+                id: 2,
+                title: "Fall 2: Nondisjunction in der Meiose I",
+                description: "Beide Eltern sind genetisch unauffällig (46,XX und 46,XY). Bei der Meiose I des Vaters tritt Nondisjunction der Gonosomen auf. Welche Karyotypen sind beim Kind möglich?",
+                parentA: { label: "Mutter", karyotype: "46,XX", sex: "weiblich", annotation: "Unauffällig", chromosomeSummary: "44 Autosomen + XX" },
+                parentB: { label: "Vater", karyotype: "46,XY", sex: "männlich", annotation: "Nondisjunction Meiose I (Gonosomen)", chromosomeSummary: "44 Autosomen + XY – aber fehlerhafte Meiose!" },
+                options: [
+                    { id: "a", label: "47,XXY (Klinefelter-Syndrom)", correct: true, explanation: "Möglich! Wenn der Vater durch Nondisjunction eine XY-Spermie bildet, erhält das Kind von der Mutter ein X → 47,XXY (Klinefelter)." },
+                    { id: "b", label: "45,X (Turner-Syndrom)", correct: true, explanation: "Möglich! Wenn der Vater eine Spermie ohne Gonosom bildet (0-Spermie), erhält das Kind nur das mütterliche X → 45,X (Turner)." },
+                    { id: "c", label: "47,XYY (Diplo-Y)", correct: false, explanation: "Nicht durch Meiose I Nondisjunction der Gonosomen beim Vater. Diplo-Y entsteht bei Meiose II Nondisjunction des Y." },
+                    { id: "d", label: "47,XXX (Triple-X)", correct: false, explanation: "Nicht durch väterliche Nondisjunction. Triple-X entsteht, wenn die Mutter eine XX-Eizelle bildet (mütterliche Nondisjunction)." }
+                ],
+                didyouknow: "Nondisjunction in der Meiose I bedeutet, dass homologe Chromosomen sich nicht trennen. Beim Vater wandern X und Y gemeinsam in eine Tochterzelle → XY-Spermien und 0-Spermien (ohne Gonosom)."
+            },
+            {
+                id: 3,
+                title: "Fall 3: Turner-Syndrom – Herkunft des X",
+                description: "Ein Kind hat Turner-Syndrom (45,X). Mutter: 46,XX. Vater: 46,XY. In welchem Elternteil ist die Nondisjunction wahrscheinlicher aufgetreten?",
+                parentA: { label: "Mutter", karyotype: "46,XX", sex: "weiblich", annotation: "Unauffällig", chromosomeSummary: "44 Autosomen + XX" },
+                parentB: { label: "Vater", karyotype: "46,XY", sex: "männlich", annotation: "Unauffällig", chromosomeSummary: "44 Autosomen + XY" },
+                options: [
+                    { id: "a", label: "Fehler beim Vater: Y-Chromosom geht verloren (0-Spermie + X-Eizelle → 45,X)", correct: true, explanation: "Richtig! In ca. 75 % der Turner-Fälle geht das väterliche Geschlechtschromosom verloren. Der Vater bildet eine 0-Spermie (kein Gonosom) → Kind hat nur das mütterliche X." },
+                    { id: "b", label: "Fehler bei der Mutter: X-Chromosom geht verloren (0-Eizelle + XY-Spermie → 46,XY)", correct: false, explanation: "Das würde 46,XY ergeben, also ein unauffälliges Kind. Das ist kein Turner-Syndrom." },
+                    { id: "c", label: "Fehler bei der Mutter: 0-Eizelle + X-Spermie → 45,X", correct: true, explanation: "Möglich! In ca. 25 % der Fälle bildet die Mutter eine 0-Eizelle (kein X). Das Kind erhält nur das väterliche X → 45,X." },
+                    { id: "d", label: "Beide Eltern müssen Träger sein", correct: false, explanation: "Falsch. Turner-Syndrom ist kein rezessives Erbleiden – es gibt keinen Träger-Status. Es entsteht durch zufällige Nondisjunction." }
+                ],
+                didyouknow: "Studien zeigen, dass bei Turner-Syndrom das verbleibende X-Chromosom in ~75% der Fälle mütterlicher Herkunft ist – d. h. das väterliche Gonosom ging verloren."
+            }
+        ];
+
+        const ForensikModus = () => {
+            const [caseIdx, setCaseIdx] = useState(0);
+            const [selected, setSelected] = useState(new Set());
+            const [checked, setChecked] = useState(false);
+            const currentCase = FORENSIK_CASES[caseIdx];
+
+            const reset = (idx) => {
+                setCaseIdx(idx);
+                setSelected(new Set());
+                setChecked(false);
+            };
+
+            const toggleOption = (id) => {
+                if (checked) return;
+                setSelected(prev => {
+                    const n = new Set(prev);
+                    if (n.has(id)) n.delete(id); else n.add(id);
+                    return n;
+                });
+            };
+
+            const correctOptions = currentCase.options.filter(o => o.correct).map(o => o.id);
+            const allCorrect = checked && correctOptions.every(id => selected.has(id)) && [...selected].every(id => correctOptions.includes(id));
+
+            const ParentCard = ({ parent }) => (
+                <div className="bg-white border border-slate-200 rounded-xl p-4 flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">{parent.sex === 'weiblich' ? '♀' : '♂'}</span>
+                        <div>
+                            <div className="font-bold text-slate-800">{parent.label}</div>
+                            <div className="text-xs text-slate-500 font-mono">{parent.karyotype}</div>
+                        </div>
+                    </div>
+                    <div className={`text-xs px-2 py-1 rounded-full inline-block font-bold mb-2 ${parent.annotation === 'Unauffällig' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {parent.annotation}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">{parent.chromosomeSummary}</div>
+                </div>
+            );
+
+            return (
+                <div className="space-y-6">
+                    {/* Case navigation */}
+                    <div className="flex gap-2 flex-wrap">
+                        {FORENSIK_CASES.map((c, i) => (
+                            <button key={c.id} onClick={() => reset(i)}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition ${caseIdx === i ? 'bg-violet-700 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-violet-50'}`}>
+                                Fall {c.id}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                        <h2 className="text-xl font-bold text-slate-800 mb-1">{currentCase.title}</h2>
+                        <p className="text-slate-600 text-sm leading-relaxed mb-4">{currentCase.description}</p>
+
+                        {/* Parents */}
+                        <div className="flex gap-4 mb-6 flex-wrap">
+                            <ParentCard parent={currentCase.parentA} />
+                            <div className="flex items-center text-2xl text-slate-400 font-bold">×</div>
+                            <ParentCard parent={currentCase.parentB} />
+                        </div>
+
+                        <p className="font-semibold text-slate-700 mb-3 text-sm">Welche Aussagen sind korrekt? (Mehrere Antworten möglich)</p>
+
+                        {/* Options */}
+                        <div className="space-y-3 mb-4">
+                            {currentCase.options.map(opt => {
+                                const isSelected = selected.has(opt.id);
+                                const isCorrect = opt.correct;
+                                let bg = 'bg-white border-slate-200';
+                                if (checked) {
+                                    if (isCorrect && isSelected) bg = 'bg-green-50 border-green-400';
+                                    else if (isCorrect && !isSelected) bg = 'bg-yellow-50 border-yellow-400';
+                                    else if (!isCorrect && isSelected) bg = 'bg-red-50 border-red-400';
+                                } else if (isSelected) {
+                                    bg = 'bg-violet-50 border-violet-400';
+                                }
+                                return (
+                                    <div key={opt.id} onClick={() => toggleOption(opt.id)}
+                                        className={`border-2 rounded-xl p-3 cursor-pointer transition-all ${bg}`}>
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-5 h-5 rounded flex-shrink-0 border-2 mt-0.5 flex items-center justify-center transition
+                                                ${isSelected ? 'bg-violet-500 border-violet-500 text-white' : 'border-slate-300'}`}>
+                                                {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium text-slate-800 text-sm">{opt.label}</div>
+                                                {checked && (
+                                                    <div className={`mt-1 text-xs leading-relaxed ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                                        {isCorrect ? '✓ ' : '✗ '}{opt.explanation}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {checked && (
+                                                <span className={`text-lg flex-shrink-0 ${isCorrect ? 'text-green-500' : 'text-red-400'}`}>
+                                                    {isCorrect ? '✓' : '✗'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {!checked ? (
+                            <button onClick={() => setChecked(true)} disabled={selected.size === 0}
+                                className="w-full bg-violet-700 hover:bg-violet-800 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl transition shadow">
+                                Auswerten
+                            </button>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className={`p-4 rounded-xl border font-bold text-center text-lg ${allCorrect ? 'bg-green-50 border-green-300 text-green-800' : 'bg-amber-50 border-amber-300 text-amber-800'}`}>
+                                    {allCorrect ? 'Perfekt! Alle richtigen Antworten ausgewählt.' : 'Fast! Prüfe die markierten Erklärungen.'}
+                                </div>
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                    <strong className="text-blue-800 text-sm block mb-1">Wusstest du?</strong>
+                                    <p className="text-blue-700 text-sm leading-relaxed">{currentCase.didyouknow}</p>
+                                </div>
+                                <button onClick={() => reset(caseIdx)}
+                                    className="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition shadow">
+                                    Neu versuchen
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        /* ─────────────────────────────────────────────
+           CHROMOSOME COUNT BADGE
+        ───────────────────────────────────────────── */
+        const ChromosomeCountBadge = ({ totalCount, sex }) => {
+            const autosomes = totalCount - (sex.match(/X/g) || []).length - (sex.match(/Y/g) || []).length;
+            const gonosomes = sex.replace('0', '');
+            const isNormal = totalCount === 46;
+            return (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-sm font-bold border-2 shadow-sm ${isNormal ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800'}`}>
+                    <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isNormal ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    {totalCount} Chromosomen: {autosomes} Autosomen + {gonosomes || '0'}
+                </div>
+            );
+        };
+
+        /* ─────────────────────────────────────────────
+           DIAGNOSIS FEEDBACK
+        ───────────────────────────────────────────── */
+        const DiagnosisFeedback = ({ feedback }) => {
+            if (!feedback.msg) return null;
+            const isSuccess = feedback.type === 'success';
+            return (
+                <div className={`p-4 rounded-xl flex items-start gap-3 border ${isSuccess ? 'bg-green-50 text-green-800 border-green-300' : 'bg-red-50 text-red-800 border-red-300'}`}>
+                    <span className="text-xl flex-shrink-0">{isSuccess ? '✓' : '⚠'}</span>
+                    <div>
+                        <strong className="block mb-1 text-base">{isSuccess ? 'Richtig! Diagnose bestätigt.' : 'Nicht korrekt'}</strong>
+                        <p className="text-sm opacity-90">{feedback.msg}</p>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ─────────────────────────────────────────────
+           MAIN APP
+        ───────────────────────────────────────────── */
         const App = () => {
+            const [tab, setTab] = useState('analyse'); // 'analyse' | 'sortier' | 'forensik'
             const [currentCase, setCurrentCase] = useState(null);
             const [userAnswer, setUserAnswer] = useState({ count: '', gender: '', diagnosis: '' });
             const [feedback, setFeedback] = useState({ type: null, msg: '' });
@@ -278,162 +865,152 @@
                     setFeedback({ type: 'success', msg: 'Perfekt! Deine Analyse ist vollständig korrekt.' });
                 } else {
                     let errors = [];
-                    if (!countCorrect) errors.push('Chromosomenzahl');
-                    if (!genderCorrect) errors.push('Geschlecht');
+                    if (!countCorrect) errors.push(`Chromosomenzahl (korrekt: ${currentCase.totalCount})`);
+                    if (!genderCorrect) errors.push(`Geschlecht (korrekt: ${currentCase.genderLabel})`);
                     if (!diagnosisCorrect) errors.push('Diagnose');
                     setFeedback({ type: 'error', msg: `Nicht ganz. Überprüfe: ${errors.join(', ')}.` });
                 }
             };
 
-            const handleLexiconOpen = (key) => {
-                setLexiconKey(key);
-                setShowLexicon(true);
-            };
+            const tabs = [
+                { id: 'analyse', label: 'Analyse-Labor', icon: '🔬' },
+                { id: 'sortier', label: 'Sortier-Labor', icon: '🧩' },
+                { id: 'forensik', label: 'Forensik', icon: '🔍' },
+            ];
 
             if (!currentCase) return <div className="flex items-center justify-center h-screen text-green-600">Lade Labor...</div>;
 
             return (
                 <div className="min-h-screen bg-green-50 font-sans text-slate-900 pb-12">
+                    {/* NAV */}
                     <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 py-3 shadow-sm">
-                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center gap-4 flex-wrap">
                             <div className="flex items-center gap-2">
                                 <span className="text-3xl">🧬</span>
-                                <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-600">Karyo-Labor</h1>
+                                <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-violet-600">Karyo-Labor</h1>
                             </div>
-                            <div className="flex gap-2">
-                                {feedback.type === 'success' && (
-                                    <button onClick={() => setShowInfo(true)} className="hidden md:flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium hover:bg-green-200 transition">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Infos zum Fall
+                            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                                {tabs.map(t => (
+                                    <button key={t.id} onClick={() => setTab(t.id)}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${tab === t.id ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                                        <span>{t.icon}</span>
+                                        <span className="hidden sm:inline">{t.label}</span>
                                     </button>
-                                )}
-                                <button onClick={() => handleLexiconOpen('healthy')} className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-700 transition shadow-md">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                                    Lexikon
-                                </button>
+                                ))}
                             </div>
+                            <button onClick={() => { setLexiconKey('healthy'); setShowLexicon(true); }}
+                                className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-700 transition shadow-md">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                <span className="hidden sm:inline">Lexikon</span>
+                            </button>
                         </div>
                     </nav>
 
                     <main className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                            <section className="lg:col-span-8 space-y-4">
-                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-1">
-                                    <div className="bg-green-50 rounded-xl p-4 border-b border-green-100 mb-2 flex justify-between items-center">
-                                        <h2 className="font-semibold text-slate-700 flex items-center gap-2">
-                                            <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                                            Karyogramm Ansicht
-                                        </h2>
-                                        <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded">Fall-ID: {currentCase && Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
-                                    </div>
-                                    <div className="p-2">
-                                        <Karyogram chromosomes={currentCase.chromosomes} />
-                                    </div>
-                                </div>
-                            </section>
 
-                            <section className="lg:col-span-4 space-y-6">
-                                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden sticky top-24">
-                                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4">
-                                        <h2 className="text-white font-bold text-lg flex items-center gap-2">
-                                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            Analyse & Diagnose
-                                        </h2>
-                                    </div>
-
-                                    <div className="p-6 space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">1. Chromosomenzahl zählen</label>
-                                            <input type="number" className="w-full bg-white text-slate-900 border-2 border-slate-200 rounded-lg p-3 text-lg focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition outline-none" placeholder="z.B. 46"
-                                                value={userAnswer.count} onChange={(e) => setUserAnswer({ ...userAnswer, count: e.target.value })} />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">2. Genetisches Geschlecht</label>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                {['Weiblich', 'Männlich'].map(g => (
-                                                    <button key={g} onClick={() => setUserAnswer({ ...userAnswer, gender: g })}
-                                                        className={`py-3 rounded-lg border-2 font-medium transition ${userAnswer.gender === g ? 'border-green-500 bg-green-50 text-green-800' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-                                                        {g}
-                                                    </button>
-                                                ))}
+                        {/* ── ANALYSE-LABOR TAB ── */}
+                        {tab === 'analyse' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                <section className="lg:col-span-8 space-y-4">
+                                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-1">
+                                        <div className="bg-green-50 rounded-xl p-4 border-b border-green-100 mb-2 flex justify-between items-center flex-wrap gap-2">
+                                            <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                                Karyogramm Ansicht
+                                            </h2>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {feedback.type === 'success' && (
+                                                    <ChromosomeCountBadge totalCount={currentCase.totalCount} sex={currentCase.sex} />
+                                                )}
+                                                <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded">
+                                                    {currentCase.totalCount} Chromosomen
+                                                </span>
                                             </div>
                                         </div>
-
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">3. Klinischer Befund</label>
-                                            <select className="w-full border-2 border-slate-200 rounded-lg p-3 bg-white focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition outline-none text-slate-700"
-                                                value={userAnswer.diagnosis} onChange={(e) => setUserAnswer({ ...userAnswer, diagnosis: e.target.value })}>
-                                                <option value="">-- Diagnose wählen --</option>
-                                                {DIAGNOSIS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                            </select>
-                                        </div>
-
-                                        {feedback.msg && (
-                                            <div className={`p-4 rounded-xl flex items-start gap-3 ${feedback.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-                                                <span className="text-xl">{feedback.type === 'success' ? '🎉' : '⚠️'}</span>
-                                                <div>
-                                                    <strong className="block mb-1">{feedback.type === 'success' ? 'Richtig!' : 'Fehler gefunden'}</strong>
-                                                    <p className="text-sm opacity-90">{feedback.msg}</p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="pt-2 space-y-3">
-                                            {feedback.type !== 'success' ? (
-                                                <button onClick={checkAnswer} className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95">Auswerten</button>
-                                            ) : (
-                                                <div className="space-y-3 animate-in">
-                                                    <button onClick={() => setShowInfo(true)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all flex justify-center items-center gap-2">ℹ️ Infos zum Syndrom lesen</button>
-                                                    <button onClick={generateNewCase} className="w-full bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-50 transition-all flex justify-center items-center gap-2">Nächster Fall ➡️</button>
-                                                </div>
-                                            )}
+                                        <div className="p-2">
+                                            <Karyogram chromosomes={currentCase.chromosomes} />
                                         </div>
                                     </div>
-                                </div>
-                            </section>
-                        </div>
+                                </section>
+
+                                <section className="lg:col-span-4 space-y-6">
+                                    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden sticky top-24">
+                                        <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4">
+                                            <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                Analyse & Diagnose
+                                            </h2>
+                                        </div>
+
+                                        <div className="p-6 space-y-5">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-2">1. Chromosomenzahl zählen</label>
+                                                <input type="number" className="w-full bg-white text-slate-900 border-2 border-slate-200 rounded-lg p-3 text-lg focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition outline-none" placeholder="z.B. 46"
+                                                    value={userAnswer.count} onChange={(e) => setUserAnswer({ ...userAnswer, count: e.target.value })} />
+                                                <p className="text-xs text-slate-400 mt-1">Normal: 46 Chromosomen: 44 Autosomen + XX oder XY</p>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-2">2. Genetisches Geschlecht</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {['Weiblich', 'Männlich'].map(g => (
+                                                        <button key={g} onClick={() => setUserAnswer({ ...userAnswer, gender: g })}
+                                                            className={`py-3 rounded-lg border-2 font-medium transition ${userAnswer.gender === g ? 'border-green-500 bg-green-50 text-green-800' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                                                            {g}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-2">3. Klinischer Befund</label>
+                                                <select className="w-full border-2 border-slate-200 rounded-lg p-3 bg-white focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition outline-none text-slate-700"
+                                                    value={userAnswer.diagnosis} onChange={(e) => setUserAnswer({ ...userAnswer, diagnosis: e.target.value })}>
+                                                    <option value="">-- Diagnose wählen --</option>
+                                                    {DIAGNOSIS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <DiagnosisFeedback feedback={feedback} />
+
+                                            <div className="pt-2 space-y-3">
+                                                {feedback.type !== 'success' ? (
+                                                    <button onClick={checkAnswer} className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95">Auswerten</button>
+                                                ) : (
+                                                    <div className="space-y-3 animate-in">
+                                                        <button onClick={() => setShowInfo(true)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all flex justify-center items-center gap-2">
+                                                            ℹ Infos zum Syndrom lesen
+                                                        </button>
+                                                        <button onClick={generateNewCase} className="w-full bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-50 transition-all flex justify-center items-center gap-2">
+                                                            Nächster Fall →
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        )}
+
+                        {/* ── SORTIER-LABOR TAB ── */}
+                        {tab === 'sortier' && <SortierLabor />}
+
+                        {/* ── FORENSIK TAB ── */}
+                        {tab === 'forensik' && <ForensikModus />}
                     </main>
 
-                    {showInfo && currentCase && <InfoModal content={SYNDROME_INFO[currentCase.diagnosisKey]} onClose={() => setShowInfo(false)} />}
+                    {/* MODALS */}
+                    {showInfo && currentCase && (
+                        <InfoModal content={SYNDROME_INFO[currentCase.diagnosisKey]} onClose={() => setShowInfo(false)} />
+                    )}
 
                     {showLexicon && (
-                        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in">
-                            <div className="bg-white w-full max-w-4xl h-[80vh] rounded-2xl overflow-hidden flex shadow-2xl">
-                                <div className="w-1/3 bg-green-50 border-r border-slate-200 overflow-y-auto">
-                                    <div className="p-4 bg-green-100 border-b border-green-200 sticky top-0"><h3 className="font-bold text-green-700">📚 Syndrome</h3></div>
-                                    {DIAGNOSIS_OPTIONS.map(opt => (
-                                        <button key={opt.value} onClick={() => setLexiconKey(opt.value)}
-                                            className={`w-full text-left p-4 border-b border-slate-100 transition hover:bg-green-50 ${lexiconKey === opt.value ? 'bg-green-50 text-green-800 font-bold border-l-4 border-l-green-500' : 'text-slate-600'}`}>
-                                            {opt.label}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="w-2/3 p-8 overflow-y-auto relative">
-                                    <button onClick={() => setShowLexicon(false)} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-red-100 hover:text-red-500 transition"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-                                    {lexiconKey && (
-                                        <div>
-                                            <h2 className="text-3xl font-bold text-green-700 mb-4">{SYNDROME_INFO[lexiconKey].title}</h2>
-                                            <p className="text-xl text-slate-800 leading-relaxed mb-8">{SYNDROME_INFO[lexiconKey].desc}</p>
-                                            {SYNDROME_INFO[lexiconKey].symptoms && (
-                                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                                                    <h4 className="font-bold text-slate-900 uppercase tracking-wider mb-2 text-sm">Symptome & Merkmale</h4>
-                                                    <p className="text-slate-600">{SYNDROME_INFO[lexiconKey].symptoms}</p>
-                                                </div>
-                                            )}
-                                            <div className="mt-8 flex gap-2">
-                                                <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full uppercase tracking-wide font-bold">Genetik</span>
-                                                <span className="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full uppercase tracking-wide font-bold">Medizin</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        <LexiconModal initialKey={lexiconKey} onClose={() => setShowLexicon(false)} />
                     )}
 
                     <footer className="bg-white border-t py-4 text-center text-xs md:text-sm text-gray-500 mt-8">
-                        <p>Johannes-Scharrer-Gymnasium • Zollfrank • &copy; {new Date().getFullYear()}</p>
+                        <p>Johannes-Scharrer-Gymnasium · Zollfrank · &copy; {new Date().getFullYear()}</p>
                     </footer>
                 </div>
             );

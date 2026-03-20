@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hormone - Bio Lern-App</title>
     <meta name="theme-color" content="#166534">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,8 +14,41 @@
     <style>
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
-        .animate-float { animation: float 3s ease-in-infinite; }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 2.8s ease-in-out infinite; }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 4px 2px rgba(34,197,94,0.3); }
+            50% { box-shadow: 0 0 16px 6px rgba(34,197,94,0.7); }
+            100% { box-shadow: 0 0 4px 2px rgba(34,197,94,0.3); }
+        }
+        .glow-green { animation: pulse-glow 1.5s ease-in-out infinite; }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 4px 2px rgba(239,68,68,0.3); }
+            50% { box-shadow: 0 0 16px 6px rgba(239,68,68,0.6); }
+            100% { box-shadow: 0 0 4px 2px rgba(239,68,68,0.3); }
+        }
+        .glow-red { animation: pulse-red 1.2s ease-in-out infinite; }
+
+        @keyframes slideRight {
+            0% { width: 0%; opacity: 0; }
+            100% { width: 100%; opacity: 1; }
+        }
+        .animate-flow { animation: slideRight 1.2s ease-out forwards; }
+
+        @keyframes dock {
+            0% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.3) translateY(-8px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+        .animate-dock { animation: dock 0.5s ease-out forwards; }
+
         * { box-sizing: border-box; }
     </style>
 </head>
@@ -23,32 +56,49 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
-        const IconHome = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
-        const IconCheck = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>;
-        const IconFlask = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>;
-        const IconPuzzle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19.439 15.435a4.5 4.5 0 0 0-3.328-5.385l-.556-.118a1.5 1.5 0 0 1-.848-2.458"/></svg>;
-        const IconUser = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
-        const IconBrain = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44"/></svg>;
+        // ── Icons ──────────────────────────────────────────────────────────────
+        const IconHome    = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+        const IconCheck   = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>;
+        const IconFlask   = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>;
+        const IconPuzzle  = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19.439 15.435a4.5 4.5 0 0 0-3.328-5.385l-.556-.118a1.5 1.5 0 0 1-.848-2.458"/></svg>;
+        const IconUser    = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const IconBrain   = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44"/></svg>;
+        const IconLoop    = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>;
+        const IconClipboard = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
 
+        // ── Station 1 ─────────────────────────────────────────────────────────
         const Station1 = ({ onComplete }) => {
-            const [step, setStep] = useState(0);
+            const [step, setStep] = useState(-1);
 
             const experiments = [
-                { title: "Berthold (1849)", desc: "Hähne wurden kastriert. Ohne Hoden bildeten sich sekundäre Geschlechtsmerkmale zurück. Hoden wurden an anderer Stelle eingepflanzt - der Hahn entwickelte sich normal!", conclusion: "Die Steuerung erfolgt über Stoffe im Blut (Hormone), nicht über Nerven." },
-                { title: "Von Mering & Minkowski (1889)", desc: "Bei Hunden wurde die Bauchspeicheldrüse entfernt. Der Urin enthielt plötzlich Zucker - Fliegen sammelten sich am Urin.", conclusion: "Die Bauchspeicheldrüse gibt einen Stoff ins Blut ab (Insulin), der den Blutzucker regelt." }
+                {
+                    title: "Berthold (1849)",
+                    desc: "Hähne wurden kastriert. Ohne Hoden bildeten sich sekundäre Geschlechtsmerkmale zurück. Hoden wurden an anderer Stelle eingepflanzt – der Hahn entwickelte sich normal!",
+                    conclusion: "Die Steuerung erfolgt über Stoffe im Blut (Hormone), nicht über Nerven."
+                },
+                {
+                    title: "Von Mering & Minkowski (1889)",
+                    desc: "Bei Hunden wurde die Bauchspeicheldrüse entfernt. Der Urin enthielt plötzlich Zucker – Fliegen sammelten sich am Urin.",
+                    conclusion: "Die Bauchspeicheldrüse gibt einen Stoff ins Blut ab (Insulin), der den Blutzucker regelt."
+                }
             ];
+
+            const handleClick = (idx) => {
+                setStep(idx);
+                if (idx === 1) onComplete();
+            };
 
             return (
                 <div className="animate-fade-in space-y-6">
                     <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 1: Entdeckung der Hormone</h2>
-                    
+
                     <div className="grid md:grid-cols-2 gap-4">
                         {experiments.map((exp, idx) => (
-                            <div 
+                            <div
                                 key={idx}
-                                onClick={() => { setStep(idx); if (idx === 1) onComplete(); }}
+                                onClick={() => handleClick(idx)}
                                 className={`cursor-pointer p-4 md:p-6 rounded-xl border-2 transition-all ${step === idx ? 'border-green-500 bg-green-50 shadow-md' : 'border-gray-200 hover:border-green-300'}`}
                             >
                                 <h3 className="font-bold text-base md:text-lg mb-2">{exp.title}</h3>
@@ -65,164 +115,329 @@
             );
         };
 
+        // ── Station 2 (improved) ──────────────────────────────────────────────
         const Station2 = ({ onComplete }) => {
-            const [filledSlots, setFilledSlots] = useState([]);
-            const [activeReceptors] = useState(['square', 'circle', 'triangle']);
-            const [message, setMessage] = useState("Ordne die Hormone den passenden Rezeptoren zu.");
-            const [completed, setCompleted] = useState(0);
+            // Hormone floating in the bloodstream
+            const hormoneTypes = [
+                { id: 'square',   label: 'Insulin',     color: 'bg-green-500',  shape: 'square'   },
+                { id: 'circle',   label: 'Thyroxin',    color: 'bg-blue-500',   shape: 'circle'   },
+                { id: 'triangle', label: 'Adrenalin',   color: 'bg-yellow-500', shape: 'triangle' },
+                { id: 'star',     label: 'Östrogen',    color: 'bg-pink-500',   shape: 'star'     },
+                { id: 'hex',      label: 'Testosteron', color: 'bg-purple-500', shape: 'hex'      },
+            ];
 
-            const handleHormoneClick = (type) => {
-                if (filledSlots.includes(type)) {
-                    setMessage("Dieser Rezeptor ist bereits besetzt!");
+            // Each cell has specific receptors
+            const targetCells = [
+                {
+                    id: 'cellA',
+                    name: 'Zelle A',
+                    desc: 'Muskelzelle',
+                    receptors: ['square'],
+                    color: 'bg-red-100 border-red-300',
+                    textColor: 'text-red-800',
+                },
+                {
+                    id: 'cellB',
+                    name: 'Zelle B',
+                    desc: 'Schilddrüsenzelle',
+                    receptors: ['circle', 'triangle'],
+                    color: 'bg-blue-100 border-blue-300',
+                    textColor: 'text-blue-800',
+                },
+                {
+                    id: 'cellC',
+                    name: 'Zelle C',
+                    desc: 'Keimdrüsenzelle',
+                    receptors: ['square', 'circle', 'triangle', 'star', 'hex'],
+                    color: 'bg-purple-100 border-purple-300',
+                    textColor: 'text-purple-800',
+                },
+            ];
+
+            const [selectedHormone, setSelectedHormone] = useState(null);
+            const [docked, setDocked] = useState({}); // { cellId: [hormoneIds] }
+            const [message, setMessage] = useState(null); // { text, ok }
+            const [dockedAnim, setDockedAnim] = useState(null);
+
+            // Count correct docks: hormone docked to a cell that has its receptor
+            const totalCorrect = Object.entries(docked).reduce((sum, [, ids]) => sum + ids.length, 0);
+            const isComplete = targetCells.every(cell =>
+                cell.receptors.every(rec => (docked[cell.id] || []).includes(rec))
+            );
+
+            useEffect(() => { if (isComplete) onComplete(); }, [isComplete]);
+
+            const shapeIcon = (shape, size = 'w-5 h-5') => {
+                if (shape === 'circle')   return <div className={`${size} rounded-full bg-current`} />;
+                if (shape === 'square')   return <div className={`${size} rounded-sm bg-current`} />;
+                if (shape === 'triangle') return <div style={{width:0,height:0,borderLeft:'10px solid transparent',borderRight:'10px solid transparent',borderBottom:'18px solid currentColor'}} />;
+                if (shape === 'star')     return <span style={{fontSize:'18px',lineHeight:1}}>★</span>;
+                if (shape === 'hex')      return <span style={{fontSize:'18px',lineHeight:1}}>⬡</span>;
+                return null;
+            };
+
+            const handleHormoneClick = (h) => {
+                setSelectedHormone(selectedHormone?.id === h.id ? null : h);
+                setMessage(null);
+            };
+
+            const handleCellClick = (cell) => {
+                if (!selectedHormone) {
+                    setMessage({ text: 'Wähle zuerst ein Hormon aus der Blutbahn.', ok: null });
                     return;
                 }
-                if (activeReceptors.includes(type)) {
-                    const newFilled = [...filledSlots, type];
-                    setFilledSlots(newFilled);
-                    setMessage("Passt! Das Hormon hat angedockt.");
-                    if (newFilled.length === activeReceptors.length) {
-                        setCompleted(c => c + 1);
-                        if (completed >= 2) onComplete();
-                        setMessage("Perfekt! Alle Rezeptoren besetzt.");
-                    }
-                } else {
-                    setMessage("Diese Zelle hat keinen passenden Rezeptor!");
+                const alreadyDocked = (docked[cell.id] || []).includes(selectedHormone.id);
+                if (alreadyDocked) {
+                    setMessage({ text: 'Dieses Hormon hat hier schon angedockt!', ok: null });
+                    return;
                 }
+                if (cell.receptors.includes(selectedHormone.id)) {
+                    setDocked(prev => ({
+                        ...prev,
+                        [cell.id]: [...(prev[cell.id] || []), selectedHormone.id]
+                    }));
+                    setDockedAnim(cell.id + selectedHormone.id);
+                    setMessage({ text: `✓ ${selectedHormone.label} dockt an ${cell.name} an – passender Rezeptor gefunden!`, ok: true });
+                    setSelectedHormone(null);
+                    setTimeout(() => setDockedAnim(null), 600);
+                } else {
+                    setMessage({ text: `✗ Kein passender Rezeptor! ${cell.name} hat keinen Rezeptor für ${selectedHormone.label}.`, ok: false });
+                }
+            };
+
+            const hormoneBg = {
+                square: 'bg-green-500', circle: 'bg-blue-500', triangle: 'bg-yellow-500', star: 'bg-pink-500', hex: 'bg-purple-500'
+            };
+            const hormoneText = {
+                square: 'text-green-500', circle: 'text-blue-500', triangle: 'text-yellow-500', star: 'text-pink-500', hex: 'text-purple-500'
             };
 
             return (
                 <div className="animate-fade-in space-y-6">
                     <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 2: Schlüssel-Schloss-Prinzip</h2>
-                    <p className="text-sm md:text-base text-gray-600">Nicht jede Zelle ist gleich! Finde heraus, welche Hormone diese Zelle benötigt.</p>
+                    <p className="text-sm text-gray-600">
+                        Wähle ein Hormon aus der Blutbahn, dann klicke auf die richtige Zielzelle.
+                        Jede Zelle hat andere Rezeptoren – nicht jedes Hormon passt!
+                    </p>
 
-                    <div className="flex flex-col md:flex-row items-center justify-around gap-6 bg-gradient-to-br from-red-50 to-white p-6 rounded-xl border border-red-100 shadow-inner min-h-[250px]">
-                        <div className="flex flex-col gap-3">
-                            <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Blutbahn</div>
-                            {['square', 'circle', 'triangle'].map((type, idx) => (
-                                <button 
-                                    key={type}
-                                    onClick={() => handleHormoneClick(type)}
-                                    className={`w-14 h-14 rounded-lg shadow-lg hover:scale-110 transition-transform flex items-center justify-center animate-float ${type === 'square' ? 'bg-green-500' : type === 'circle' ? 'bg-blue-500 rounded-full' : 'bg-yellow-500'}`}
-                                    style={{animationDelay: `${idx}s`}}
+                    {/* Bloodstream */}
+                    <div className="bg-gradient-to-r from-red-50 via-red-100 to-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="text-xs font-bold text-red-400 uppercase tracking-widest mb-3">Blutbahn – wähle ein Hormon</div>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            {hormoneTypes.map((h, idx) => {
+                                const isDocked = Object.values(docked).some(arr => arr.includes(h.id));
+                                const isSelected = selectedHormone?.id === h.id;
+                                return (
+                                    <button
+                                        key={h.id}
+                                        onClick={() => !isDocked && handleHormoneClick(h)}
+                                        disabled={isDocked}
+                                        style={{ animationDelay: `${idx * 0.4}s` }}
+                                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all animate-float
+                                            ${isDocked ? 'opacity-30 cursor-not-allowed border-gray-200 bg-gray-100'
+                                            : isSelected ? 'border-yellow-400 bg-yellow-50 scale-110 shadow-lg ring-2 ring-yellow-300'
+                                            : `border-transparent hover:border-gray-300 hover:scale-105 ${h.color} bg-opacity-10`}`}
+                                        title={h.label}
+                                    >
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDocked ? 'bg-gray-300' : h.color} text-white shadow`}>
+                                            {shapeIcon(h.shape)}
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-700 whitespace-nowrap">{h.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Target cells */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {targetCells.map(cell => {
+                            const dockedHere = docked[cell.id] || [];
+                            const allFilled = cell.receptors.every(r => dockedHere.includes(r));
+                            return (
+                                <button
+                                    key={cell.id}
+                                    onClick={() => handleCellClick(cell)}
+                                    className={`relative text-left rounded-2xl border-2 p-4 transition-all hover:shadow-lg hover:scale-[1.02] focus:outline-none
+                                        ${allFilled ? 'border-green-500 bg-green-50' : cell.color}
+                                        ${selectedHormone ? 'cursor-pointer ring-2 ring-offset-1 ring-yellow-300' : 'cursor-pointer'}`}
                                 >
-                                    <span className="text-white font-bold text-xs">{type[0].toUpperCase()}</span>
+                                    {allFilled && (
+                                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-0.5">
+                                            <IconCheck className="w-3 h-3" />
+                                        </div>
+                                    )}
+                                    <div className={`font-bold text-sm ${cell.textColor}`}>{cell.name}</div>
+                                    <div className="text-xs text-gray-500 mb-3">{cell.desc}</div>
+
+                                    {/* Receptors */}
+                                    <div className="space-y-1">
+                                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Rezeptoren:</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {cell.receptors.map(recId => {
+                                                const h = hormoneTypes.find(x => x.id === recId);
+                                                const filled = dockedHere.includes(recId);
+                                                const isAnimating = dockedAnim === cell.id + recId;
+                                                return (
+                                                    <div
+                                                        key={recId}
+                                                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all
+                                                            ${filled ? `${h.color} border-transparent text-white ${isAnimating ? 'animate-dock' : ''}` : 'bg-white border-gray-300 text-gray-400'}`}
+                                                        title={h?.label}
+                                                    >
+                                                        {filled
+                                                            ? <span className="text-white">{shapeIcon(h.shape, 'w-4 h-4')}</span>
+                                                            : <span className={`${hormoneText[recId]}`}>{shapeIcon(h?.shape, 'w-4 h-4')}</span>
+                                                        }
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </button>
-                            ))}
-                        </div>
-
-                        <div className="relative w-48 h-48 md:w-56 md:h-56 bg-gray-200 border-4 border-gray-400 rounded-full flex items-center justify-center shadow-2xl">
-                            <span className="text-gray-500 font-bold text-sm">Zielzelle</span>
-                            {activeReceptors.map((type, idx) => (
-                                <div 
-                                    key={type}
-                                    className={`absolute w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${filledSlots.includes(type) ? 'bg-green-500 text-white scale-110' : 'bg-white border-gray-400'}`}
-                                    style={{
-                                        top: idx === 0 ? '-10px' : idx === 1 ? '50%' : 'auto',
-                                        bottom: idx === 2 ? '-10px' : 'auto',
-                                        left: idx === 1 ? '-10px' : idx === 0 || idx === 2 ? '50%' : 'auto',
-                                        right: idx === 1 ? 'auto' : 'auto',
-                                        transform: 'translate(-50%, -50%)'
-                                    }}
-                                >
-                                    {type[0].toUpperCase()}
-                                </div>
-                            ))}
-                        </div>
+                            );
+                        })}
                     </div>
 
-                    <div className={`p-4 rounded-lg text-center font-medium transition-colors ${message.includes('Perfekt') ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                        {message}
-                    </div>
+                    {/* Feedback */}
+                    {message && (
+                        <div className={`p-3 rounded-xl text-sm font-medium text-center transition-all animate-fade-in
+                            ${message.ok === true ? 'bg-green-100 text-green-800 border border-green-300'
+                            : message.ok === false ? 'bg-red-100 text-red-700 border border-red-300'
+                            : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
+                            {message.text}
+                        </div>
+                    )}
+
+                    {isComplete && (
+                        <div className="bg-green-100 border-2 border-green-400 rounded-xl p-4 text-center text-green-900 font-bold animate-fade-in">
+                            Perfekt! Du verstehst das Schlüssel-Schloss-Prinzip: Jedes Hormon wirkt nur auf Zellen mit passendem Rezeptor!
+                        </div>
+                    )}
                 </div>
             );
         };
 
+        // ── Station 3 ─────────────────────────────────────────────────────────
         const Station3 = ({ onComplete }) => {
             const [placements, setPlacements] = useState({});
             const [selectedId, setSelectedId] = useState(null);
             const [activeInfo, setActiveInfo] = useState(null);
 
             const glands = [
-                { id: 'hypo', name: 'Hypothalamus', short: 'Steuerzentrale', desc: 'Oberste Befehlszentrale im Gehirn. Verbindet Nerven- mit Hormonsystem.', hormone: 'Releasing-Hormone', top: '10%', left: '48%' },
-                { id: 'hypophyse', name: 'Hypophyse', short: 'Hirnanhangsdrüse', desc: '"Chef-Drüse" - steuert andere Hormondrüsen.', hormone: 'Wachstumshormon', top: '18%', left: '48%' },
-                { id: 'schild', name: 'Schilddrüse', short: 'Stoffwechsel', desc: 'Produziert Thyroxin für den Energiestoffwechsel.', hormone: 'Thyroxin', top: '28%', left: '48%' },
-                { id: 'neben', name: 'Nebennieren', short: 'Stress & Alarm', desc: 'Schütten bei Stress Adrenalin aus.', hormone: 'Adrenalin', top: '45%', left: '40%' },
-                { id: 'bauch', name: 'Bauchspeicheldrüse', short: 'Blutzucker', desc: 'Reguliert den Blutzuckerspiegel.', hormone: 'Insulin', top: '55%', left: '48%' },
-                { id: 'sex', name: 'Keimdrüsen', short: 'Sexualität', desc: 'Produzieren Geschlechtshormone.', hormone: 'Testosteron/Östrogen', top: '75%', left: '48%' },
+                { id: 'hypo',      name: 'Hypothalamus',        short: 'Steuerzentrale',   desc: 'Oberste Befehlszentrale im Gehirn. Verbindet Nerven- mit Hormonsystem.', hormone: 'Releasing-Hormone', cx: 150, cy: 72 },
+                { id: 'hypophyse', name: 'Hypophyse',           short: 'Hirnanhangsdrüse', desc: '"Chef-Drüse" – steuert andere Hormondrüsen.',                            hormone: 'Wachstumshormon',  cx: 150, cy: 95 },
+                { id: 'schild',    name: 'Schilddrüse',         short: 'Stoffwechsel',     desc: 'Produziert Thyroxin für den Energiestoffwechsel.',                       hormone: 'Thyroxin',         cx: 150, cy: 155 },
+                { id: 'neben',     name: 'Nebennieren',         short: 'Stress & Alarm',   desc: 'Schütten bei Stress Adrenalin aus.',                                     hormone: 'Adrenalin',        cx: 150, cy: 265 },
+                { id: 'bauch',     name: 'Bauchspeicheldrüse',  short: 'Blutzucker',       desc: 'Reguliert den Blutzuckerspiegel.',                                       hormone: 'Insulin',          cx: 165, cy: 300 },
+                { id: 'sex',       name: 'Keimdrüsen',          short: 'Sexualität',       desc: 'Produzieren Geschlechtshormone.',                                        hormone: 'Testosteron/Östrogen', cx: 150, cy: 375 },
             ];
 
             const allPlaced = glands.every(g => placements[g.id]);
-
             useEffect(() => { if (allPlaced) onComplete(); }, [allPlaced]);
 
             const handleGlandClick = (id) => {
-                if (!placements[id]) {
-                    setSelectedId(id);
-                    setActiveInfo(null);
-                } else {
-                    setActiveInfo(glands.find(g => g.id === id));
-                }
+                if (!placements[id]) { setSelectedId(id); setActiveInfo(null); }
+                else { setActiveInfo(glands.find(g => g.id === id)); }
             };
 
             const handleBodyClick = (targetId) => {
                 if (selectedId && selectedId === targetId) {
-                    setPlacements(prev => ({...prev, [selectedId]: true}));
+                    setPlacements(prev => ({ ...prev, [selectedId]: true }));
                     setActiveInfo(glands.find(g => g.id === selectedId));
                     setSelectedId(null);
                 }
             };
 
+            const BodySVG = () => (
+                <svg viewBox="0 0 300 500" className="w-full h-full">
+                    <defs>
+                        <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#e8d5c4" />
+                            <stop offset="100%" stopColor="#dbc4b0" />
+                        </linearGradient>
+                        <linearGradient id="organBg" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#fce4ec" stopOpacity="0.5" />
+                            <stop offset="100%" stopColor="#f8bbd0" stopOpacity="0.3" />
+                        </linearGradient>
+                    </defs>
+                    <ellipse cx="150" cy="55" rx="35" ry="42" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1.5" />
+                    <ellipse cx="114" cy="55" rx="6" ry="10" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <ellipse cx="186" cy="55" rx="6" ry="10" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <rect x="137" y="93" width="26" height="30" rx="4" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <path d="M105,125 Q100,125 95,135 L80,185 L78,240 L82,320 Q85,340 100,350 L115,360 L135,365 L150,367 L165,365 L185,360 L200,350 Q215,340 218,320 L222,240 L220,185 L205,135 Q200,125 195,125 Z"
+                        fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1.5" />
+                    <path d="M115,140 Q110,145 108,160 L105,220 L108,290 Q110,320 125,340 L150,350 L175,340 Q190,320 192,290 L195,220 L192,160 Q190,145 185,140 Z"
+                        fill="url(#organBg)" stroke="#e0a0b0" strokeWidth="0.5" strokeDasharray="3,3" />
+                    <path d="M105,125 Q80,128 60,145 L50,160" fill="none" stroke="#c9a88c" strokeWidth="8" strokeLinecap="round" />
+                    <path d="M195,125 Q220,128 240,145 L250,160" fill="none" stroke="#c9a88c" strokeWidth="8" strokeLinecap="round" />
+                    <path d="M50,160 L42,220 L38,280 L40,310 Q42,325 48,330 L55,332 Q60,330 58,320 L52,280 L50,240" fill="none" stroke="url(#skinGrad)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    <ellipse cx="51" cy="332" rx="12" ry="8" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <path d="M250,160 L258,220 L262,280 L260,310 Q258,325 252,330 L245,332 Q240,330 242,320 L248,280 L250,240" fill="none" stroke="url(#skinGrad)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    <ellipse cx="249" cy="332" rx="12" ry="8" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <path d="M125,360 L118,400 L112,440 L110,470 L108,490" fill="none" stroke="url(#skinGrad)" strokeWidth="28" strokeLinecap="round" />
+                    <ellipse cx="108" cy="493" rx="16" ry="7" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <path d="M175,360 L182,400 L188,440 L190,470 L192,490" fill="none" stroke="url(#skinGrad)" strokeWidth="28" strokeLinecap="round" />
+                    <ellipse cx="192" cy="493" rx="16" ry="7" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <path d="M130,40 Q125,30 135,25 Q145,18 155,22 Q165,18 170,28 Q178,35 172,45 Q175,52 168,56 Q160,62 150,60 Q140,62 133,56 Q126,50 130,40 Z"
+                        fill="#f8d7e0" fillOpacity="0.5" stroke="#d4a0b0" strokeWidth="0.8" />
+                    <path d="M140,150 Q135,145 132,150 Q130,158 140,158 Z" fill="#b2dfdb" fillOpacity="0.4" stroke="#80cbc4" strokeWidth="0.5" />
+                    <path d="M160,150 Q165,145 168,150 Q170,158 160,158 Z" fill="#b2dfdb" fillOpacity="0.4" stroke="#80cbc4" strokeWidth="0.5" />
+                    <rect x="146" y="152" width="8" height="4" rx="2" fill="#b2dfdb" fillOpacity="0.3" />
+                    <ellipse cx="128" cy="268" rx="12" ry="18" fill="#ffccbc" fillOpacity="0.3" stroke="#ffab91" strokeWidth="0.5" />
+                    <ellipse cx="172" cy="268" rx="12" ry="18" fill="#ffccbc" fillOpacity="0.3" stroke="#ffab91" strokeWidth="0.5" />
+                    <path d="M135,295 Q145,290 165,295 Q175,298 178,305 Q175,310 165,308 Q145,305 135,300 Z" fill="#fff9c4" fillOpacity="0.3" stroke="#fff176" strokeWidth="0.5" />
+                    {glands.map(g => {
+                        const placed = placements[g.id];
+                        const selected = selectedId === g.id;
+                        return (
+                            <g key={g.id} onClick={() => handleBodyClick(g.id)} style={{ cursor: 'pointer' }}>
+                                {selected && !placed && (
+                                    <circle cx={g.cx} cy={g.cy} r="14" fill="none" stroke="#3b82f6" strokeWidth="2" opacity="0.6">
+                                        <animate attributeName="r" values="10;16;10" dur="1.2s" repeatCount="indefinite" />
+                                        <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.2s" repeatCount="indefinite" />
+                                    </circle>
+                                )}
+                                <circle cx={g.cx} cy={g.cy} r="10"
+                                    fill={placed ? "#22c55e" : selected ? "#60a5fa" : "#e5e7eb"}
+                                    stroke={placed ? "#16a34a" : selected ? "#3b82f6" : "#d1d5db"}
+                                    strokeWidth="2" opacity={placed || selected ? 1 : 0.4} />
+                                {placed && <polyline points={`${g.cx-4},${g.cy} ${g.cx-1},${g.cy+3} ${g.cx+5},${g.cy-4}`} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+                                {placed && <text x={g.cx + 16} y={g.cy + 4} fill="#166534" fontSize="10" fontWeight="bold" fontFamily="sans-serif">{g.name}</text>}
+                            </g>
+                        );
+                    })}
+                </svg>
+            );
+
             return (
                 <div className="animate-fade-in space-y-6">
                     <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 3: Die Hormondrüsen</h2>
-                    
                     <div className="flex flex-col md:flex-row gap-6">
                         <div className="flex-1 space-y-3">
                             <p className="text-xs md:text-sm text-gray-600 mb-3">Klicke auf einen Begriff, dann auf den passenden Punkt am Körper.</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {glands.map(g => (
-                                    <button
-                                        key={g.id}
-                                        onClick={() => handleGlandClick(g.id)}
-                                        className={`p-2 md:p-3 text-xs md:text-sm rounded border text-left transition-all ${
-                                            placements[g.id] 
-                                                ? 'bg-green-100 border-green-300 text-green-800' 
-                                                : selectedId === g.id 
-                                                    ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-200' 
-                                                    : 'bg-white hover:bg-gray-50'
-                                        }`}
-                                    >
+                                    <button key={g.id} onClick={() => handleGlandClick(g.id)}
+                                        className={`p-2 md:p-3 text-xs md:text-sm rounded-lg border-2 text-left transition-all ${
+                                            placements[g.id] ? 'bg-green-100 border-green-400 text-green-800'
+                                            : selectedId === g.id ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-200 shadow-md'
+                                            : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'}`}>
                                         <div className="font-bold text-xs md:text-sm">{g.name}</div>
                                         <div className="text-xs text-gray-500">{g.short}</div>
                                     </button>
                                 ))}
                             </div>
+                            {allPlaced && (
+                                <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-center text-green-800 font-bold text-sm animate-fade-in">
+                                    Alle Drüsen korrekt platziert!
+                                </div>
+                            )}
                         </div>
-
-                        <div className="relative w-48 h-72 md:w-56 md:h-80 mx-auto bg-gray-100 rounded-3xl border-4 border-white shadow-inner flex-shrink-0">
-                            <svg viewBox="0 0 100 200" className="w-full h-full text-gray-300 opacity-50">
-                                <path fill="currentColor" d="M50,10 C55,10 60,15 60,22 C60,28 65,30 70,35 L80,60 L70,70 L60,50 L60,100 L70,190 L55,190 L50,130 L45,190 L30,190 L40,100 L40,50 L30,70 L20,60 L30,35 C35,30 40,28 40,22 C40,15 45,10 50,10 Z" />
-                            </svg>
-
-                            {glands.map(g => (
-                                <button
-                                    key={g.id}
-                                    onClick={() => handleBodyClick(g.id)}
-                                    style={{ top: g.top, left: g.left, transform: 'translate(-50%, -50%)' }}
-                                    className={`absolute w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs transition-all duration-300 z-10 
-                                        ${placements[g.id] 
-                                            ? 'bg-green-500 border-green-600 text-white scale-100 hover:scale-110' 
-                                            : selectedId === g.id 
-                                                ? 'bg-blue-400 border-blue-600 animate-ping' 
-                                                : 'bg-white border-gray-400 opacity-30'
-                                        }`}
-                                >
-                                    {placements[g.id] && <IconCheck className="w-3 h-3 md:w-4 md:h-4" />}
-                                </button>
-                            ))}
+                        <div className="w-56 h-[380px] md:w-64 md:h-[420px] mx-auto flex-shrink-0 bg-gradient-to-b from-blue-50 to-green-50 rounded-2xl border border-gray-200 shadow-inner p-2">
+                            <BodySVG />
                         </div>
                     </div>
-
                     <div className="min-h-[120px]">
                         {activeInfo ? (
                             <div className="bg-green-50 border-l-4 border-green-500 p-3 md:p-4 rounded-r shadow-sm animate-fade-in">
@@ -232,9 +447,13 @@
                                 </div>
                                 <p className="text-gray-700 mt-2 text-xs md:text-sm">{activeInfo.desc}</p>
                             </div>
+                        ) : selectedId ? (
+                            <div className="bg-blue-50 border border-blue-200 p-4 rounded text-center text-blue-700 text-xs md:text-sm animate-fade-in">
+                                Klicke jetzt auf die richtige Stelle am Körper für <strong>{glands.find(g => g.id === selectedId)?.name}</strong>.
+                            </div>
                         ) : (
                             <div className="bg-gray-50 border border-gray-100 p-6 rounded text-center text-gray-400 text-xs md:text-sm">
-                                Ordne eine Drüse zu, um mehr zu erfahren.
+                                Wähle eine Drüse aus der Liste und ordne sie dem Körper zu.
                             </div>
                         )}
                     </div>
@@ -242,58 +461,342 @@
             );
         };
 
-        const Station4 = ({ onComplete }) => {
+        // ── Station 4 (old station 4 renamed) — same quiz but kept as Station4 internally
+        // We'll render this as Station 4 (Hormondrüsen quiz embedded), but the expanded quiz is now Station 7.
+        // Actually keeping old station 4 as "Station 4: Hormondrüsen" and moving quiz to end.
+
+        // ── Station 5: Hormoneller Regelkreis ────────────────────────────────
+        const Station5 = ({ onComplete }) => {
+            const [sliderValue, setSliderValue] = useState(30);
+            const [flowKey, setFlowKey] = useState(0);
+
+            // Low = activation; High = suppression
+            const isLow  = sliderValue < 40;
+            const isHigh = sliderValue > 60;
+            const isMid  = !isLow && !isHigh;
+
+            const [completed, setCompleted] = useState(false);
+
+            const handleSlider = (val) => {
+                setSliderValue(val);
+                setFlowKey(k => k + 1);
+                if (!completed) { setCompleted(true); onComplete(); }
+            };
+
+            const NodeBox = ({ title, subtitle, active, suppress, children }) => (
+                <div className={`relative flex flex-col items-center justify-center rounded-2xl border-2 p-3 md:p-4 transition-all duration-700 min-w-[90px] md:min-w-[120px]
+                    ${suppress ? 'border-red-400 bg-red-50 glow-red'
+                    : active  ? 'border-green-400 bg-green-50 glow-green'
+                    : 'border-gray-200 bg-white'}`}>
+                    <div className={`font-bold text-xs md:text-sm text-center ${suppress ? 'text-red-700' : active ? 'text-green-700' : 'text-gray-600'}`}>{title}</div>
+                    {subtitle && <div className="text-xs text-gray-400 text-center mt-0.5">{subtitle}</div>}
+                    {children}
+                </div>
+            );
+
+            const Arrow = ({ label, red, show, keyProp }) => (
+                <div className="flex flex-col items-center justify-center mx-1 md:mx-2" style={{ minWidth: '48px' }}>
+                    <div className={`text-xs font-semibold mb-0.5 ${red ? 'text-red-500' : 'text-green-600'}`}>{label}</div>
+                    <div className={`relative h-1 rounded-full overflow-hidden ${red ? 'bg-red-100' : 'bg-green-100'}`} style={{ width: '48px' }}>
+                        {show && (
+                            <div
+                                key={keyProp}
+                                className={`absolute top-0 left-0 h-full rounded-full animate-flow ${red ? 'bg-red-400' : 'bg-green-500'}`}
+                                style={{ width: '100%' }}
+                            />
+                        )}
+                    </div>
+                    <div className={`text-lg leading-none ${red ? 'text-red-400' : 'text-green-500'}`}>{red ? '⊣' : '→'}</div>
+                </div>
+            );
+
+            // Feedback inhibition arrows (from organ back to hypothalamus, shown when high)
+            const FeedbackArrow = ({ show, keyProp }) => (
+                show ? (
+                    <div key={keyProp} className="animate-fade-in flex items-center gap-1 mt-3 text-xs text-red-600 font-semibold">
+                        <span>Negative Rückkopplung</span>
+                        <svg viewBox="0 0 80 20" className="w-16 h-4">
+                            <defs><marker id="arrowRed" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ef4444"/></marker></defs>
+                            <path d="M70,10 Q40,10 10,10" stroke="#ef4444" strokeWidth="2" fill="none" markerEnd="url(#arrowRed)" strokeDasharray="4,2">
+                                <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1s" repeatCount="indefinite" />
+                            </path>
+                        </svg>
+                        <span>⊣ Hypothalamus</span>
+                    </div>
+                ) : null
+            );
+
+            return (
+                <div className="animate-fade-in space-y-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 5: Hormoneller Regelkreis</h2>
+                    <p className="text-sm text-gray-600">Bewege den Schieberegler und beobachte, wie das Hormonsystem reagiert.</p>
+
+                    {/* Slider */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                        <div className="flex justify-between text-xs text-gray-500 font-medium">
+                            <span>Thyroxin-Spiegel im Blut</span>
+                            <span className={`font-bold ${isLow ? 'text-blue-600' : isHigh ? 'text-red-600' : 'text-green-600'}`}>
+                                {sliderValue}% — {isLow ? 'Niedrig' : isHigh ? 'Hoch' : 'Normal'}
+                            </span>
+                        </div>
+                        <input
+                            type="range" min="0" max="100" value={sliderValue}
+                            onChange={e => handleSlider(Number(e.target.value))}
+                            className="w-full accent-green-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400">
+                            <span>0% (Mangel)</span>
+                            <span>50% (Normal)</span>
+                            <span>100% (Überschuss)</span>
+                        </div>
+                    </div>
+
+                    {/* Axis diagram */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-4 md:p-6 shadow-sm overflow-x-auto">
+                        <div className="flex items-center justify-center gap-0 min-w-[320px]">
+                            <NodeBox
+                                title="Hypothalamus"
+                                subtitle={isLow ? 'gibt TRH ab' : isHigh ? 'gehemmt' : 'ruhig'}
+                                active={isLow}
+                                suppress={isHigh}
+                            >
+                                {isLow && <div className="text-xs text-green-600 mt-1 font-bold animate-fade-in">↑ TRH</div>}
+                                {isHigh && <div className="text-xs text-red-600 mt-1 font-bold animate-fade-in">⊣ gehemmt</div>}
+                            </NodeBox>
+
+                            <Arrow label="TRH" red={isHigh} show={isLow || isHigh} keyProp={`h-${flowKey}`} />
+
+                            <NodeBox
+                                title="Hypophyse"
+                                subtitle={isLow ? 'gibt TSH ab' : isHigh ? 'gehemmt' : 'ruhig'}
+                                active={isLow}
+                                suppress={isHigh}
+                            >
+                                {isLow && <div className="text-xs text-green-600 mt-1 font-bold animate-fade-in">↑ TSH</div>}
+                                {isHigh && <div className="text-xs text-red-600 mt-1 font-bold animate-fade-in">⊣ gehemmt</div>}
+                            </NodeBox>
+
+                            <Arrow label="TSH" red={isHigh} show={isLow || isHigh} keyProp={`p-${flowKey}`} />
+
+                            <NodeBox
+                                title="Schilddrüse"
+                                subtitle={isLow ? 'aktiv' : isHigh ? 'gehemmt' : 'normal'}
+                                active={isLow}
+                                suppress={isHigh}
+                            >
+                                {isLow && <div className="text-xs text-green-600 mt-1 font-bold animate-fade-in">↑ Thyroxin</div>}
+                                {isHigh && <div className="text-xs text-red-600 mt-1 font-bold animate-fade-in">⊣ weniger</div>}
+                            </NodeBox>
+                        </div>
+
+                        {/* Feedback arrow when high */}
+                        <FeedbackArrow show={isHigh} keyProp={`fb-${flowKey}`} />
+                    </div>
+
+                    {/* Explanation */}
+                    <div className={`p-4 rounded-xl border text-sm transition-all animate-fade-in
+                        ${isLow ? 'bg-blue-50 border-blue-200 text-blue-900'
+                        : isHigh ? 'bg-red-50 border-red-200 text-red-900'
+                        : 'bg-green-50 border-green-200 text-green-900'}`}>
+                        {isLow && (
+                            <>
+                                <strong>Niedriger Thyroxinspiegel:</strong> Der Hypothalamus registriert den Mangel und schüttet <em>TRH (Thyreotropin-Releasing-Hormon)</em> aus. Dieses stimuliert die Hypophyse zur Freisetzung von <em>TSH (Thyreoidea-stimulierendes Hormon)</em>. TSH regt die Schilddrüse an, mehr <em>Thyroxin</em> zu produzieren – der Spiegel steigt wieder.
+                            </>
+                        )}
+                        {isHigh && (
+                            <>
+                                <strong>Hoher Thyroxinspiegel:</strong> Zu viel Thyroxin im Blut hemmt (negative Rückkopplung) sowohl den Hypothalamus als auch die Hypophyse. Weniger TRH und TSH werden ausgeschüttet – die Schilddrüse wird gebremst, der Spiegel sinkt wieder. Das ist <em>negative Rückkopplung</em>.
+                            </>
+                        )}
+                        {isMid && (
+                            <>
+                                <strong>Normaler Hormonspiegel:</strong> Das System befindet sich im Gleichgewicht (Homöostase). Hypothalamus und Hypophyse halten die Schilddrüse auf konstantem Niveau. Verschiebe den Regler, um die Regelung zu sehen!
+                            </>
+                        )}
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-500">
+                        <strong>Merke:</strong> Der hormonelle Regelkreis funktioniert wie ein Thermostat – er misst ständig den Ist-Wert im Blut und korrigiert ihn Richtung Sollwert. Dies nennt man <em>Homöostase</em>.
+                    </div>
+                </div>
+            );
+        };
+
+        // ── Station 6: Fallbeispiele ──────────────────────────────────────────
+        const Station6 = ({ onComplete }) => {
+            const cases = [
+                {
+                    id: 'c1',
+                    title: 'Fall 1',
+                    symptoms: 'Patient ist ständig müde, friert leicht, nimmt an Gewicht zu und fühlt sich antriebslos.',
+                    correctGland: 'schilddruese',
+                    diagnosis: 'Hypothyreose (Schilddrüsenunterfunktion)',
+                    explanation: 'Zu wenig Thyroxin verlangsamt den gesamten Stoffwechsel: Kältegefühl, Gewichtszunahme, Erschöpfung. Therapie: Thyroxin-Tabletten (L-Thyroxin).',
+                    color: 'bg-blue-50 border-blue-200',
+                    diagColor: 'bg-blue-100 border-blue-400 text-blue-900',
+                },
+                {
+                    id: 'c2',
+                    title: 'Fall 2',
+                    symptoms: 'Patient hat ständig starken Durst, muss häufig Wasser lassen, und der Blutzucker ist dauerhaft erhöht.',
+                    correctGland: 'bauchspeicheldruese',
+                    diagnosis: 'Diabetes mellitus (Zuckerkrankheit)',
+                    explanation: 'Fehlendes oder wirkungsloses Insulin verhindert die Glucoseaufnahme in Körperzellen. Zucker bleibt im Blut und wird über den Urin ausgeschieden. Therapie: Insulin-Injektionen oder orale Antidiabetika.',
+                    color: 'bg-yellow-50 border-yellow-200',
+                    diagColor: 'bg-yellow-100 border-yellow-400 text-yellow-900',
+                },
+                {
+                    id: 'c3',
+                    title: 'Fall 3',
+                    symptoms: 'Patient reagiert übertrieben stark auf Stress, hat dauerhaft Herzrasen, erhöhten Blutdruck und Schlafstörungen.',
+                    correctGland: 'nebennieren',
+                    diagnosis: 'Nebennierenhyperfunktion (zu viel Adrenalin/Cortisol)',
+                    explanation: 'Die Nebennieren schütten dauerhaft zu viel Stresshormone (Adrenalin, Cortisol) aus. Der Körper befindet sich ständig im Alarmzustand. Ursache kann ein Tumor (Phäochromozytom) oder ein Morbus Cushing sein.',
+                    color: 'bg-orange-50 border-orange-200',
+                    diagColor: 'bg-orange-100 border-orange-400 text-orange-900',
+                },
+            ];
+
+            const glandOptions = [
+                { value: '', label: '– Drüse auswählen –' },
+                { value: 'hypothalamus', label: 'Hypothalamus' },
+                { value: 'hypophyse', label: 'Hypophyse' },
+                { value: 'schilddruese', label: 'Schilddrüse' },
+                { value: 'nebennieren', label: 'Nebennieren' },
+                { value: 'bauchspeicheldruese', label: 'Bauchspeicheldrüse' },
+                { value: 'keimdrüsen', label: 'Keimdrüsen' },
+            ];
+
+            const [answers, setAnswers] = useState({});
+            const [submitted, setSubmitted] = useState({});
+
+            const handleSubmit = (caseId) => {
+                setSubmitted(prev => ({ ...prev, [caseId]: true }));
+                const allDone = cases.every(c => submitted[c.id] || c.id === caseId);
+                if (allDone) onComplete();
+            };
+
+            return (
+                <div className="animate-fade-in space-y-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 6: Fallbeispiele</h2>
+                    <p className="text-sm text-gray-600">Lies die Symptome und bestimme die betroffene Hormondrüse.</p>
+
+                    <div className="space-y-5">
+                        {cases.map(c => {
+                            const isSubmitted = submitted[c.id];
+                            const isCorrect = answers[c.id] === c.correctGland;
+                            return (
+                                <div key={c.id} className={`rounded-2xl border-2 p-4 md:p-5 transition-all ${c.color}`}>
+                                    <div className="font-bold text-sm text-gray-700 mb-1">{c.title}</div>
+                                    <div className="text-sm text-gray-800 mb-4 leading-relaxed italic">"{c.symptoms}"</div>
+
+                                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                        <select
+                                            value={answers[c.id] || ''}
+                                            onChange={e => setAnswers(prev => ({ ...prev, [c.id]: e.target.value }))}
+                                            disabled={isSubmitted}
+                                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-60"
+                                        >
+                                            {glandOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                        </select>
+                                        {!isSubmitted && (
+                                            <button
+                                                onClick={() => handleSubmit(c.id)}
+                                                disabled={!answers[c.id]}
+                                                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+                                            >
+                                                Antworten
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {isSubmitted && (
+                                        <div className={`mt-4 rounded-xl border-2 p-3 animate-fade-in ${isCorrect ? c.diagColor : 'bg-red-50 border-red-300 text-red-900'}`}>
+                                            <div className="font-bold text-sm mb-1">
+                                                {isCorrect ? '✓ Richtig! ' : '✗ Leider falsch. '}
+                                                Diagnose: {c.diagnosis}
+                                            </div>
+                                            <p className="text-xs leading-relaxed">{c.explanation}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {cases.every(c => submitted[c.id]) && (
+                        <div className="bg-green-100 border-2 border-green-400 rounded-xl p-4 text-center text-green-900 font-bold animate-fade-in">
+                            Alle Fallbeispiele abgeschlossen! Du kennst jetzt die klinische Bedeutung der Hormondrüsen.
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ── Station 7: Quiz (expanded) ────────────────────────────────────────
+        const Station7 = ({ onComplete }) => {
             const [qIndex, setQIndex] = useState(0);
             const [score, setScore] = useState(0);
             const [showResult, setShowResult] = useState(false);
             const [feedback, setFeedback] = useState(null);
 
             const questions = [
+                // Original questions
                 { q: "Wie gelangen Hormone zur Zielzelle?", options: ["Über Nervenbahnen", "Durch die Blutbahn", "Über Lymphflüssigkeit"], correct: 1 },
                 { q: "Welches Hormon ist für Stress verantwortlich?", options: ["Insulin", "Östrogen", "Adrenalin"], correct: 2 },
                 { q: "Welches Hormon senkt den Blutzucker?", options: ["Insulin", "Testosteron", "Thyroxin"], correct: 0 },
-                { q: "Welche Hormone steuern die Pubertät?", options: ["Wachstumshormone", "Sexualhormone", "Stresshormone"], correct: 1 }
+                { q: "Welche Hormone steuern die Pubertät?", options: ["Wachstumshormone", "Sexualhormone", "Stresshormone"], correct: 1 },
+                // New Regelkreis questions
+                { q: "Was versteht man unter negativer Rückkopplung im Regelkreis?", options: ["Ein Hormon verstärkt sich selbst", "Ein hoher Hormonspiegel hemmt die weitere Ausschüttung", "Hormone werden durch Nerven gehemmt"], correct: 1 },
+                { q: "Welches Hormon gibt der Hypothalamus ab, um die Schilddrüse zu aktivieren?", options: ["TSH (Thyreoidea-stimulierendes Hormon)", "TRH (Thyreotropin-Releasing-Hormon)", "Thyroxin"], correct: 1 },
+                { q: "Was ist Homöostase?", options: ["Das Gleichgewicht des Hormonsystems im Körper", "Die Überproduktion von Hormonen", "Die Umwandlung von Hormonen in Nervensignale"], correct: 0 },
             ];
 
             const handleAnswer = (optIndex) => {
                 if (feedback) return;
                 const isCorrect = optIndex === questions[qIndex].correct;
                 if (isCorrect) setScore(s => s + 1);
-                setFeedback(isCorrect ? 'Richtig!' : 'Leider falsch.');
-
+                setFeedback(isCorrect ? 'Richtig!' : `Leider falsch. Richtig wäre: "${questions[qIndex].options[questions[qIndex].correct]}"`);
                 setTimeout(() => {
                     setFeedback(null);
-                    if (qIndex < questions.length - 1) {
-                        setQIndex(q => q + 1);
-                    } else {
-                        setShowResult(true);
-                        onComplete();
-                    }
-                }, 1500);
+                    if (qIndex < questions.length - 1) setQIndex(q => q + 1);
+                    else { setShowResult(true); onComplete(); }
+                }, 2000);
             };
 
             if (showResult) {
+                const pct = Math.round((score / questions.length) * 100);
                 return (
                     <div className="animate-fade-in text-center space-y-6 pt-10">
                         <div className="inline-block p-6 rounded-full bg-green-100 text-green-600 mb-4">
                             <IconCheck className="w-12 h-12 md:w-16 md:h-16" />
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold text-green-800">Quiz beendet!</h2>
-                        <p className="text-lg md:text-xl">Du hast {score} von {questions.length} Fragen richtig.</p>
+                        <p className="text-lg md:text-xl">Du hast <strong>{score}</strong> von <strong>{questions.length}</strong> Fragen richtig.</p>
+                        <div className="w-full bg-gray-200 rounded-full h-4 max-w-sm mx-auto">
+                            <div className="bg-green-500 h-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="text-gray-500">{pct >= 80 ? 'Ausgezeichnet!' : pct >= 60 ? 'Gut gemacht!' : 'Übe noch einmal!'}</p>
                     </div>
                 );
             }
 
             return (
                 <div className="animate-fade-in space-y-6 max-w-lg mx-auto">
-                    <div className="flex justify-between items-center text-xs md:text-sm text-gray-500 border-b pb-2">
+                    <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 7: Quiz</h2>
+                    <div className="flex justify-between items-center text-xs md:text-sm text-gray-500">
                         <span>Frage {qIndex + 1} von {questions.length}</span>
                         <span>Score: {score}</span>
                     </div>
 
-                    <h2 className="text-lg md:text-xl font-bold text-gray-800 min-h-[60px] flex items-center justify-center text-center">
+                    {/* Progress bar */}
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${((qIndex) / questions.length) * 100}%` }} />
+                    </div>
+
+                    <h3 className="text-base md:text-lg font-bold text-gray-800 min-h-[60px] flex items-center justify-center text-center">
                         {questions[qIndex].q}
-                    </h2>
+                    </h3>
 
                     <div className="space-y-3">
                         {questions[qIndex].options.map((opt, idx) => (
@@ -302,10 +805,10 @@
                                 onClick={() => handleAnswer(idx)}
                                 disabled={feedback !== null}
                                 className={`w-full p-3 md:p-4 rounded-xl border-2 text-left font-medium transition-all text-sm md:text-base ${
-                                    feedback && idx === questions[qIndex].correct 
+                                    feedback && idx === questions[qIndex].correct
                                     ? 'bg-green-100 border-green-500 text-green-800'
-                                    : feedback && idx !== questions[qIndex].correct 
-                                    ? 'opacity-50'
+                                    : feedback && idx !== questions[qIndex].correct
+                                    ? 'opacity-40 border-gray-200'
                                     : 'bg-white border-gray-200 hover:border-green-300 hover:bg-green-50'
                                 }`}
                             >
@@ -313,9 +816,9 @@
                             </button>
                         ))}
                     </div>
-                    
+
                     {feedback && (
-                        <div className={`text-center font-bold text-lg ${feedback === 'Richtig!' ? 'text-green-600' : 'text-red-500'}`}>
+                        <div className={`text-center font-bold text-sm md:text-base p-3 rounded-xl ${feedback.startsWith('Richtig') ? 'text-green-700 bg-green-50 border border-green-200' : 'text-red-600 bg-red-50 border border-red-200'}`}>
                             {feedback}
                         </div>
                     )}
@@ -323,47 +826,72 @@
             );
         };
 
+        // ── App Shell ─────────────────────────────────────────────────────────
         const App = () => {
             const [currentStation, setCurrentStation] = useState('dashboard');
-            const [progress, setProgress] = useState({ station1: false, station2: false, station3: false, station4: false });
+            const [progress, setProgress] = useState({
+                station1: false, station2: false, station3: false,
+                station5: false, station6: false, station7: false,
+            });
 
-            const markComplete = (station) => {
-                setProgress(prev => ({...prev, [station]: true}));
-            };
+            const markComplete = (station) => setProgress(prev => ({ ...prev, [station]: true }));
 
             const stations = [
-                { id: 'station1', title: 'Entdeckung', icon: <IconFlask className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Berthold & Minkowski' },
-                { id: 'station2', title: 'Schlüssel & Schloss', icon: <IconPuzzle className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Wie Hormone andocken' },
-                { id: 'station3', title: 'Hormondrüsen', icon: <IconUser className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Anatomie des Körpers' },
-                { id: 'station4', title: 'Quiz', icon: <IconBrain className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Teste dein Wissen' }
+                { id: 'station1', title: 'Entdeckung',       icon: <IconFlask     className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Berthold & Minkowski',        num: '1' },
+                { id: 'station2', title: 'Schlüssel & Schloss', icon: <IconPuzzle  className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Wie Hormone andocken',       num: '2' },
+                { id: 'station3', title: 'Hormondrüsen',     icon: <IconUser      className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Anatomie des Körpers',       num: '3' },
+                { id: 'station5', title: 'Regelkreis',        icon: <IconLoop      className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Hypothalamus-Achse',        num: '5' },
+                { id: 'station6', title: 'Fallbeispiele',    icon: <IconClipboard className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Klinische Fälle',            num: '6' },
+                { id: 'station7', title: 'Quiz',              icon: <IconBrain     className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Teste dein Wissen',          num: '7' },
             ];
 
             const renderContent = () => {
-                switch(currentStation) {
+                switch (currentStation) {
                     case 'station1': return <Station1 onComplete={() => markComplete('station1')} />;
                     case 'station2': return <Station2 onComplete={() => markComplete('station2')} />;
                     case 'station3': return <Station3 onComplete={() => markComplete('station3')} />;
-                    case 'station4': return <Station4 onComplete={() => markComplete('station4')} />;
+                    case 'station5': return <Station5 onComplete={() => markComplete('station5')} />;
+                    case 'station6': return <Station6 onComplete={() => markComplete('station6')} />;
+                    case 'station7': return <Station7 onComplete={() => markComplete('station7')} />;
                     default: return (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-in">
-                            {stations.map(s => (
-                                <button 
-                                    key={s.id}
-                                    onClick={() => setCurrentStation(s.id)}
-                                    className="flex flex-col items-center p-4 md:p-6 bg-white border-2 border-green-50 rounded-2xl shadow-sm hover:shadow-md hover:border-green-200 transition-all group relative"
-                                >
-                                    <div className="bg-green-100 text-green-700 p-3 md:p-4 rounded-full mb-3 md:mb-4 group-hover:scale-110 transition-transform">
-                                        {s.icon}
-                                    </div>
-                                    <h3 className="text-sm md:text-xl font-bold text-gray-800">{s.title}</h3>
-                                    <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">{s.desc}</p>
-                                    {progress[s.id] && (
-                                        <div className="absolute top-2 md:top-4 right-2 md:right-4 bg-green-500 text-white p-1 rounded-full shadow-lg">
-                                            <IconCheck className="w-3 h-3 md:w-4 md:h-4" />
+                        <div className="animate-fade-in space-y-4">
+                            <div className="text-center pb-2">
+                                <h2 className="text-xl md:text-2xl font-bold text-green-800">Willkommen!</h2>
+                                <p className="text-sm text-gray-500 mt-1">Wähle eine Station und lerne über Hormone.</p>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+                                {stations.map(s => (
+                                    <button
+                                        key={s.id}
+                                        onClick={() => setCurrentStation(s.id)}
+                                        className="flex flex-col items-center p-4 md:p-5 bg-white border-2 border-green-50 rounded-2xl shadow-sm hover:shadow-md hover:border-green-200 transition-all group relative"
+                                    >
+                                        <div className="absolute top-2 left-2 text-xs font-bold text-gray-300">St.{s.num}</div>
+                                        <div className="bg-green-100 text-green-700 p-3 md:p-4 rounded-full mb-3 group-hover:scale-110 transition-transform">
+                                            {s.icon}
                                         </div>
-                                    )}
-                                </button>
-                            ))}
+                                        <h3 className="text-sm md:text-base font-bold text-gray-800 text-center">{s.title}</h3>
+                                        <p className="text-xs text-gray-500 mt-1 text-center">{s.desc}</p>
+                                        {progress[s.id] && (
+                                            <div className="absolute top-2 right-2 bg-green-500 text-white p-0.5 rounded-full shadow">
+                                                <IconCheck className="w-3 h-3" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Overall progress */}
+                            <div className="bg-white border border-gray-100 rounded-xl p-3 flex items-center gap-3">
+                                <div className="text-xs text-gray-500 whitespace-nowrap">Fortschritt:</div>
+                                <div className="flex-1 bg-gray-100 rounded-full h-2">
+                                    <div className="bg-green-500 h-2 rounded-full transition-all"
+                                        style={{ width: `${(Object.values(progress).filter(Boolean).length / Object.keys(progress).length) * 100}%` }} />
+                                </div>
+                                <div className="text-xs font-bold text-green-700 whitespace-nowrap">
+                                    {Object.values(progress).filter(Boolean).length}/{Object.keys(progress).length}
+                                </div>
+                            </div>
                         </div>
                     );
                 }
@@ -381,11 +909,28 @@
                                 <p className="text-xs text-green-600 hidden md:block">Interaktives Lernmodul</p>
                             </div>
                         </div>
-                        {currentStation !== 'dashboard' && (
-                            <button onClick={() => setCurrentStation('dashboard')} className="text-xs md:text-sm bg-green-100 text-green-700 px-3 py-1.5 rounded-lg font-medium hover:bg-green-200 transition">
-                                Zur Übersicht
-                            </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {currentStation !== 'dashboard' && (
+                                <button onClick={() => setCurrentStation('dashboard')} className="text-xs md:text-sm bg-green-100 text-green-700 px-3 py-1.5 rounded-lg font-medium hover:bg-green-200 transition">
+                                    Zur Übersicht
+                                </button>
+                            )}
+                            {/* Mini station nav */}
+                            {currentStation !== 'dashboard' && (
+                                <div className="hidden md:flex gap-1">
+                                    {stations.map(s => (
+                                        <button key={s.id} onClick={() => setCurrentStation(s.id)}
+                                            title={s.title}
+                                            className={`w-7 h-7 rounded-full text-xs font-bold transition-all border
+                                                ${currentStation === s.id ? 'bg-green-600 text-white border-green-600'
+                                                : progress[s.id] ? 'bg-green-100 text-green-700 border-green-300'
+                                                : 'bg-gray-100 text-gray-400 border-gray-200 hover:bg-green-50'}`}>
+                                            {s.num}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </header>
 
                     <main className="flex-grow bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-green-50 relative overflow-hidden min-h-[400px]">
@@ -393,7 +938,7 @@
                     </main>
 
                     <footer className="text-center text-xs text-gray-400 mt-4 md:mt-6 pb-4">
-                        Johannes-Scharrer-Gymnasium • Zollfrank • &copy; {new Date().getFullYear()}
+                        Johannes-Scharrer-Gymnasium &bull; Zollfrank &bull; &copy; {new Date().getFullYear()}
                     </footer>
                 </div>
             );
