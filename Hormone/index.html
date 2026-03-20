@@ -143,12 +143,12 @@
             const [activeInfo, setActiveInfo] = useState(null);
 
             const glands = [
-                { id: 'hypo', name: 'Hypothalamus', short: 'Steuerzentrale', desc: 'Oberste Befehlszentrale im Gehirn. Verbindet Nerven- mit Hormonsystem.', hormone: 'Releasing-Hormone', top: '10%', left: '48%' },
-                { id: 'hypophyse', name: 'Hypophyse', short: 'Hirnanhangsdrüse', desc: '"Chef-Drüse" - steuert andere Hormondrüsen.', hormone: 'Wachstumshormon', top: '18%', left: '48%' },
-                { id: 'schild', name: 'Schilddrüse', short: 'Stoffwechsel', desc: 'Produziert Thyroxin für den Energiestoffwechsel.', hormone: 'Thyroxin', top: '28%', left: '48%' },
-                { id: 'neben', name: 'Nebennieren', short: 'Stress & Alarm', desc: 'Schütten bei Stress Adrenalin aus.', hormone: 'Adrenalin', top: '45%', left: '40%' },
-                { id: 'bauch', name: 'Bauchspeicheldrüse', short: 'Blutzucker', desc: 'Reguliert den Blutzuckerspiegel.', hormone: 'Insulin', top: '55%', left: '48%' },
-                { id: 'sex', name: 'Keimdrüsen', short: 'Sexualität', desc: 'Produzieren Geschlechtshormone.', hormone: 'Testosteron/Östrogen', top: '75%', left: '48%' },
+                { id: 'hypo', name: 'Hypothalamus', short: 'Steuerzentrale', desc: 'Oberste Befehlszentrale im Gehirn. Verbindet Nerven- mit Hormonsystem.', hormone: 'Releasing-Hormone', cx: 150, cy: 72 },
+                { id: 'hypophyse', name: 'Hypophyse', short: 'Hirnanhangsdrüse', desc: '"Chef-Drüse" - steuert andere Hormondrüsen.', hormone: 'Wachstumshormon', cx: 150, cy: 95 },
+                { id: 'schild', name: 'Schilddrüse', short: 'Stoffwechsel', desc: 'Produziert Thyroxin für den Energiestoffwechsel.', hormone: 'Thyroxin', cx: 150, cy: 155 },
+                { id: 'neben', name: 'Nebennieren', short: 'Stress & Alarm', desc: 'Schütten bei Stress Adrenalin aus.', hormone: 'Adrenalin', cx: 150, cy: 265 },
+                { id: 'bauch', name: 'Bauchspeicheldrüse', short: 'Blutzucker', desc: 'Reguliert den Blutzuckerspiegel.', hormone: 'Insulin', cx: 165, cy: 300 },
+                { id: 'sex', name: 'Keimdrüsen', short: 'Sexualität', desc: 'Produzieren Geschlechtshormone.', hormone: 'Testosteron/Östrogen', cx: 150, cy: 375 },
             ];
 
             const allPlaced = glands.every(g => placements[g.id]);
@@ -172,10 +172,112 @@
                 }
             };
 
+            const BodySVG = () => (
+                <svg viewBox="0 0 300 500" className="w-full h-full">
+                    <defs>
+                        <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#e8d5c4" />
+                            <stop offset="100%" stopColor="#dbc4b0" />
+                        </linearGradient>
+                        <linearGradient id="organBg" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#fce4ec" stopOpacity="0.5" />
+                            <stop offset="100%" stopColor="#f8bbd0" stopOpacity="0.3" />
+                        </linearGradient>
+                    </defs>
+
+                    {/* Head */}
+                    <ellipse cx="150" cy="55" rx="35" ry="42" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1.5" />
+                    {/* Ears */}
+                    <ellipse cx="114" cy="55" rx="6" ry="10" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+                    <ellipse cx="186" cy="55" rx="6" ry="10" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+
+                    {/* Neck */}
+                    <rect x="137" y="93" width="26" height="30" rx="4" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+
+                    {/* Torso */}
+                    <path d="M105,125 Q100,125 95,135 L80,185 L78,240 L82,320 Q85,340 100,350 L115,360 L135,365 L150,367 L165,365 L185,360 L200,350 Q215,340 218,320 L222,240 L220,185 L205,135 Q200,125 195,125 Z"
+                        fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1.5" />
+
+                    {/* Internal organ area (translucent) */}
+                    <path d="M115,140 Q110,145 108,160 L105,220 L108,290 Q110,320 125,340 L150,350 L175,340 Q190,320 192,290 L195,220 L192,160 Q190,145 185,140 Z"
+                        fill="url(#organBg)" stroke="#e0a0b0" strokeWidth="0.5" strokeDasharray="3,3" />
+
+                    {/* Shoulders */}
+                    <path d="M105,125 Q80,128 60,145 L50,160" fill="none" stroke="#c9a88c" strokeWidth="8" strokeLinecap="round" />
+                    <path d="M195,125 Q220,128 240,145 L250,160" fill="none" stroke="#c9a88c" strokeWidth="8" strokeLinecap="round" />
+
+                    {/* Left arm */}
+                    <path d="M50,160 L42,220 L38,280 L40,310 Q42,325 48,330 L55,332 Q60,330 58,320 L52,280 L50,240"
+                        fill="none" stroke="url(#skinGrad)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    <ellipse cx="51" cy="332" rx="12" ry="8" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+
+                    {/* Right arm */}
+                    <path d="M250,160 L258,220 L262,280 L260,310 Q258,325 252,330 L245,332 Q240,330 242,320 L248,280 L250,240"
+                        fill="none" stroke="url(#skinGrad)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    <ellipse cx="249" cy="332" rx="12" ry="8" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+
+                    {/* Left leg */}
+                    <path d="M125,360 L118,400 L112,440 L110,470 L108,490"
+                        fill="none" stroke="url(#skinGrad)" strokeWidth="28" strokeLinecap="round" />
+                    <ellipse cx="108" cy="493" rx="16" ry="7" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+
+                    {/* Right leg */}
+                    <path d="M175,360 L182,400 L188,440 L190,470 L192,490"
+                        fill="none" stroke="url(#skinGrad)" strokeWidth="28" strokeLinecap="round" />
+                    <ellipse cx="192" cy="493" rx="16" ry="7" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
+
+                    {/* Brain outline in head */}
+                    <path d="M130,40 Q125,30 135,25 Q145,18 155,22 Q165,18 170,28 Q178,35 172,45 Q175,52 168,56 Q160,62 150,60 Q140,62 133,56 Q126,50 130,40 Z"
+                        fill="#f8d7e0" fillOpacity="0.5" stroke="#d4a0b0" strokeWidth="0.8" />
+
+                    {/* Thyroid butterfly shape */}
+                    <path d="M140,150 Q135,145 132,150 Q130,158 140,158 Z" fill="#b2dfdb" fillOpacity="0.4" stroke="#80cbc4" strokeWidth="0.5" />
+                    <path d="M160,150 Q165,145 168,150 Q170,158 160,158 Z" fill="#b2dfdb" fillOpacity="0.4" stroke="#80cbc4" strokeWidth="0.5" />
+                    <rect x="146" y="152" width="8" height="4" rx="2" fill="#b2dfdb" fillOpacity="0.3" />
+
+                    {/* Kidneys / Adrenal glands hint */}
+                    <ellipse cx="128" cy="268" rx="12" ry="18" fill="#ffccbc" fillOpacity="0.3" stroke="#ffab91" strokeWidth="0.5" />
+                    <ellipse cx="172" cy="268" rx="12" ry="18" fill="#ffccbc" fillOpacity="0.3" stroke="#ffab91" strokeWidth="0.5" />
+
+                    {/* Pancreas hint */}
+                    <path d="M135,295 Q145,290 165,295 Q175,298 178,305 Q175,310 165,308 Q145,305 135,300 Z"
+                        fill="#fff9c4" fillOpacity="0.3" stroke="#fff176" strokeWidth="0.5" />
+
+                    {/* Gland click targets */}
+                    {glands.map(g => {
+                        const placed = placements[g.id];
+                        const selected = selectedId === g.id;
+                        return (
+                            <g key={g.id} onClick={() => handleBodyClick(g.id)} style={{cursor: 'pointer'}}>
+                                {selected && !placed && (
+                                    <circle cx={g.cx} cy={g.cy} r="14" fill="none" stroke="#3b82f6" strokeWidth="2" opacity="0.6">
+                                        <animate attributeName="r" values="10;16;10" dur="1.2s" repeatCount="indefinite" />
+                                        <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.2s" repeatCount="indefinite" />
+                                    </circle>
+                                )}
+                                <circle
+                                    cx={g.cx} cy={g.cy} r="10"
+                                    fill={placed ? "#22c55e" : selected ? "#60a5fa" : "#e5e7eb"}
+                                    stroke={placed ? "#16a34a" : selected ? "#3b82f6" : "#d1d5db"}
+                                    strokeWidth="2"
+                                    opacity={placed || selected ? 1 : 0.4}
+                                />
+                                {placed && (
+                                    <polyline points={`${g.cx-4},${g.cy} ${g.cx-1},${g.cy+3} ${g.cx+5},${g.cy-4}`} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                )}
+                                {placed && (
+                                    <text x={g.cx + 16} y={g.cy + 4} fill="#166534" fontSize="10" fontWeight="bold" fontFamily="sans-serif">{g.name}</text>
+                                )}
+                            </g>
+                        );
+                    })}
+                </svg>
+            );
+
             return (
                 <div className="animate-fade-in space-y-6">
                     <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 3: Die Hormondrüsen</h2>
-                    
+
                     <div className="flex flex-col md:flex-row gap-6">
                         <div className="flex-1 space-y-3">
                             <p className="text-xs md:text-sm text-gray-600 mb-3">Klicke auf einen Begriff, dann auf den passenden Punkt am Körper.</p>
@@ -184,12 +286,12 @@
                                     <button
                                         key={g.id}
                                         onClick={() => handleGlandClick(g.id)}
-                                        className={`p-2 md:p-3 text-xs md:text-sm rounded border text-left transition-all ${
-                                            placements[g.id] 
-                                                ? 'bg-green-100 border-green-300 text-green-800' 
-                                                : selectedId === g.id 
-                                                    ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-200' 
-                                                    : 'bg-white hover:bg-gray-50'
+                                        className={`p-2 md:p-3 text-xs md:text-sm rounded-lg border-2 text-left transition-all ${
+                                            placements[g.id]
+                                                ? 'bg-green-100 border-green-400 text-green-800'
+                                                : selectedId === g.id
+                                                    ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-200 shadow-md'
+                                                    : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                                         }`}
                                     >
                                         <div className="font-bold text-xs md:text-sm">{g.name}</div>
@@ -197,29 +299,16 @@
                                     </button>
                                 ))}
                             </div>
+
+                            {allPlaced && (
+                                <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-center text-green-800 font-bold text-sm animate-fade-in">
+                                    Alle Drüsen korrekt platziert!
+                                </div>
+                            )}
                         </div>
 
-                        <div className="relative w-48 h-72 md:w-56 md:h-80 mx-auto bg-gray-100 rounded-3xl border-4 border-white shadow-inner flex-shrink-0">
-                            <svg viewBox="0 0 100 200" className="w-full h-full text-gray-300 opacity-50">
-                                <path fill="currentColor" d="M50,10 C55,10 60,15 60,22 C60,28 65,30 70,35 L80,60 L70,70 L60,50 L60,100 L70,190 L55,190 L50,130 L45,190 L30,190 L40,100 L40,50 L30,70 L20,60 L30,35 C35,30 40,28 40,22 C40,15 45,10 50,10 Z" />
-                            </svg>
-
-                            {glands.map(g => (
-                                <button
-                                    key={g.id}
-                                    onClick={() => handleBodyClick(g.id)}
-                                    style={{ top: g.top, left: g.left, transform: 'translate(-50%, -50%)' }}
-                                    className={`absolute w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs transition-all duration-300 z-10 
-                                        ${placements[g.id] 
-                                            ? 'bg-green-500 border-green-600 text-white scale-100 hover:scale-110' 
-                                            : selectedId === g.id 
-                                                ? 'bg-blue-400 border-blue-600 animate-ping' 
-                                                : 'bg-white border-gray-400 opacity-30'
-                                        }`}
-                                >
-                                    {placements[g.id] && <IconCheck className="w-3 h-3 md:w-4 md:h-4" />}
-                                </button>
-                            ))}
+                        <div className="w-56 h-[380px] md:w-64 md:h-[420px] mx-auto flex-shrink-0 bg-gradient-to-b from-blue-50 to-green-50 rounded-2xl border border-gray-200 shadow-inner p-2">
+                            <BodySVG />
                         </div>
                     </div>
 
@@ -232,9 +321,13 @@
                                 </div>
                                 <p className="text-gray-700 mt-2 text-xs md:text-sm">{activeInfo.desc}</p>
                             </div>
+                        ) : selectedId ? (
+                            <div className="bg-blue-50 border border-blue-200 p-4 rounded text-center text-blue-700 text-xs md:text-sm animate-fade-in">
+                                Klicke jetzt auf die richtige Stelle am Körper für <strong>{glands.find(g => g.id === selectedId)?.name}</strong>.
+                            </div>
                         ) : (
                             <div className="bg-gray-50 border border-gray-100 p-6 rounded text-center text-gray-400 text-xs md:text-sm">
-                                Ordne eine Drüse zu, um mehr zu erfahren.
+                                Wähle eine Drüse aus der Liste und ordne sie dem Körper zu.
                             </div>
                         )}
                     </div>
