@@ -400,58 +400,135 @@
             const cy = height / 2;
 
             const renderContent = () => {
+                // Interphase
                 if (phase === 0) {
-                    return <Cell x={cx} y={cy} r={50} label="Urkeimzelle (2n)">
-                        <text x="0" y="0" textAnchor="middle" dy=".3em" fontSize="8" fill="#444">DNA-Repl.</text>
+                    return <Cell x={cx} y={cy} r={65} label="Urkeimzelle (2n, 4C)">
+                        <Chromosome x="-15" y="-10" size={16} color="blue" type="double" rotation={-15} />
+                        <Chromosome x="15" y="10" size={16} color="red" type="double" rotation={15} />
                     </Cell>;
                 }
-                if (phase <= 4) {
-                    if (phase === 3) {
-                        return <Cell x={cx} y={cy} r={55} label="Anaphase I">
-                            <Chromosome x="-30" y="0" size={18} color="blue" type="double" rotation={-15} />
-                            <Chromosome x="30" y="0" size={18} color="red" type="double" rotation={15} />
-                        </Cell>;
-                    }
-                    if (phase === 4) {
-                        const r1 = type === 'egg' ? 20 : 40;
-                        const r2 = type === 'egg' ? 50 : 40;
+                // Prophase I
+                if (phase === 1) {
+                    return <Cell x={cx} y={cy} r={65} label="Prophase I">
+                        {/* Synapsis/Tetrad */}
+                        <Chromosome x="-8" y="0" size={18} color="blue" type="double" />
+                        <Chromosome x="8" y="0" size={18} color="red" type="double" />
+                    </Cell>;
+                }
+                // Metaphase I
+                if (phase === 2) {
+                    return <Cell x={cx} y={cy} r={65} label="Metaphase I">
+                        {/* Spindle fibers */}
+                        <line x1="-50" y1="-50" x2="-8" y2="0" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <line x1="50" y1="50" x2="8" y2="0" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <Chromosome x="-8" y="0" size={18} color="blue" type="double" rotation={0} />
+                        <Chromosome x="8" y="0" size={18} color="red" type="double" rotation={0} />
+                    </Cell>;
+                }
+                // Anaphase I
+                if (phase === 3) {
+                    return <Cell x={cx} y={cy} r={65} label="Anaphase I">
+                        <line x1="-50" y1="-50" x2="-20" y2="-20" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <line x1="50" y1="50" x2="20" y2="20" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <Chromosome x="-20" y="-20" size={18} color="blue" type="double" rotation={45} />
+                        <Chromosome x="20" y="20" size={18} color="red" type="double" rotation={45} />
+                    </Cell>;
+                }
+                // Telophase I (2 cells)
+                if (phase === 4) {
+                    if (type === 'egg') {
                         return <g>
-                            <Cell x={cx} y={cy - 50} r={r1} label={type === 'egg' ? 'Polkörper' : '1n'}>
-                                <Chromosome x="0" y="0" size={12} color="blue" type="double" />
+                            <Cell x={cx} y={cy - 70} r={20} label="Polkörper">
+                                <Chromosome x="0" y="0" size={10} color="blue" type="double" />
                             </Cell>
-                            <Cell x={cx} y={cy + 40} r={r2} label={type === 'egg' ? 'Oozyte II' : '1n'}>
-                                <Chromosome x="0" y="0" size={12} color="red" type="double" />
+                            <Cell x={cx} y={cy + 25} r={55} label="Oozyte II">
+                                <Chromosome x="0" y="0" size={16} color="red" type="double" />
+                            </Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Spermatozyte II">
+                                <Chromosome x="0" y="0" size={14} color="blue" type="double" />
+                            </Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Spermatozyte II">
+                                <Chromosome x="0" y="0" size={14} color="red" type="double" />
                             </Cell>
                         </g>;
                     }
-                    return <Cell x={cx} y={cy} r={50} label={`Phase ${phase}`}>
-                        <Chromosome x="-10" y="0" size={16} color="blue" type="double" />
-                        <Chromosome x="10" y="0" size={16} color="red" type="double" />
-                    </Cell>;
                 }
-                if (phase >= 5) {
-                    if (phase === 8) {
-                        if (type === 'sperm') {
-                            return <g>
-                                <Cell x={cx - 35} y={cy - 50} r={25} label="1n"><Chromosome x="0" y="0" size={8} color="blue" type="single" /></Cell>
-                                <Cell x={cx + 35} y={cy - 50} r={25} label="1n"><Chromosome x="0" y="0" size={8} color="blue" type="single" /></Cell>
-                                <Cell x={cx - 35} y={cy + 50} r={25} label="1n"><Chromosome x="0" y="0" size={8} color="red" type="single" /></Cell>
-                                <Cell x={cx + 35} y={cy + 50} r={25} label="1n"><Chromosome x="0" y="0" size={8} color="red" type="single" /></Cell>
-                            </g>;
-                        } else {
-                            return <g>
-                                <Cell x={cx - 25} y={cy - 50} r={10} label="PK"><circle r="2" fill="blue" /></Cell>
-                                <Cell x={cx + 25} y={cy - 50} r={10} label="PK"><circle r="2" fill="blue" /></Cell>
-                                <Cell x={cx - 40} y={cy + 50} r={10} label="PK"><circle r="2" fill="red" /></Cell>
-                                <Cell x={cx + 15} y={cy + 50} r={45} label="Eizelle (1n)">
-                                    <Chromosome x="0" y="0" size={15} color="red" type="single" />
-                                </Cell>
-                            </g>;
-                        }
+                // Prophase II 
+                if (phase === 5) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="PK (Meiose II)"><Chromosome x="0" y="0" size={10} color="blue" type="double" /></Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Prophase II"><Chromosome x="0" y="0" size={16} color="red" type="double" /></Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Prophase II"><Chromosome x="0" y="0" size={14} color="blue" type="double" /></Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Prophase II"><Chromosome x="0" y="0" size={14} color="red" type="double" /></Cell>
+                        </g>;
                     }
-                    return <Cell x={cx} y={cy} r={50} label={`Phase ${phase}`}>
-                        <Chromosome x="0" y="0" size={14} color="blue" type="single" />
-                    </Cell>;
+                }
+                // Metaphase II
+                if (phase === 6) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="Metaphase II (PK)"><Chromosome x="0" y="0" size={10} color="blue" type="double" rotation={90} /></Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Metaphase II"><Chromosome x="0" y="0" size={16} color="red" type="double" rotation={90} /></Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Metaphase II"><Chromosome x="0" y="0" size={14} color="blue" type="double" rotation={90} /></Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Metaphase II"><Chromosome x="0" y="0" size={14} color="red" type="double" rotation={90} /></Cell>
+                        </g>;
+                    }
+                }
+                // Anaphase II (pulling apart sister chromatids)
+                if (phase === 7) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="Anaphase II (PK)">
+                                <Chromosome x="-6" y="0" size={10} color="blue" type="single" rotation={90} />
+                                <Chromosome x="6" y="0" size={10} color="blue" type="single" rotation={90} />
+                            </Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Anaphase II">
+                                <Chromosome x="-15" y="0" size={16} color="red" type="single" rotation={90} />
+                                <Chromosome x="15" y="0" size={16} color="red" type="single" rotation={90} />
+                            </Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Anaphase II">
+                                <Chromosome x="-10" y="0" size={14} color="blue" type="single" rotation={90} />
+                                <Chromosome x="10" y="0" size={14} color="blue" type="single" rotation={90} />
+                            </Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Anaphase II">
+                                <Chromosome x="-10" y="0" size={14} color="red" type="single" rotation={90} />
+                                <Chromosome x="10" y="0" size={14} color="red" type="single" rotation={90} />
+                            </Cell>
+                        </g>;
+                    }
+                }
+                // Telophase II (4 cells final)
+                if (phase === 8) {
+                    if (type === 'sperm') {
+                        return <g>
+                            <Cell x={cx - 45} y={cy - 48} r={32} label="Spermium (1n, 1C)"><Chromosome x="0" y="0" size={12} color="blue" type="single" /></Cell>
+                            <Cell x={cx + 45} y={cy - 48} r={32} label="Spermium "><Chromosome x="0" y="0" size={12} color="blue" type="single" /></Cell>
+                            <Cell x={cx - 45} y={cy + 48} r={32} label="Spermium "><Chromosome x="0" y="0" size={12} color="red" type="single" /></Cell>
+                            <Cell x={cx + 45} y={cy + 48} r={32} label="Spermium "><Chromosome x="0" y="0" size={12} color="red" type="single" /></Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 45} y={cy - 65} r={18} label="PK"><Chromosome x="0" y="0" size={8} color="blue" type="single" /></Cell>
+                            <Cell x={cx + 0} y={cy - 85} r={18} label="PK"><Chromosome x="0" y="0" size={8} color="blue" type="single" /></Cell>
+                            <Cell x={cx + 45} y={cy - 65} r={18} label="PK"><Chromosome x="0" y="0" size={8} color="red" type="single" /></Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Eizelle (1n, 1C)">
+                                <Chromosome x="0" y="0" size={16} color="red" type="single" />
+                            </Cell>
+                        </g>;
+                    }
                 }
                 return null;
             };
@@ -634,16 +711,20 @@
                         return (
                             <div className="flex flex-col h-full animate-fade-in overflow-y-auto">
                                 <div className="grid grid-cols-2 gap-3 md:gap-4 mb-3" style={{ minHeight: '180px', maxHeight: '260px' }}>
-                                    <div className="flex flex-col items-center bg-white/50 p-2 rounded-lg">
+                                    <div className="flex flex-col items-center bg-white/50 p-2 rounded-lg overflow-hidden">
                                         <h3 className="font-bold text-blue-800 mb-2 text-xs md:text-sm border-b-2 border-blue-200 pb-1">Spermatogenese</h3>
-                                        <div className="flex-grow w-full relative">
-                                            <CellCanvas mode="gametogenese" type="sperm" phase={sliderValue} />
+                                        <div className="flex-grow w-full relative flex items-center justify-center">
+                                            <div className="absolute inset-0">
+                                                <CellCanvas mode="gametogenese" type="sperm" phase={sliderValue} />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-center bg-white/50 p-2 rounded-lg">
+                                    <div className="flex flex-col items-center bg-white/50 p-2 rounded-lg overflow-hidden">
                                         <h3 className="font-bold text-red-800 mb-2 text-xs md:text-sm border-b-2 border-red-200 pb-1">Oogenese</h3>
-                                        <div className="flex-grow w-full relative">
-                                            <CellCanvas mode="gametogenese" type="egg" phase={sliderValue} />
+                                        <div className="flex-grow w-full relative flex items-center justify-center">
+                                            <div className="absolute inset-0">
+                                                <CellCanvas mode="gametogenese" type="egg" phase={sliderValue} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
