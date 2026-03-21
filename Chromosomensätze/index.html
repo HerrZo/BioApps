@@ -336,8 +336,22 @@
             useEffect(() => { nextQuestion(); }, []);
 
             const checkAnswer = () => {
-                const isCorrect = userGuessPloidy === targetState.ploidy && userGuessCC === targetState.cc;
-                setResult(isCorrect ? 'correct' : 'wrong');
+                const isPloidyCorrect = userGuessPloidy === targetState.ploidy;
+                const isCcCorrect = userGuessCC === targetState.cc;
+                const isCorrect = isPloidyCorrect && isCcCorrect;
+                
+                let feedbackText = "";
+                if (!isCorrect) {
+                  if (!isPloidyCorrect && !isCcCorrect) {
+                    feedbackText = "Beides ist leider falsch. Zähle die Chromosomen desselben Typs (Größe/Form) für die Ploidie und schaue dir die Form (X-Form vs. I-Form) für die Chromatiden an.";
+                  } else if (!isPloidyCorrect) {
+                    feedbackText = `Die Ploidie war falsch. Es sind ${targetState.ploidy} Chromosomen desselben Typs vorhanden, also ist der Satz ${targetState.ploidy}n.`;
+                  } else {
+                    feedbackText = `Der Zustand war falsch. Jedes Chromosom besteht hier aus ${targetState.cc === '1cc' ? 'einem' : 'zwei'} Chromatiden.`;
+                  }
+                }
+                
+                setResult({ status: isCorrect ? 'correct' : 'wrong', msg: feedbackText });
                 setScore(s => ({ correct: s.correct + (isCorrect ? 1 : 0), total: s.total + 1 }));
             };
 
@@ -419,17 +433,22 @@
                                 </div>
                             ) : (
                                 <div className="text-center space-y-5 animate-fade-in">
-                                    <div className={`inline-flex p-3 rounded-full ${result === 'correct' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                        {result === 'correct' ? <IconCheck className="w-10 h-10"/> : <IconX className="w-10 h-10"/>}
+                                    <div className={`inline-flex p-3 rounded-full \${result.status === 'correct' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                        {result.status === 'correct' ? <IconCheck className="w-10 h-10"/> : <IconX className="w-10 h-10"/>}
                                     </div>
                                     
                                     <div>
-                                        <h4 className={`text-lg font-bold ${result === 'correct' ? 'text-green-800' : 'text-red-800'}`}>
-                                            {result === 'correct' ? 'Richtig!' : 'Leider falsch'}
+                                        <h4 className={`text-lg font-bold \${result.status === 'correct' ? 'text-green-800' : 'text-red-800'}`}>
+                                            {result.status === 'correct' ? 'Richtig!' : 'Leider falsch'}
                                         </h4>
                                         <p className="text-gray-600 mt-2 text-sm">
                                             Das war <strong>{targetState.ploidy}n</strong> und <strong>{targetState.cc === '1cc' ? '1-Chromatid' : '2-Chromatid'}</strong>.
                                         </p>
+                                        {result.status === 'wrong' ? (
+                                            <div className="mt-4 p-3 bg-red-50 text-red-800 text-xs rounded-lg border border-red-200 text-left">
+                                                <strong>Tipp:</strong> {result.msg}
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     <button 

@@ -71,22 +71,22 @@
             const [message, setMessage] = useState("Ordne die Hormone den passenden Rezeptoren zu.");
             const [completed, setCompleted] = useState(0);
 
-            const handleHormoneClick = (type) => {
-                if (filledSlots.includes(type)) {
+            const handleHormoneDrop = (droppedType, receptorType) => {
+                if (filledSlots.includes(receptorType)) {
                     setMessage("Dieser Rezeptor ist bereits besetzt!");
                     return;
                 }
-                if (activeReceptors.includes(type)) {
-                    const newFilled = [...filledSlots, type];
+                if (droppedType === receptorType) {
+                    const newFilled = [...filledSlots, receptorType];
                     setFilledSlots(newFilled);
-                    setMessage("Passt! Das Hormon hat angedockt.");
+                    setMessage("Passt! Das Hormon hat nach dem Schlüssel-Schloss-Prinzip angedockt.");
                     if (newFilled.length === activeReceptors.length) {
                         setCompleted(c => c + 1);
                         if (completed >= 2) onComplete();
                         setMessage("Perfekt! Alle Rezeptoren besetzt.");
                     }
                 } else {
-                    setMessage("Diese Zelle hat keinen passenden Rezeptor!");
+                    setMessage("Falscher Rezeptor! Die Form von Hormon und Rezeptor muss exakt zusammenpassen.");
                 }
             };
 
@@ -99,39 +99,58 @@
                         <div className="flex flex-col gap-3">
                             <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Blutbahn</div>
                             {['square', 'circle', 'triangle'].map((type, idx) => (
-                                <button 
+                                <div 
                                     key={type}
-                                    onClick={() => handleHormoneClick(type)}
-                                    className={`w-14 h-14 rounded-lg shadow-lg hover:scale-110 transition-transform flex items-center justify-center animate-float ${type === 'square' ? 'bg-green-500' : type === 'circle' ? 'bg-blue-500 rounded-full' : 'bg-yellow-500'}`}
-                                    style={{animationDelay: `${idx}s`}}
+                                    draggable
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.setData('type', type);
+                                        // Verhindert ein Standardverhalten, bei dem das Element teilweise nicht bewegt wird
+                                    }}
+                                    className={`w-14 h-14 rounded-lg shadow-lg hover:scale-110 transition-transform flex items-center justify-center cursor-grab active:cursor-grabbing animate-float \${type === 'square' ? 'bg-green-500 rounded-md' : type === 'circle' ? 'bg-blue-500 rounded-full' : 'bg-yellow-500 rotate-45 scale-75'}`}
+                                    style={{animationDelay: `\${idx}s`}}
                                 >
-                                    <span className="text-white font-bold text-xs">{type[0].toUpperCase()}</span>
-                                </button>
+                                    <span className={`text-white font-bold text-xs \${type === 'triangle' ? '-rotate-45' : ''}`}>{type[0].toUpperCase()}</span>
+                                </div>
                             ))}
                         </div>
 
-                        <div className="relative w-48 h-48 md:w-56 md:h-56 bg-gray-200 border-4 border-gray-400 rounded-full flex items-center justify-center shadow-2xl">
+                        <div 
+                            className="relative w-48 h-48 md:w-56 md:h-56 bg-gray-200 border-4 border-gray-400 rounded-full flex items-center justify-center shadow-2xl"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                setMessage("Ziehe das Hormon exakt auf einen der äußeren Rezeptoren der Zielzelle!");
+                            }}
+                        >
                             <span className="text-gray-500 font-bold text-sm">Zielzelle</span>
                             {activeReceptors.map((type, idx) => (
                                 <div 
                                     key={type}
-                                    className={`absolute w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${filledSlots.includes(type) ? 'bg-green-500 text-white scale-110' : 'bg-white border-gray-400'}`}
+                                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const droppedType = e.dataTransfer.getData('type');
+                                        handleHormoneDrop(droppedType, type);
+                                    }}
+                                    className={`absolute w-12 h-12 md:w-14 md:h-14 bg-white shadow-xl flex items-center justify-center text-xs font-bold transition-all \${filledSlots.includes(type) ? 'text-white scale-110' : 'border-4 border-gray-400 text-gray-400 opacity-80'} \${type === 'square' ? 'rounded-md' : type === 'circle' ? 'rounded-full' : 'rotate-45 scale-75'}`}
                                     style={{
                                         top: idx === 0 ? '-10px' : idx === 1 ? '50%' : 'auto',
                                         bottom: idx === 2 ? '-10px' : 'auto',
                                         left: idx === 1 ? '-10px' : idx === 0 || idx === 2 ? '50%' : 'auto',
                                         right: idx === 1 ? 'auto' : 'auto',
-                                        transform: 'translate(-50%, -50%)'
+                                        transform: 'translate(-50%, -50%)',
+                                        backgroundColor: filledSlots.includes(type) ? (type === 'square' ? '#22c55e' : type === 'circle' ? '#3b82f6' : '#eab308') : 'white'
                                     }}
                                 >
-                                    {type[0].toUpperCase()}
+                                    <span className={type === 'triangle' ? '-rotate-45' : ''}>{type[0].toUpperCase()}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className={`p-4 rounded-lg text-center font-medium transition-colors ${message.includes('Perfekt') ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                        {message}
+                    <div className={`p-4 rounded-lg text-center font-medium transition-colors \${message.includes('Perfekt') ? 'bg-green-100 text-green-800' : 'bg-blue-50 text-blue-800 border-l-4 border-blue-500 shadow-sm'}`}>
+                        {message.includes("Ziehe") || message.includes("Falsch") || message.includes("passt nicht") || message.includes("Ordne") ? "ℹ️ " + message : message}
                     </div>
                 </div>
             );
@@ -249,27 +268,27 @@
             const [feedback, setFeedback] = useState(null);
 
             const questions = [
-                { q: "Wie gelangen Hormone zur Zielzelle?", options: ["Über Nervenbahnen", "Durch die Blutbahn", "Über Lymphflüssigkeit"], correct: 1 },
-                { q: "Welches Hormon ist für Stress verantwortlich?", options: ["Insulin", "Östrogen", "Adrenalin"], correct: 2 },
-                { q: "Welches Hormon senkt den Blutzucker?", options: ["Insulin", "Testosteron", "Thyroxin"], correct: 0 },
-                { q: "Welche Hormone steuern die Pubertät?", options: ["Wachstumshormone", "Sexualhormone", "Stresshormone"], correct: 1 }
+                { q: "Wie gelangen Hormone zur Zielzelle?", options: ["Über Nervenbahnen", "Durch die Blutbahn", "Über Lymphflüssigkeit"], correct: 1, explanation: "Hormone werden von Drüsen ins Blut abgegeben und erreichen so ihre Zielzellen überall im Körper." },
+                { q: "Welches Hormon ist für Stress verantwortlich?", options: ["Insulin", "Östrogen", "Adrenalin"], correct: 2, explanation: "Adrenalin wird in Stress- oder Gefahrensituationen von den Nebennieren ausgeschüttet (Kampf-oder-Flucht-Reaktion)." },
+                { q: "Welches Hormon senkt den Blutzucker?", options: ["Insulin", "Testosteron", "Thyroxin"], correct: 0, explanation: "Die Bauchspeicheldrüse schüttet bei hohem Blutzucker Insulin aus, damit Zellen Glukose aufnehmen." },
+                { q: "Welche Hormone steuern die Pubertät?", options: ["Wachstumshormone", "Sexualhormone", "Stresshormone"], correct: 1, explanation: "Sexualhormone (z.B. Testosteron, Östrogen) lösen die Ausprägung der sekundären Geschlechtsmerkmale aus." }
             ];
 
             const handleAnswer = (optIndex) => {
                 if (feedback) return;
                 const isCorrect = optIndex === questions[qIndex].correct;
                 if (isCorrect) setScore(s => s + 1);
-                setFeedback(isCorrect ? 'Richtig!' : 'Leider falsch.');
+                setFeedback(isCorrect ? 'correct' : 'wrong');
+            };
 
-                setTimeout(() => {
-                    setFeedback(null);
-                    if (qIndex < questions.length - 1) {
-                        setQIndex(q => q + 1);
-                    } else {
-                        setShowResult(true);
-                        onComplete();
-                    }
-                }, 1500);
+            const nextQuestion = () => {
+                setFeedback(null);
+                if (qIndex < questions.length - 1) {
+                    setQIndex(q => q + 1);
+                } else {
+                    setShowResult(true);
+                    onComplete();
+                }
             };
 
             if (showResult) {
@@ -315,8 +334,17 @@
                     </div>
                     
                     {feedback && (
-                        <div className={`text-center font-bold text-lg ${feedback === 'Richtig!' ? 'text-green-600' : 'text-red-500'}`}>
-                            {feedback}
+                        <div className={`p-4 rounded-xl text-left border \${feedback === 'correct' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} animate-fade-in`}>
+                            <div className={`font-bold text-lg mb-2 \${feedback === 'correct' ? 'text-green-700' : 'text-red-700'}`}>
+                                {feedback === 'correct' ? '✅ Richtig!' : '❌ Leider falsch.'}
+                            </div>
+                            <p className="text-sm text-gray-700 mb-4">{questions[qIndex].explanation}</p>
+                            <button 
+                                onClick={nextQuestion} 
+                                className="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition"
+                            >
+                                {qIndex < questions.length - 1 ? 'Nächste Frage' : 'Ergebnis anzeigen'}
+                            </button>
                         </div>
                     )}
                 </div>

@@ -39,11 +39,11 @@
         ];
 
         const QUIZ_DATA = [
-            { question: "Was ist das primäre Ziel der Meiose?", options: ["Wachstum", "Bildung genetisch identischer Zellen", "Bildung haploider Keimzellen", "Verdopplung des Chromosomensatzes"], correct: 2 },
-            { question: "Wann findet das Crossing-Over statt?", options: ["Prophase I", "Metaphase II", "Interphase", "Anaphase I"], correct: 0 },
-            { question: "Was wird in der Anaphase I getrennt?", options: ["Schwesterchromatiden", "Homologe Chromosomenpaare", "Zellkerne", "Zellmembranen"], correct: 1 },
-            { question: "Wie bezeichnet man den Chromosomensatz einer menschlichen Eizelle?", options: ["Diploid (2n)", "Haploid (1n)", "Polyploid", "Tetraploid"], correct: 1 },
-            { question: "Was ist das Ergebnis der Spermatogenese?", options: ["1 Spermium, 3 Polkörperchen", "2 diploide Spermien", "4 haploide Spermien", "4 diploide Spermien"], correct: 2 },
+            { question: "Was ist das primäre Ziel der Meiose?", options: ["Wachstum", "Bildung genetisch identischer Zellen", "Bildung haploider Keimzellen", "Verdopplung des Chromosomensatzes"], correct: 2, explanation: "Die Meiose reduziert den Chromosomensatz von diploid auf haploid, um vermehrungsfähige Geschlechtszellen (Keimzellen) zu bilden." },
+            { question: "Wann findet das Crossing-Over statt?", options: ["Prophase I", "Metaphase II", "Interphase", "Anaphase I"], correct: 0, explanation: "In der Prophase I paaren sich die homologen Chromosomen (Synapsis) und tauschen genetisches Material aus (Crossing-Over)." },
+            { question: "Was wird in der Anaphase I getrennt?", options: ["Schwesterchromatiden", "Homologe Chromosomenpaare", "Zellkerne", "Zellmembranen"], correct: 1, explanation: "In der ersten Reifeteilung (Meiose I) werden die homologen Chromosomenpaare getrennt. Die Schwesterchromatiden werden erst in der Anaphase II getrennt." },
+            { question: "Wie bezeichnet man den Chromosomensatz einer menschlichen Eizelle?", options: ["Diploid (2n)", "Haploid (1n)", "Polyploid", "Tetraploid"], correct: 1, explanation: "Keimzellen (Eizellen und Spermien) haben einen einfachen (haploiden) Chromosomensatz (1n)." },
+            { question: "Was ist das Ergebnis der Spermatogenese?", options: ["1 Spermium, 3 Polkörperchen", "2 diploide Spermien", "4 haploide Spermien", "4 diploide Spermien"], correct: 2, explanation: "Bei der Samenbildung (Spermatogenese) entstehen aus einer diploiden Urkeimzelle vier funktionsfähige, haploide Spermien." },
         ];
 
         const IconDna = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12h20M2 12c0 5.5 4.5 10 10 10s10-4.5 10-10S17.5 2 12 2 2 6.5 2 12z"></path></svg>;
@@ -289,11 +289,19 @@
                         </div>
 
                         {selectedOption !== null && (
-                            <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-                                <button onClick={nextQuestion} className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition flex items-center text-sm">
-                                    {currentQ < QUIZ_DATA.length - 1 ? "Nächste Frage" : "Ergebnis anzeigen"}
-                                    <IconChevronDown className="w-4 h-4 ml-2 -rotate-90" />
-                                </button>
+                            <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col justify-end animate-fade-in">
+                                <div className={`p-4 rounded-xl text-left border mb-4 \${selectedOption === question.correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                    <div className={`font-bold text-lg mb-2 \${selectedOption === question.correct ? 'text-green-700' : 'text-red-700'}`}>
+                                        {selectedOption === question.correct ? '✅ Richtig!' : '❌ Leider falsch.'}
+                                    </div>
+                                    <p className="text-sm text-gray-700">{question.explanation}</p>
+                                </div>
+                                <div className="flex justify-end">
+                                    <button onClick={nextQuestion} className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition flex items-center text-sm shadow-md">
+                                        {currentQ < QUIZ_DATA.length - 1 ? "Nächste Frage" : "Ergebnis anzeigen"}
+                                        <IconChevronDown className="w-4 h-4 ml-2 -rotate-90" />
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
