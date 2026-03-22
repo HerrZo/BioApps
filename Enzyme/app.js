@@ -503,82 +503,99 @@ const App = {
     ctx.save(); ctx.translate(20, (T + B) / 2); ctx.rotate(-Math.PI / 2);
     ctx.fillText('Energie', 0, 0); ctx.restore();
 
-    // ── Eᵢ(E) horizontal level line ──
-    ctx.strokeStyle = textCol; ctx.lineWidth = 2; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(L, eduktY); ctx.lineTo(L + gW * 0.22, eduktY); ctx.stroke();
-    // Label left of axis
-    ctx.fillStyle = textCol; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'right';
-    ctx.fillText('Eᵢ(E)', L - 8, eduktY + 5);
-    // "Edukte" label above the line
-    ctx.textAlign = 'center'; ctx.font = '12px Outfit';
-    ctx.fillText('Edukte', L + gW * 0.11, eduktY - 10);
-
-    // ── Eᵢ(P) horizontal level line ──
-    ctx.strokeStyle = textCol; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(L + gW * 0.80, produktY); ctx.lineTo(R, produktY); ctx.stroke();
-    ctx.fillStyle = textCol; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'left';
-    ctx.fillText('Eᵢ(P)', R + 6, produktY + 5);
-    ctx.textAlign = 'center'; ctx.font = '12px Outfit';
-    ctx.fillText('Produkte', L + gW * 0.90, produktY - 10);
-
-    // ── Curve helper ──
-    const drawCurve = (peak, color) => {
-      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.setLineDash([]);
-      ctx.beginPath();
-      for (let t = 0; t <= 1; t += 0.003) {
-        const x = L + t * gW;
-        const base = eduktY + (produktY - eduktY) * t;
-        const bump = Math.sin(t * Math.PI) * (eduktY - peak);
-        const y = base - bump;
-        t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    };
-
-    // ── Draw curves ──
-    drawCurve(peakHigh, '#ef4444');  // without enzyme (always)
-    if (this.energyShowEnzyme) drawCurve(peakLow, '#22c55e');
-
-    // ── EA bracket helper ──
-    const drawEA = (x, topY, label, color) => {
-      // Dashed vertical line from eduktY up to topY
-      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
-      ctx.beginPath(); ctx.moveTo(x, eduktY); ctx.lineTo(x, topY + 4); ctx.stroke();
-      // Small horizontal ticks at top and bottom
-      ctx.setLineDash([]); ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x - 5, eduktY); ctx.lineTo(x + 5, eduktY); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x - 5, topY + 4); ctx.lineTo(x + 5, topY + 4); ctx.stroke();
-      // Arrowhead pointing up
-      ctx.beginPath();
-      ctx.moveTo(x - 4, topY + 12); ctx.lineTo(x, topY + 4); ctx.lineTo(x + 4, topY + 12);
-      ctx.stroke();
-      // Label: right of the bracket, vertically centred
-      const midY = (eduktY + topY) / 2 + 4;
-      ctx.fillStyle = color; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'left';
-      ctx.fillText(label, x + 8, midY);
-    };
-
-    // EA without enzyme
-    drawEA(L + gW * 0.30, peakHigh, 'Eᴀ ohne Enzym', '#ef4444');
-    // EA with enzyme
-    if (this.energyShowEnzyme) {
-      drawEA(L + gW * 0.62, peakLow, 'Eᴀ mit Enzym', '#22c55e');
+    // ── Grid Lines (Subtle solid lines) ──
+    ctx.strokeStyle = isDark ? '#2a3a2a' : '#f1f5f9'; 
+    ctx.lineWidth = 1; ctx.setLineDash([]);
+    const gridCount = 6;
+    for (let i = 0; i <= gridCount; i++) {
+      let gy = T + (gH * i / gridCount);
+      ctx.beginPath(); ctx.moveTo(L, gy); ctx.lineTo(R, gy); ctx.stroke();
     }
 
-    // ── ΔEᵢ bracket (right side, between Ei(E) and Ei(P)) ──
-    const dgX = L + gW * 0.73;
+    // ── Eᵢ(E) and Eᵢ(P) solid horizontal level lines ──
+    ctx.strokeStyle = isDark ? '#507050' : '#cbd5e1'; 
+    ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(L, eduktY); ctx.lineTo(R, eduktY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(L, produktY); ctx.lineTo(R, produktY); ctx.stroke();
+
+    // Level Labels (Eᵢ)
+    ctx.fillStyle = textCol; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'right';
+    ctx.fillText('Eᵢ(E)', L - 8, eduktY + 5);
+    ctx.textAlign = 'left';
+    ctx.fillText('Eᵢ(P)', R + 8, produktY + 5);
+    
+    // States Labels (Edukte/Produkte)
+    ctx.textAlign = 'left'; ctx.font = 'bold 12px Outfit';
+    ctx.fillText('Edukte', L + 10, eduktY - 10);
+    ctx.textAlign = 'right';
+    ctx.fillText('Produkte', R - 10, produktY - 10);
+
+    // ── Curve helper (returns exact peak coordinates) ──
+    const drawCurve = (peakY, color) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.setLineDash([]);
+      ctx.beginPath();
+      let best = { x: 0, y: 9999 };
+      // Higher resolution for peak detection
+      const steps = 500;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = L + t * gW;
+        const base = eduktY + (produktY - eduktY) * t;
+        const bump = Math.sin(t * Math.PI) * (eduktY - peakY);
+        const y = base - bump;
+        if (y < best.y) { best.y = y; best.x = x; }
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      return best;
+    };
+
+    // ── Draw curves and get their peaks ──
+    const p1 = drawCurve(peakHigh, '#ef4444');  // ohne Enzym
+    let p2 = null;
+    if (this.energyShowEnzyme) p2 = drawCurve(peakLow, '#22c55e');
+
+    // ── EA arrow helper ──
+    const drawEA = (peakX, peakY, label, color, labelOffset) => {
+      // Vertical line from base level to curve peak
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+      ctx.beginPath(); ctx.moveTo(peakX, eduktY); ctx.lineTo(peakX, peakY); ctx.stroke();
+      
+      // Top/Bottom ticks
+      ctx.setLineDash([]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(peakX - 5, eduktY); ctx.lineTo(peakX + 5, eduktY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(peakX - 5, peakY); ctx.lineTo(peakX + 5, peakY); ctx.stroke();
+      
+      // Arrowhead EXACTLY at peakY
+      ctx.beginPath();
+      ctx.moveTo(peakX - 4, peakY + 8); ctx.lineTo(peakX, peakY); ctx.lineTo(peakX + 4, peakY + 8);
+      ctx.stroke();
+      
+      // Label
+      ctx.fillStyle = color; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'left';
+      ctx.fillText(label, peakX + 10, (eduktY + peakY) / 2 + labelOffset);
+    };
+
+    // Draw EA arrows
+    drawEA(p1.x, p1.y, 'Eᴀ ohne Enzym', '#ef4444', 0);
+    if (this.energyShowEnzyme) {
+      drawEA(p2.x, p2.y, 'Eᴀ mit Enzym', '#22c55e', 4);
+    }
+
+    // ── ΔEᵢ bracket (Reaction energy) ──
+    const dX = L + gW * 0.78;
     ctx.strokeStyle = isDark ? '#7aa07a' : '#64748b'; ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(dgX, eduktY); ctx.lineTo(dgX, produktY); ctx.stroke();
-    ctx.setLineDash([]); ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(dgX - 5, eduktY); ctx.lineTo(dgX + 5, eduktY); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(dgX - 5, produktY); ctx.lineTo(dgX + 5, produktY); ctx.stroke();
-    // Arrow pointing down
-    ctx.beginPath();
-    ctx.moveTo(dgX - 4, produktY - 8); ctx.lineTo(dgX, produktY); ctx.lineTo(dgX + 4, produktY - 8);
-    ctx.stroke();
+    ctx.setLineDash([3, 2]);
+    ctx.beginPath(); ctx.moveTo(dX, eduktY); ctx.lineTo(dX, produktY); ctx.stroke();
+    ctx.setLineDash([]);
+    // Bracket ends
+    ctx.beginPath(); ctx.moveTo(dX - 4, eduktY); ctx.lineTo(dX + 4, eduktY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(dX - 4, produktY); ctx.lineTo(dX + 4, produktY); ctx.stroke();
+    // Pointing down
+    ctx.beginPath(); ctx.moveTo(dX - 3, produktY - 6); ctx.lineTo(dX, produktY); ctx.lineTo(dX + 3, produktY - 6); ctx.stroke();
+    
     ctx.fillStyle = isDark ? '#7aa07a' : '#64748b'; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'left';
-    ctx.fillText('ΔEᵢ', dgX + 8, (eduktY + produktY) / 2 + 4);
+    ctx.fillText('ΔEᵢ', dX + 8, (eduktY + produktY) / 2 + 5);
   },
 
   // ── FACTORS RENDER ──────────────────────────────────────────
