@@ -335,49 +335,68 @@ const App = {
   },
 
   getMechSVG(step) {
-    const enzymeColor = '#16a34a';
-    const substrateColor = '#8b5cf6';
-    const productColor = '#06b6d4';
-    const w = 800, h = 260;
+    const eC = '#166534'; // enzyme dark green (visible in light mode)
+    const eFill = '#16a34a'; // enzyme fill
+    const sC = '#8b5cf6'; // substrate
+    const pC = '#06b6d4'; // product
+    const w = 800, h = 280;
     let svg = `<svg viewBox="0 0 ${w} ${h}" class="enzyme-svg" xmlns="http://www.w3.org/2000/svg">`;
-    svg += `<defs><linearGradient id="enz-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${enzymeColor}" stop-opacity="0.9"/><stop offset="100%" stop-color="#22c55e" stop-opacity="0.7"/></linearGradient></defs>`;
-    // Enzyme body (pac-man shape with active site notch)
-    const ex = 350, ey = 130, er = 80;
+    svg += `<defs><linearGradient id="eg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${eFill}" stop-opacity="0.9"/><stop offset="100%" stop-color="#22c55e" stop-opacity="0.7"/></linearGradient></defs>`;
+    // Enzyme center & radius
+    const cx = 320, cy = 130, r = 85;
+    // Active site notch is on the RIGHT side – triangular/wedge notch
+    // Notch points: top-right of notch, tip (inward), bottom-right of notch
+    const nTop = {x: cx + r * 0.85, y: cy - 28};
+    const nTip = {x: cx + r * 0.45, y: cy};
+    const nBot = {x: cx + r * 0.85, y: cy + 28};
+    // Enzyme path: arc from top to nTop, line to nTip, line to nBot, arc from nBot back to top
+    const enzymePath = `M${cx},${cy-r} A${r},${r} 0 1,0 ${nBot.x},${nBot.y} L${nTip.x},${nTip.y} L${nTop.x},${nTop.y} A${r},${r} 0 0,0 ${cx},${cy-r} Z`;
+    // Substrate: triangular wedge that fits the notch
+    const subW = 32; // how deep the substrate triangle is
+    const subPath = (ox, oy) => `M${ox},${oy-26} L${ox+subW},${oy-26} L${ox+subW},${oy+26} L${ox},${oy+26} L${ox-20},${oy} Z`;
+
     if (step === 0) {
-      // Enzyme open, substrate approaching
-      svg += `<path d="M${ex},${ey - er} A${er},${er} 0 1,1 ${ex},${ey + er} L${ex},${ey + 25} L${ex + 30},${ey} L${ex},${ey - 25} Z" fill="url(#enz-grad)" stroke="${enzymeColor}" stroke-width="2"/>`;
-      svg += `<text x="${ex - 30}" y="${ey + 5}" fill="white" font-size="14" font-weight="bold" font-family="Outfit">Enzym</text>`;
-      // Substrate floating right
-      svg += `<rect x="550" y="105" width="50" height="50" rx="8" fill="${substrateColor}" opacity="0.85"><animate attributeName="x" values="600;540;600" dur="2s" repeatCount="indefinite"/></rect>`;
-      svg += `<text x="560" y="137" fill="white" font-size="11" font-weight="bold" font-family="Outfit"><animate attributeName="x" values="610;550;610" dur="2s" repeatCount="indefinite"/>Sub.</text>`;
-      svg += `<text x="${ex - 10}" y="${ey + 5}" fill="${enzymeColor}" font-size="10" font-weight="bold" font-family="Outfit">AZ</text>`;
+      // Enzyme with open active site, substrate approaching from right
+      svg += `<path d="${enzymePath}" fill="url(#eg)" stroke="${eFill}" stroke-width="2"/>`;
+      svg += `<text x="${cx-35}" y="${cy+5}" fill="${eC}" font-size="15" font-weight="bold" font-family="Outfit">Enzym</text>`;
+      // AZ label near the notch
+      svg += `<text x="${nTip.x+10}" y="${cy-32}" fill="${eFill}" font-size="10" font-weight="bold" font-family="Outfit">Aktives</text>`;
+      svg += `<text x="${nTip.x+10}" y="${cy-20}" fill="${eFill}" font-size="10" font-weight="bold" font-family="Outfit">Zentrum</text>`;
+      // Substrate floating from right
+      const sy = cy;
+      svg += `<path d="${subPath(530, sy)}" fill="${sC}" opacity="0.85"><animate attributeName="opacity" values="0.85;0.95;0.85" dur="2s" repeatCount="indefinite"/></path>`;
+      svg += `<text x="525" y="${sy+5}" fill="white" font-size="11" font-weight="bold" font-family="Outfit">Substrat</text>`;
+      // Arrow showing movement
+      svg += `<line x1="500" y1="${cy}" x2="430" y2="${cy}" stroke="${sC}" stroke-width="2" stroke-dasharray="6,4"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1s" repeatCount="indefinite"/></line>`;
+      svg += `<polygon points="430,${cy-6} 418,${cy} 430,${cy+6}" fill="${sC}"/>`;
     } else if (step === 1) {
-      // ES-complex: substrate docked
-      svg += `<path d="M${ex},${ey - er} A${er},${er} 0 1,1 ${ex},${ey + er} L${ex},${ey + 25} L${ex + 30},${ey} L${ex},${ey - 25} Z" fill="url(#enz-grad)" stroke="${enzymeColor}" stroke-width="2"/>`;
-      svg += `<rect x="${ex + 2}" y="${ey - 25}" width="50" height="50" rx="8" fill="${substrateColor}" opacity="0.9"/>`;
-      svg += `<text x="${ex + 10}" y="${ey + 5}" fill="white" font-size="11" font-weight="bold" font-family="Outfit">Sub.</text>`;
-      svg += `<text x="${ex - 45}" y="${ey + 5}" fill="white" font-size="14" font-weight="bold" font-family="Outfit">Enzym</text>`;
-      // Arrow label
-      svg += `<text x="${ex - 10}" y="${ey + er + 30}" fill="${enzymeColor}" font-size="13" font-weight="bold" font-family="Outfit" text-anchor="middle">Enzym-Substrat-Komplex</text>`;
+      // ES-complex: substrate docked into the notch
+      svg += `<path d="${enzymePath}" fill="url(#eg)" stroke="${eFill}" stroke-width="2"/>`;
+      // Substrate fits exactly into the notch
+      svg += `<path d="${subPath(nTip.x + 20, cy)}" fill="${sC}" opacity="0.9"/>`;
+      svg += `<text x="${nTip.x+15}" y="${cy+5}" fill="white" font-size="10" font-weight="bold" font-family="Outfit">Sub.</text>`;
+      svg += `<text x="${cx-35}" y="${cy+5}" fill="${eC}" font-size="15" font-weight="bold" font-family="Outfit">Enzym</text>`;
+      svg += `<text x="${cx}" y="${cy+r+28}" fill="${eFill}" font-size="14" font-weight="bold" font-family="Outfit" text-anchor="middle">Enzym-Substrat-Komplex</text>`;
     } else if (step === 2) {
-      // Catalysis happening
-      svg += `<path d="M${ex},${ey - er} A${er},${er} 0 1,1 ${ex},${ey + er} L${ex},${ey + 25} L${ex + 30},${ey} L${ex},${ey - 25} Z" fill="url(#enz-grad)" stroke="${enzymeColor}" stroke-width="2"><animate attributeName="opacity" values="1;0.7;1" dur="0.8s" repeatCount="indefinite"/></path>`;
-      svg += `<rect x="${ex + 2}" y="${ey - 25}" width="50" height="50" rx="8" fill="${substrateColor}" opacity="0.7"><animate attributeName="opacity" values="0.9;0.4;0.9" dur="0.6s" repeatCount="indefinite"/></rect>`;
-      svg += `<text x="${ex - 45}" y="${ey + 5}" fill="white" font-size="14" font-weight="bold" font-family="Outfit">Enzym</text>`;
-      // Energy sparks
-      svg += `<circle cx="${ex + 35}" cy="${ey - 35}" r="4" fill="#fbbf24"><animate attributeName="r" values="2;6;2" dur="0.5s" repeatCount="indefinite"/></circle>`;
-      svg += `<circle cx="${ex + 55}" cy="${ey + 10}" r="3" fill="#fbbf24"><animate attributeName="r" values="1;5;1" dur="0.7s" repeatCount="indefinite"/></circle>`;
-      svg += `<text x="${ex + 20}" y="${ey + er + 30}" fill="${enzymeColor}" font-size="13" font-weight="bold" font-family="Outfit" text-anchor="middle">⚡ Katalyse läuft...</text>`;
+      // Catalysis
+      svg += `<path d="${enzymePath}" fill="url(#eg)" stroke="${eFill}" stroke-width="2"><animate attributeName="opacity" values="1;0.75;1" dur="0.8s" repeatCount="indefinite"/></path>`;
+      svg += `<path d="${subPath(nTip.x + 20, cy)}" fill="${sC}" opacity="0.7"><animate attributeName="opacity" values="0.9;0.4;0.9" dur="0.6s" repeatCount="indefinite"/></path>`;
+      svg += `<text x="${cx-35}" y="${cy+5}" fill="${eC}" font-size="15" font-weight="bold" font-family="Outfit">Enzym</text>`;
+      // Sparks
+      svg += `<circle cx="${nTop.x+10}" cy="${cy-40}" r="4" fill="#fbbf24"><animate attributeName="r" values="2;7;2" dur="0.5s" repeatCount="indefinite"/></circle>`;
+      svg += `<circle cx="${nBot.x+15}" cy="${cy+15}" r="3" fill="#fbbf24"><animate attributeName="r" values="1;6;1" dur="0.7s" repeatCount="indefinite"/></circle>`;
+      svg += `<circle cx="${nTip.x+45}" cy="${cy}" r="3" fill="#fbbf24"><animate attributeName="r" values="2;5;2" dur="0.4s" repeatCount="indefinite"/></circle>`;
+      svg += `<text x="${cx}" y="${cy+r+28}" fill="${eFill}" font-size="14" font-weight="bold" font-family="Outfit" text-anchor="middle">⚡ Katalyse läuft...</text>`;
     } else {
-      // Products released
-      svg += `<path d="M${ex},${ey - er} A${er},${er} 0 1,1 ${ex},${ey + er} L${ex},${ey + 25} L${ex + 30},${ey} L${ex},${ey - 25} Z" fill="url(#enz-grad)" stroke="${enzymeColor}" stroke-width="2"/>`;
-      svg += `<text x="${ex - 45}" y="${ey + 5}" fill="white" font-size="14" font-weight="bold" font-family="Outfit">Enzym</text>`;
-      svg += `<text x="${ex - 5}" y="${ey + 5}" fill="${enzymeColor}" font-size="10" font-weight="bold" font-family="Outfit">frei!</text>`;
-      // Two products moving away
-      svg += `<rect x="550" y="85" width="35" height="35" rx="6" fill="${productColor}" opacity="0.85"><animate attributeName="x" values="480;600" dur="2s" fill="freeze"/></rect>`;
-      svg += `<text x="555" y="108" fill="white" font-size="9" font-weight="bold" font-family="Outfit"><animate attributeName="x" values="485;605" dur="2s" fill="freeze"/>P1</text>`;
-      svg += `<rect x="550" y="145" width="35" height="35" rx="6" fill="${productColor}" opacity="0.85"><animate attributeName="x" values="480;620" dur="2.2s" fill="freeze"/></rect>`;
-      svg += `<text x="555" y="168" fill="white" font-size="9" font-weight="bold" font-family="Outfit"><animate attributeName="x" values="485;625" dur="2.2s" fill="freeze"/>P2</text>`;
+      // Products released, enzyme free
+      svg += `<path d="${enzymePath}" fill="url(#eg)" stroke="${eFill}" stroke-width="2"/>`;
+      svg += `<text x="${cx-35}" y="${cy+5}" fill="${eC}" font-size="15" font-weight="bold" font-family="Outfit">Enzym</text>`;
+      svg += `<text x="${nTip.x+5}" y="${cy+5}" fill="${eFill}" font-size="10" font-weight="bold" font-family="Outfit">frei!</text>`;
+      // Two products leaving to the right
+      svg += `<rect x="500" y="${cy-45}" width="38" height="32" rx="6" fill="${pC}" opacity="0.9"><animate attributeName="x" values="430;600" dur="2s" fill="freeze"/></rect>`;
+      svg += `<text x="508" y="${cy-24}" fill="white" font-size="10" font-weight="bold" font-family="Outfit"><animate attributeName="x" values="438;608" dur="2s" fill="freeze"/>P₁</text>`;
+      svg += `<rect x="500" y="${cy+13}" width="38" height="32" rx="6" fill="${pC}" opacity="0.9"><animate attributeName="x" values="430;620" dur="2.2s" fill="freeze"/></rect>`;
+      svg += `<text x="508" y="${cy+34}" fill="white" font-size="10" font-weight="bold" font-family="Outfit"><animate attributeName="x" values="438;628" dur="2.2s" fill="freeze"/>P₂</text>`;
     }
     svg += '</svg>';
     return svg;
@@ -403,7 +422,7 @@ const App = {
       </div>
       <div class="energy-diagram"><canvas id="energy-canvas"></canvas></div>
       <div class="graph-legend"><span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Ohne Enzym</span><span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Mit Enzym</span></div>
-      <div class="card" style="margin-top:var(--sp-lg)"><h3>Was passiert?</h3><p style="font-size:0.85rem;margin-top:var(--sp-sm)">Das Enzym stabilisiert den Übergangszustand. Die <strong>Aktivierungsenergie (EA)</strong> wird gesenkt, die <strong>Reaktionsenergie (ΔG)</strong> bleibt gleich.</p></div>
+      <div class="card" style="margin-top:var(--sp-lg)"><h3>Was passiert?</h3><p style="font-size:0.85rem;margin-top:var(--sp-sm)">Das Enzym stabilisiert den Übergangszustand. Die <strong>Aktivierungsenergie (E<sub>A</sub>)</strong> wird gesenkt, die <strong>Reaktionsenergie (ΔE<sub>i</sub>)</strong> bleibt gleich. E<sub>i</sub>(E) = innere Energie der Edukte, E<sub>i</sub>(P) = innere Energie der Produkte.</p></div>
       <button class="btn btn-primary" style="margin-top:var(--sp-lg)" onclick="Progress.markDone('energy');Scoring.add(10)">✓ Kapitel abschließen</button>
       ${this.getNavFooter('energy')}`;
     setTimeout(() => this.drawEnergyDiagram(), 50);
@@ -419,26 +438,95 @@ const App = {
     const w = rect.width, h = rect.height;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     ctx.fillStyle = isDark ? '#1a2e1a' : '#fafff5'; ctx.fillRect(0, 0, w, h);
-    const mx = 60, my = 30, bx = w - 30, by = h - 50;
+    const mx = 70, my = 30, bx = w - 30, by = h - 50;
+    // Axes
     ctx.strokeStyle = isDark ? '#4a6a4a' : '#94a3b8'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx, by); ctx.lineTo(bx, by); ctx.stroke();
     ctx.fillStyle = isDark ? '#a0c0a0' : '#475569'; ctx.font = '13px Outfit'; ctx.textAlign = 'center';
     ctx.fillText('Reaktionsverlauf', (mx + bx) / 2, h - 10);
-    ctx.save(); ctx.translate(18, (my + by) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Energie', 0, 0); ctx.restore();
-    const rw = bx - mx, eduktY = by - 80, produktY = by - 50, peakNoEnz = my + 40, peakEnz = my + 120;
+    ctx.save(); ctx.translate(16, (my + by) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Energie', 0, 0); ctx.restore();
+    const rw = bx - mx, eduktY = by - 90, produktY = by - 45, peakNoEnz = my + 30, peakEnz = my + 110;
+
+    // ── Ei(E) and Ei(P) horizontal lines ──
+    // Ei(E) line across educts
+    ctx.strokeStyle = isDark ? '#7aa07a' : '#475569'; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(mx, eduktY); ctx.lineTo(mx + rw * 0.25, eduktY); ctx.stroke();
+    // Ei(P) line across products
+    ctx.beginPath(); ctx.moveTo(mx + rw * 0.75, produktY); ctx.lineTo(bx, produktY); ctx.stroke();
+    // Labels for Ei(E) and Ei(P)
+    ctx.fillStyle = isDark ? '#c0e0c0' : '#334155'; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'right';
+    ctx.fillText('Eᵢ(E)', mx - 5, eduktY + 4);
+    ctx.textAlign = 'left';
+    ctx.fillText('Eᵢ(P)', bx + 5, produktY + 4);
+
+    // ── Without enzyme curve (always shown) ──
     ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
     ctx.beginPath();
-    for (let t = 0; t <= 1; t += 0.005) { const x = mx + t * rw; const base = eduktY + (produktY - eduktY) * t; const bump = Math.sin(t * Math.PI) * (eduktY - peakNoEnz); const y = base - bump; t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    for (let t = 0; t <= 1; t += 0.004) {
+      const x = mx + t * rw;
+      const base = eduktY + (produktY - eduktY) * t;
+      const bump = Math.sin(t * Math.PI) * (eduktY - peakNoEnz);
+      const y = base - bump;
+      t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
     ctx.stroke();
-    if (this.energyShowEnzyme) { ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2.5; ctx.beginPath(); for (let t = 0; t <= 1; t += 0.005) { const x = mx + t * rw; const base = eduktY + (produktY - eduktY) * t; const bump = Math.sin(t * Math.PI) * (eduktY - peakEnz); const y = base - bump; t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); }
-    const arrowX = mx + rw * 0.35;
+
+    // ── With enzyme curve ──
+    if (this.energyShowEnzyme) {
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+      ctx.beginPath();
+      for (let t = 0; t <= 1; t += 0.004) {
+        const x = mx + t * rw;
+        const base = eduktY + (produktY - eduktY) * t;
+        const bump = Math.sin(t * Math.PI) * (eduktY - peakEnz);
+        const y = base - bump;
+        t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // ── EA arrow WITHOUT enzyme: from Ei(E) up to peakNoEnz ──
+    const arrowX = mx + rw * 0.42;
     ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
-    ctx.beginPath(); ctx.moveTo(arrowX, eduktY); ctx.lineTo(arrowX, peakNoEnz + 15); ctx.stroke();
-    ctx.setLineDash([]); ctx.fillStyle = '#ef4444'; ctx.font = 'bold 11px Outfit'; ctx.textAlign = 'left';
-    ctx.fillText('EA ohne Enzym', arrowX + 6, (eduktY + peakNoEnz) / 2);
-    if (this.energyShowEnzyme) { const ax2 = mx + rw * 0.55; ctx.strokeStyle = '#22c55e'; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(ax2, eduktY); ctx.lineTo(ax2, peakEnz + 15); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#22c55e'; ctx.font = 'bold 11px Outfit'; ctx.fillText('EA mit Enzym', ax2 + 6, (eduktY + peakEnz) / 2 + 10); }
-    ctx.fillStyle = isDark ? '#c0e0c0' : '#334155'; ctx.font = 'bold 13px Outfit'; ctx.textAlign = 'center';
-    ctx.fillText('Edukte', mx + 40, eduktY - 10); ctx.fillText('Produkte', bx - 50, produktY - 10);
+    ctx.beginPath(); ctx.moveTo(arrowX, eduktY); ctx.lineTo(arrowX, peakNoEnz + 8); ctx.stroke();
+    // Arrowhead
+    ctx.setLineDash([]); ctx.beginPath();
+    ctx.moveTo(arrowX - 4, peakNoEnz + 16); ctx.lineTo(arrowX, peakNoEnz + 8); ctx.lineTo(arrowX + 4, peakNoEnz + 16); ctx.stroke();
+    // Label: Eₐ ohne Enzym
+    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 11px Outfit'; ctx.textAlign = 'left';
+    ctx.fillText('E', arrowX + 6, (eduktY + peakNoEnz) / 2);
+    ctx.font = 'bold 8px Outfit';
+    ctx.fillText('A', arrowX + 17, (eduktY + peakNoEnz) / 2 + 3);
+    ctx.font = 'bold 11px Outfit';
+    ctx.fillText(' ohne Enzym', arrowX + 24, (eduktY + peakNoEnz) / 2);
+
+    // ── EA arrow WITH enzyme: from Ei(E) up to peakEnz ──
+    if (this.energyShowEnzyme) {
+      const ax2 = mx + rw * 0.56;
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(ax2, eduktY); ctx.lineTo(ax2, peakEnz + 8); ctx.stroke();
+      ctx.setLineDash([]); ctx.beginPath();
+      ctx.moveTo(ax2 - 4, peakEnz + 16); ctx.lineTo(ax2, peakEnz + 8); ctx.lineTo(ax2 + 4, peakEnz + 16); ctx.stroke();
+      ctx.fillStyle = '#22c55e'; ctx.font = 'bold 11px Outfit'; ctx.textAlign = 'left';
+      ctx.fillText('E', ax2 + 6, (eduktY + peakEnz) / 2 + 8);
+      ctx.font = 'bold 8px Outfit';
+      ctx.fillText('A', ax2 + 17, (eduktY + peakEnz) / 2 + 11);
+      ctx.font = 'bold 11px Outfit';
+      ctx.fillText(' mit Enzym', ax2 + 24, (eduktY + peakEnz) / 2 + 8);
+    }
+
+    // ── ΔEi arrow (reaction energy, stays the same) ──
+    const dgX = bx - 70;
+    ctx.strokeStyle = isDark ? '#7aa07a' : '#64748b'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(dgX, eduktY); ctx.lineTo(dgX, produktY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = isDark ? '#7aa07a' : '#64748b'; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'center';
+    ctx.fillText('ΔEᵢ', dgX, (eduktY + produktY) / 2 + 4);
+
+    // ── Edukt / Produkt labels ──
+    ctx.fillStyle = isDark ? '#c0e0c0' : '#334155'; ctx.font = 'bold 12px Outfit'; ctx.textAlign = 'center';
+    ctx.fillText('Edukte', mx + rw * 0.12, eduktY - 12);
+    ctx.fillText('Produkte', bx - rw * 0.12, produktY - 12);
   },
 
   // ── FACTORS RENDER ──────────────────────────────────────────
