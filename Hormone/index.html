@@ -419,60 +419,128 @@
             };
 
             const BodySVG = () => (
-                <svg viewBox="0 0 300 500" className="w-full h-full">
+                <svg viewBox="10 0 280 500" className="w-full h-full filter drop-shadow-md">
                     <defs>
                         <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#e8d5c4" />
+                            <stop offset="0%" stopColor="#f5e6d8" />
+                            <stop offset="50%" stopColor="#ebd5c4" />
                             <stop offset="100%" stopColor="#dbc4b0" />
                         </linearGradient>
-                        <linearGradient id="organBg" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#fce4ec" stopOpacity="0.5" />
-                            <stop offset="100%" stopColor="#f8bbd0" stopOpacity="0.3" />
+                        <linearGradient id="shadowGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="black" stopOpacity="0.05" />
+                            <stop offset="100%" stopColor="transparent" />
                         </linearGradient>
+                        <filter id="organGlow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="1.5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
                     </defs>
-                    <ellipse cx="150" cy="55" rx="35" ry="42" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1.5" />
-                    <ellipse cx="114" cy="55" rx="6" ry="10" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <ellipse cx="186" cy="55" rx="6" ry="10" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <rect x="137" y="93" width="26" height="30" rx="4" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <path d="M105,125 Q100,125 95,135 L80,185 L78,240 L82,320 Q85,340 100,350 L115,360 L135,365 L150,367 L165,365 L185,360 L200,350 Q215,340 218,320 L222,240 L220,185 L205,135 Q200,125 195,125 Z"
-                        fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1.5" />
-                    <path d="M115,140 Q110,145 108,160 L105,220 L108,290 Q110,320 125,340 L150,350 L175,340 Q190,320 192,290 L195,220 L192,160 Q190,145 185,140 Z"
-                        fill="url(#organBg)" stroke="#e0a0b0" strokeWidth="0.5" strokeDasharray="3,3" />
-                    <path d="M105,125 Q80,128 60,145 L50,160" fill="none" stroke="#c9a88c" strokeWidth="8" strokeLinecap="round" />
-                    <path d="M195,125 Q220,128 240,145 L250,160" fill="none" stroke="#c9a88c" strokeWidth="8" strokeLinecap="round" />
-                    <path d="M50,160 L42,220 L38,280 L40,310 Q42,325 48,330 L55,332 Q60,330 58,320 L52,280 L50,240" fill="none" stroke="url(#skinGrad)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
-                    <ellipse cx="51" cy="332" rx="12" ry="8" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <path d="M250,160 L258,220 L262,280 L260,310 Q258,325 252,330 L245,332 Q240,330 242,320 L248,280 L250,240" fill="none" stroke="url(#skinGrad)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
-                    <ellipse cx="249" cy="332" rx="12" ry="8" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <path d="M125,360 L118,400 L112,440 L110,470 L108,490" fill="none" stroke="url(#skinGrad)" strokeWidth="28" strokeLinecap="round" />
-                    <ellipse cx="108" cy="493" rx="16" ry="7" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <path d="M175,360 L182,400 L188,440 L190,470 L192,490" fill="none" stroke="url(#skinGrad)" strokeWidth="28" strokeLinecap="round" />
-                    <ellipse cx="192" cy="493" rx="16" ry="7" fill="url(#skinGrad)" stroke="#c9a88c" strokeWidth="1" />
-                    <path d="M130,40 Q125,30 135,25 Q145,18 155,22 Q165,18 170,28 Q178,35 172,45 Q175,52 168,56 Q160,62 150,60 Q140,62 133,56 Q126,50 130,40 Z"
-                        fill="#f8d7e0" fillOpacity="0.5" stroke="#d4a0b0" strokeWidth="0.8" />
-                    <path d="M140,150 Q135,145 132,150 Q130,158 140,158 Z" fill="#b2dfdb" fillOpacity="0.4" stroke="#80cbc4" strokeWidth="0.5" />
-                    <path d="M160,150 Q165,145 168,150 Q170,158 160,158 Z" fill="#b2dfdb" fillOpacity="0.4" stroke="#80cbc4" strokeWidth="0.5" />
-                    <rect x="146" y="152" width="8" height="4" rx="2" fill="#b2dfdb" fillOpacity="0.3" />
-                    <ellipse cx="128" cy="268" rx="12" ry="18" fill="#ffccbc" fillOpacity="0.3" stroke="#ffab91" strokeWidth="0.5" />
-                    <ellipse cx="172" cy="268" rx="12" ry="18" fill="#ffccbc" fillOpacity="0.3" stroke="#ffab91" strokeWidth="0.5" />
-                    <path d="M135,295 Q145,290 165,295 Q175,298 178,305 Q175,310 165,308 Q145,305 135,300 Z" fill="#fff9c4" fillOpacity="0.3" stroke="#fff176" strokeWidth="0.5" />
+
+                    {/* Outer Body Outline - Anatomical Proportion */}
+                    <path d="M150,20 C175,20 195,45 195,75 C195,90 185,100 175,110 L175,125 
+                             C200,130 225,145 235,175 L245,215 C250,235 255,255 255,275 
+                             L252,320 C250,335 240,340 230,340 C220,340 215,330 212,315 
+                             L205,250 C202,230 200,210 195,190 
+                             L195,350 C195,370 185,480 175,490 C165,500 155,500 150,500 
+                             C145,500 135,500 125,490 C115,480 105,370 105,350 
+                             L105,190 C100,210 98,230 95,250 L88,315 
+                             C85,330 80,340 70,340 C60,340 50,335 48,320 
+                             L45,275 C45,255 50,235 55,215 L65,175 
+                             C75,145 100,130 125,125 L125,110 
+                             C115,100 105,90 105,75 C105,45 125,20 150,20 Z" 
+                          fill="url(#skinGrad)" stroke="#b5947a" strokeWidth="1.2" />
+
+                    {/* Subtle Muscular Shading */}
+                    <path d="M150,25 C170,25 188,48 188,75 M112,75 C112,48 130,25 150,25" fill="none" stroke="#d4b49a" strokeWidth="0.8" opacity="0.6" />
+                    <path d="M125,145 Q150,155 175,145 M130,220 Q150,230 170,220 M130,290 Q150,300 170,290" fill="none" stroke="#c9a88c" strokeWidth="1" opacity="0.5" />
+
+                    {/* Internal Organ Framework (Textbook Style) */}
+                    <g opacity="0.4" filter="url(#organGlow)">
+                        {/* Lungs */}
+                        <path d="M128,140 Q105,145 108,185 Q110,210 138,205 Q140,180 138,150 Z" fill="#f8bbd0" stroke="#d81b60" strokeWidth="0.5" />
+                        <path d="M172,140 Q195,145 192,185 Q190,210 162,205 Q160,180 162,150 Z" fill="#f8bbd0" stroke="#d81b60" strokeWidth="0.5" />
+                        
+                        {/* Heart Position */}
+                        <path d="M142,175 Q150,165 158,180 Q155,195 145,192 Z" fill="#ef5350" stroke="#c62828" strokeWidth="0.5" />
+                        
+                        {/* Liver */}
+                        <path d="M125,225 Q145,220 185,235 Q185,260 165,265 Q145,265 125,255 Z" fill="#8d6e63" stroke="#4e342e" strokeWidth="0.5" />
+                        
+                        {/* Stomach */}
+                        <path d="M175,245 Q165,275 135,265 Q125,255 145,235 Z" fill="#ffccbc" stroke="#bf360c" strokeWidth="0.5" />
+                        
+                        {/* Intestines (Area) */}
+                        <path d="M125,280 Q150,275 175,280 L180,330 Q150,345 120,330 Z" fill="#e1bee7" stroke="#7b1fa2" strokeWidth="0.5" />
+                    </g>
+
+                    {/* Enhanced Brain Detail */}
+                    <path d="M132,45 C125,45 120,55 120,65 C120,75 130,85 150,85 C170,85 180,75 180,65 C180,55 175,45 168,45 Z" 
+                          fill="#fce4ec" stroke="#f06292" strokeWidth="0.8" opacity="0.6" />
+                    <path d="M135,55 Q150,50 165,55 M140,65 Q150,60 160,65" fill="none" stroke="#f06292" strokeWidth="0.5" opacity="0.4" />
+
+                    {/* Individual Gland Placements with Interactive Glow */}
                     {glands.map(g => {
                         const placed = placements[g.id];
                         const selected = selectedId === g.id;
+                        
+                        // Anatomical markers for specific glands
+                        let glandShape = null;
+                        if (placed) {
+                            if (g.id === 'schild') glandShape = <path d="M142,148 Q150,155 158,148 L155,160 Q150,158 145,160 Z" fill="#ef5350" stroke="#b71c1c" strokeWidth="0.5" />;
+                            if (g.id === 'bauch') glandShape = <path d="M135,285 Q150,280 175,285 Q180,295 170,300 Q150,300 135,295 Z" fill="#fff59d" stroke="#fbc02d" strokeWidth="0.5" />;
+                            if (g.id === 'neben') glandShape = (
+                                <g>
+                                    <path d="M128,260 L138,255 L143,260 Z" fill="#ffa726" stroke="#e65100" strokeWidth="0.3" />
+                                    <path d="M172,260 L162,255 L157,260 Z" fill="#ffa726" stroke="#e65100" strokeWidth="0.3" />
+                                </g>
+                            );
+                            if (g.id === 'sex') glandShape = (
+                                <g>
+                                    <circle cx="135" cy="375" r="5" fill="#ce93d8" stroke="#6a1b9a" strokeWidth="0.5" />
+                                    <circle cx="165" cy="375" r="5" fill="#ce93d8" stroke="#6a1b9a" strokeWidth="0.5" />
+                                </g>
+                            );
+                        }
+
                         return (
                             <g key={g.id} onClick={() => handleBodyClick(g.id)} style={{ cursor: 'pointer' }}>
+                                {/* Visual Anchor for Gland */}
+                                {glandShape}
+                                
+                                {/* Selection Indicator */}
                                 {selected && !placed && (
-                                    <circle cx={g.cx} cy={g.cy} r="14" fill="none" stroke="#3b82f6" strokeWidth="2" opacity="0.6">
-                                        <animate attributeName="r" values="10;16;10" dur="1.2s" repeatCount="indefinite" />
-                                        <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.2s" repeatCount="indefinite" />
-                                    </circle>
+                                    <g>
+                                        <circle cx={g.cx} cy={g.cy} r="18" fill="none" stroke="#2563eb" strokeWidth="2" opacity="0.4">
+                                            <animate attributeName="r" values="14;22;14" dur="1.5s" repeatCount="indefinite" />
+                                            <animate attributeName="opacity" values="0.6;0;0.6" dur="1.5s" repeatCount="indefinite" />
+                                        </circle>
+                                        <circle cx={g.cx} cy={g.cy} r="4" fill="#2563eb">
+                                            <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
+                                        </circle>
+                                    </g>
                                 )}
-                                <circle cx={g.cx} cy={g.cy} r="10"
-                                    fill={placed ? "#22c55e" : selected ? "#60a5fa" : "#e5e7eb"}
-                                    stroke={placed ? "#16a34a" : selected ? "#3b82f6" : "#d1d5db"}
-                                    strokeWidth="2" opacity={placed || selected ? 1 : 0.4} />
-                                {placed && <polyline points={`${g.cx - 4},${g.cy} ${g.cx - 1},${g.cy + 3} ${g.cx + 5},${g.cy - 4}`} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
-                                {placed && <text x={g.cx + 16} y={g.cy + 4} fill="#166534" fontSize="10" fontWeight="bold" fontFamily="sans-serif">{g.name}</text>}
+
+                                {/* Gland Hotspot / Placement Indicator */}
+                                <circle cx={g.cx} cy={g.cy} r={placed ? "6" : "8"}
+                                    fill={placed ? "#10b981" : selected ? "#3b82f6" : "white"}
+                                    fillOpacity={placed || selected ? "1" : "0.1"}
+                                    stroke={placed ? "#065f46" : selected ? "#1d4ed8" : "#94a3b8"}
+                                    strokeWidth={placed || selected ? "2" : "1"}
+                                    strokeDasharray={placed || selected ? "" : "3,2"}
+                                    className="transition-all duration-300"
+                                />
+
+                                {placed && (
+                                    <g filter="url(#organGlow)">
+                                        <line x1={g.cx} y1={g.cy} x2={g.cx + (g.cx > 150 ? 25 : -25)} y2={g.cy} stroke="#10b981" strokeWidth="1" strokeDasharray="2,1" />
+                                        <text x={g.cx + (g.cx > 150 ? 28 : -28)} y={g.cy + 4} 
+                                              fill="#065f46" fontSize="11" fontWeight="bold" 
+                                              textAnchor={g.cx > 150 ? "start" : "end"}
+                                              fontFamily="sans-serif" className="animate-fade-in">
+                                            {g.name}
+                                        </text>
+                                    </g>
+                                )}
                             </g>
                         );
                     })}
