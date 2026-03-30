@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SangerSequenz | Mobile Learning</title>
+    
+    <!-- Meta & SEO -->
+    <meta name="description" content="Interaktive Mobile-Learning App zur Sanger-Sequenzierung für Biologie 12.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        
+        <!-- ==================== SCREEN: HOME ==================== -->
+        <div id="screen-home" class="screen active">
+            <div class="home-hero">
+                <div class="molecular-bg" id="home-bg"></div>
+                <h1>Sanger<br><span class="highlight">Sequenzierung</span></h1>
+                <p class="subtitle">Die Entschlüsselung der DNA</p>
+                <div class="badge">Biologie 12</div>
+            </div>
+            
+            <div class="home-actions">
+                <button class="btn btn-primary btn-large" onclick="app.startLesson()">
+                    <span class="icon">▶</span> Lektion starten
+                </button>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <span class="stat-value">6</span>
+                        <span class="stat-label">Module</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">10m</span>
+                        <span class="stat-label">Dauer</span>
+                    </div>
+                    <div class="stat-box" id="highscore-box">
+                        <span class="stat-value" id="highscore-val">-</span>
+                        <span class="stat-label">Punkte</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN: LEARN ==================== -->
+        <div id="screen-learn" class="screen">
+            <div class="top-bar">
+                <button class="btn-icon" onclick="app.showScreen('home')">✕</button>
+                <div class="progress-container">
+                    <div class="progress-bar" id="learn-progress"></div>
+                </div>
+                <div class="score-display">🔬</div>
+            </div>
+
+            <div class="cards-container" id="learn-cards">
+                <!-- Cards werden dynamisch per JS eingefügt -->
+            </div>
+
+            <div class="bottom-bar">
+                <button id="btn-prev-card" class="btn btn-secondary" onclick="app.prevCard()" disabled>Zurück</button>
+                <button id="btn-next-card" class="btn btn-primary" onclick="app.nextCard()">Weiter</button>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN: QUIZ ==================== -->
+        <div id="screen-quiz" class="screen">
+            <div class="top-bar">
+                <button class="btn-icon" onclick="app.cancelQuiz()">✕</button>
+                <div class="progress-container">
+                    <div class="progress-bar quiz-progress" id="quiz-progress"></div>
+                </div>
+                <div class="score-display">⭐ <span id="quiz-score">0</span></div>
+            </div>
+
+            <div class="quiz-container">
+                <div class="quiz-question" id="quiz-question-text">Frage lädt...</div>
+                <div class="quiz-media" id="quiz-media-container"></div>
+                <div class="quiz-options" id="quiz-options-container">
+                    <!-- Optionen via JS -->
+                </div>
+            </div>
+            
+            <div class="bottom-bar" id="quiz-action-bar" style="display: none;">
+                <button id="btn-quiz-next" class="btn btn-primary btn-full" onclick="app.nextQuizQuestion()">Nächste Frage</button>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN: RESULT ==================== -->
+        <div id="screen-result" class="screen">
+            <div class="result-content">
+                <div class="result-icon">🏆</div>
+                <h2>Lektion abgeschlossen!</h2>
+                
+                <div class="score-circle">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="progress" id="result-circle" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="score-text">
+                        <span id="final-score-val">0</span>%
+                    </div>
+                </div>
+                
+                <div class="result-feedback" id="result-feedback-text">
+                    Großartige Arbeit! Du hast die Grundlagen der DNA-Sequenzierung gemeistert.
+                </div>
+                
+                <p class="pedagogy-note">Dieses Wissen hilft dir beim Verständnis der modernen Genetik und PCR-Anwendungen.</p>
+            </div>
+            
+            <div class="bottom-bar">
+                <button class="btn btn-secondary" onclick="app.startQuiz()">Wiederholen</button>
+                <button class="btn btn-primary" onclick="app.showScreen('home')">Zum Menü</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
