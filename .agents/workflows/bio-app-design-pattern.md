@@ -14,15 +14,12 @@ Jede App wird als **Single-File SPA (Single Page Application)** in der Datei `in
 
 ## 2. Visuelles Design: IMMER GRÜN
 - **Farbpalette:** Das Thema ist IMMER grün, um zu den anderen Biologie-Apps zu passen! Die Akzentfarben sind `green-500`, `green-600`, `green-700`, `green-800` für Text, Buttons und Rahmen. Hintergründe nutzen `green-50` oder `green-100`.
-- **Ecken & Schatten:** Boxen haben große Rundungen (`rounded-xl` oder `rounded-2xl`). Header und Main haben sanfte Schatten (`shadow-sm`, `shadow-xl`).
-- **Icons:** Ausschließlich SVG Inline-Icons (eingebettet als React Components, z.B. `<IconHome />`, `<IconCheck />`).
-
-## 3. Mobile First Design & Layout
-Das Layout muss auf Smartphones (`md:` prefix = Desktop) strikt fließend sein:
-
-### App-Container & Body
-- Der Root-Container MUSS das Format haben:
-  `<div className="max-w-4xl mx-auto p-3 md:p-4 min-h-screen flex flex-col">`
+- **Ecken & Schatten:** Boxen haben große Rundungen (`rounded-xl` oder `rounded-2xl`).- **Header & Navigation**: Oben ein Sticky-Header (`sticky top-2 z-50`). 
+  - Die Navigation erfolgt **nicht** über ein Kachel-Dashboard, sondern über eine horizontale **Tab-Navigation (Scrolled Mobile)** im oder unter dem Header. (Beispiel: `<nav className="flex bg-black/10 p-1 rounded-xl overflow-x-auto max-w-full">`). Dies ist der Standard der meisten BioApps! Aktive Tabs sollen deutlich hervorgehoben sein (z.B. weißer Hintergrund, Schatten, und Icon).
+- **Icons**: Verwende saubere SVG-Icons (z.B. von FeatherIcons / Lucide).
+- **Hintergrund & Layout-Shell**:
+  Der gesamte SPA-Container bekommt z.B.:
+  `<div className="container mx-auto max-w-5xl p-2 md:p-4 h-screen flex flex-col">` oder `min-h-screen`.
 
 ### Header (Sticky Navigation)
 Der Header oben bleibt über `sticky top-2 z-50` beim Scrollen sichtbar und passt sich der Screen-Größe an:
