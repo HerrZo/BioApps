@@ -1,59 +1,86 @@
 ---
-description: Design- und Architektur-Richtlinien für alle interaktiven Biologie-Apps (React + Tailwind)
+description: Blueprint und Best-Practices zur Erstellung neuer interaktiver Biologie-Apps (React + Tailwind)
 ---
 
 # BioApp Design Guidelines
 
-Alle Biologie-Lernapps in diesem Repository ("BioApps") müssen strikt einem einheitlichen technischen und visuellen Design folgen, damit sich Schüler (z.B. der gymnasialen Oberstufe) plattformübergreifend an das gleiche Interaktionsmuster gewöhnen können.
+Alle Biologie-Lernapps in diesem Repository ("BioApps") müssen ZWINGEND dem unten stehenden exakten technischen, mobilen und visuellen Vorbild folgen.
 
-## 1. Technischer Stack & Architektur
+## 1. Technischer Stack & Struktur
 Jede App wird als **Single-File SPA (Single Page Application)** in der Datei `index.html` erstellt.
-Es werden keine separaten CSS- oder JS-Dateien verwendet!
+- Bibliotheken (via CDN): React 18, Babel Standalone (für JSX), TailwindCSS (`<script src="https://cdn.tailwindcss.com"></script>`).
+- `<body class="bg-green-50 text-gray-900 min-h-screen font-sans">` -> Es gibt ein `<div id="root"></div>`.
+- Die gesamte Logik lebt in `<script type="text/babel">`.
 
-**Zwingend einzubindende externe Bibliotheken (via CDN):**
-- TailwindCSS (`<script src="https://cdn.tailwindcss.com"></script>`)
-- React 18 (`react` und `react-dom` UMD PRODUCTION)
-- Babel Standalone (`@babel/standalone/babel.min.js`) für in-browser JSX-Kompilierung.
+## 2. Visuelles Design: IMMER GRÜN
+- **Farbpalette:** Das Thema ist IMMER grün, um zu den anderen Biologie-Apps zu passen! Die Akzentfarben sind `green-500`, `green-600`, `green-700`, `green-800` für Text, Buttons und Rahmen. Hintergründe nutzen `green-50` oder `green-100`.
+- **Ecken & Schatten:** Boxen haben große Rundungen (`rounded-xl` oder `rounded-2xl`). Header und Main haben sanfte Schatten (`shadow-sm`, `shadow-xl`).
+- **Icons:** Ausschließlich SVG Inline-Icons (eingebettet als React Components, z.B. `<IconHome />`, `<IconCheck />`).
 
-## 2. Struktur der `index.html`
-- **DOCTYPE & Head:** Standard HTML5. Meta-Viewport für Mobile-First. Theme-Color passend zur Hauptfarbe.
-- **Styles:** Custom CSS Animationen (`@keyframes`) unter `<style>` für komplexe Micro-Interactions (z.B. Fade-Ins, Pulsen, Floaten).
-- **Body:** Nutzt Tailwind-Klassen zur Hintergrundfärbung (z.B. `bg-green-50 text-gray-900 min-h-screen font-sans`). Ein leeres `<div id="root"></div>`.
-- **Script:** Ein `<script type="text/babel">` Block, in welchem die komplette React-App geschrieben wird.
+## 3. Mobile First Design & Layout
+Das Layout muss auf Smartphones (`md:` prefix = Desktop) strikt fließend sein:
 
-## 3. React App-Layout
-Die Hauptkomponente (`<App />`) verwaltet den globalen State:
-- `currentStation` (welche Lektion/Simulation aktuell geöffnet ist oder 'dashboard')
-- `progress` (Objekt, das trackt, welche Stationen bereits abgeschlossen sind)
+### App-Container & Body
+- Der Root-Container MUSS das Format haben:
+  `<div className="max-w-4xl mx-auto p-3 md:p-4 min-h-screen flex flex-col">`
 
-**Das Dashboard:**
-Zeigt eine Willkommensnachricht ("Willkommen! Wähle eine Station...") und rendert z.B. 4 bis 7 "Stationen" als anklickbare Kacheln.
-Jede Kachel zeigt:
-- Die Nummer der Station (zB. "St. 1")
-- Ein SVG Icon
-- Titel und kurze Beschreibung
-- Einen grünen Haken, wenn abgeschlossen.
-- Ganz unten auf dem Dashboard befindet sich ein globaler Fortschrittsbalken.
+### Header (Sticky Navigation)
+Der Header oben bleibt über `sticky top-2 z-50` beim Scrollen sichtbar und passt sich der Screen-Größe an:
+```jsx
+<header className="flex justify-between items-center mb-4 md:mb-6 bg-white p-3 md:p-4 rounded-xl shadow-sm border border-green-100 sticky top-2 z-50">
+    <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={() => setCurrentStation('dashboard')}>
+        <div className="bg-green-100 p-2 rounded-lg text-green-700">
+            <IconHome className="w-5 h-5 md:w-6 md:h-6" />
+        </div>
+        <div>
+            {/* Responsiver Titel */}
+            <h1 className="text-lg md:text-2xl font-bold text-green-800 leading-tight">Themenname</h1>
+            {/* Subtitel verschwindet auf Mobile! */}
+            <p className="text-xs text-green-600 hidden md:block">Untertitel</p>
+        </div>
+    </div>
+    
+    <div className="flex items-center gap-2">
+        {currentStation !== 'dashboard' && (
+            <button onClick={() => setCurrentStation('dashboard')} className="text-xs md:text-sm bg-green-100 text-green-700 px-3 py-1.5 rounded-lg font-medium hover:bg-green-200 transition">
+                Zur Übersicht
+            </button>
+        )}
+        {/* Die Mini-Navigationsobjekte als Kreise sind NUR auf Desktop sichtbar */}
+        {currentStation !== 'dashboard' && (
+            <div className="hidden md:flex gap-1">
+                {/* <button className="... w-7 h-7 rounded-full ...">1</button> etc. */}
+            </div>
+        )}
+    </div>
+</header>
+```
 
-**Stations-Ansicht:**
-- Oben ein **Header** (Sticky): Links ein Zurück-Button ("Zur Übersicht" bzw. "Home Icon") und der Name der App. Rechts ggf. direkt anwählbare Nummern der Stationen zur schnellen Navigation.
-- In der Mitte: Der **Content-Bereich** (`<main>`). Hier wird die aktive `StationX`-Komponente gerendert.
-- Unten: **Footer** (`Johannes-Scharrer-Gymnasium • Zollfrank • © 202X`).
+### Main Area Layout
+Der Inhaltsbereich, der das Dashboard oder die aktive Station rendert:
+```jsx
+<main className="flex-grow bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-green-50 relative overflow-hidden min-h-[400px]">
+    {renderContent()}
+</main>
+```
 
-## 4. Design-Richtlinien (TailwindCSS)
-Das Design muss modern, sauber und einladend sein (vermeide dunkle Hacker-Ästhetik für Schul-Apps, es sei denn, spezifisch gewünscht, aber selbst dann das UI-Pattern beibehalten).
+### Footer
+```jsx
+<footer className="text-center text-xs text-gray-400 mt-4 md:mt-6 pb-4">
+    Johannes-Scharrer-Gymnasium &bull; Zollfrank &bull; &copy; {new Date().getFullYear()}
+</footer>
+```
 
-- **Farbpalette:** Jede App wählt eine Hauptfarbe (z.B. Grün für Hormone, Indigo für DNA, etc.).
-- **Komponenten:**
-  - Karten & Kontainer haben abgerundete Ecken (`rounded-xl`, `rounded-2xl`).
-  - Leichte Schatten (`shadow-sm`, `shadow-md`, `shadow-xl`) grenzen Tiefe ab.
-  - Interaktive Buttons haben Hover-Effekte (`hover:scale-[1.02]`, `hover:border-blue-300`, `transition-all`).
-- **Icons:** Inline SVG Icons im Header, auf dem Dashboard und in Buttons! (Kein externes Icon-Paket).
+## 4. Dashboard (Startansicht)
+Auf dem Dashboard gibt es Kacheln (Cards) für verschiedene Stationen.
+- Mobile First Grid: `<div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">` (2 nebeneinander auf Mobile, 3 auf Desktop).
+- Große Touchflächen (`p-4 md:p-5`), kleine Schriften (`text-xs md:text-sm`).
+- Aktiver Zustand (z.B. Station Abgeschlossen) erhält eine kreisrunde, grüne Badge mit Häkchen oben rechts an der Kachel.
 
-## 5. Didaktik & Interaktivität
-Jede Station behandelt ein inhaltliches Teilgebiet.
-- Mindestens eine Station muss eine *Simulation / Drag&Drop / Sandbox* sein, in der User etwas chemisch/biologisch ausprobieren können.
-- Die letzte Station (oft `Station 7` oder ähnlich) ist zwingend ein **Multiple-Choice-Quiz (Abitur-Niveau)** oder ein Überprüfungs-Formular mit Live-Feedback.
-- Live-Rückmeldungen ("Richtig!", "Das war leider falsch") müssen in farblich abgehobenen Feedback-Boxen (rot/grün) dargestellt werden.
+## 5. Stationen & Inhalt
+- Ansichten einer Station beginnen immer mit: `<div className="animate-fade-in space-y-4 md:space-y-6">`
+- Überschriften nutzen den Stil: `<h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">...</h2>`
+- Jede Station wird nach Abschluss (`onComplete()`) markiert, sodass der globale Progressbar (`Fortschritt: X/Y`) wächst.
+- Das Quiz am Ende nutzt Multiple-Choice, gibt grünes/rotes Feedback und präsentiert auf einem Result-Screen einen großen `<IconCheck />`.
 
-Halte dich zukünftig STRICT an dieses Muster (React + Babel + Tailwind via index.html Single-File), wenn du aufgefordert wirst, Apps "nach dem allgemeinen Design" zu bauen oder bestehende Apps anzupassen!
+Halte dich zukünftig EXACT an dieses Template. Ändere die primäre Farbe niemals von Grün weg. Skaliere Padding, Typographie und Abstand für Mobile (Basis) -> und Desktop `md:`.
