@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bio-Abi: Genetik Master</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/dark-mode.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../shared/tailwind-config.js"></script>
 
     <!-- React & ReactDOM (UMD for browser) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -64,6 +67,22 @@
 <link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans selection:bg-green-200">
+<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between" style="background:rgba(255,255,255,0.92)">
+  <a href="../index.html"
+     class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
+     aria-label="Zurück zur Startseite">
+    <span class="group-hover:-translate-x-1 transition-transform inline-block">←</span>
+    <span>Startseite</span>
+  </a>
+  <button
+    data-dark-toggle
+    onclick="toggleDarkMode()"
+    aria-pressed="false"
+    title="Dunkles Design"
+    aria-label="Dark Mode umschalten">
+    <span class="dark-mode-icon">🌙</span>
+  </button>
+</nav>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -1516,5 +1535,6 @@
         root.render(<App />);
     </script>
 <script type="module" src="/index.tsx"></script>
+<script src="../shared/dark-mode.js"></script>
 </body>
 </html>

@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sinnesorgane – Bio Lern-App (8. Klasse)</title>
+  <meta name="theme-color" content="#166534">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="../shared/tailwind-config.js"></script>
+  <link rel="stylesheet" href="../shared/dark-mode.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+    @keyframes pulse-ring { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:.8} }
+    .pulse { animation: pulse-ring 2s ease-in-out infinite; }
+
+    @keyframes wave {
+      0%   { d: path("M0,20 Q25,5 50,20 Q75,35 100,20"); }
+      50%  { d: path("M0,20 Q25,35 50,20 Q75,5 100,20"); }
+      100% { d: path("M0,20 Q25,5 50,20 Q75,35 100,20"); }
+    }
+
+    @keyframes lensSquish {
+      0%,100% { rx:12; ry:8; }
+      50%      { rx:7;  ry:13; }
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+
+    /* SVG interactive highlights */
+    .svg-part { cursor:pointer; transition: filter .2s, opacity .2s; }
+    .svg-part:hover { filter: brightness(1.25); }
+    .svg-part.active-part { filter: drop-shadow(0 0 6px #16a34a); }
+
+    /* Dark mode card overrides */
+    .dark .card { background:#1a2e1a; border-color:#2d4a2d; }
+    .dark .card-inner { background:#1f351f; border-color:#2d4a2d; }
+    .dark body { background:#0f1f0f; color:#e2f0e2; }
+
+    @keyframes scanLine {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    .scan-line { animation: scanLine 2s linear infinite; }
+  </style>
+</head>
+<body class="bg-green-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+<div id="root"></div>
+<script src="../shared/dark-mode.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef } = React;
+
+// ─── SVG Icons ───────────────────────────────────────────────────────────────
+const IconEye   = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+const IconEar   = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7-7 11-7 11"/><path d="M10.5 13.5A2.5 2.5 0 0 0 13 11"/><path d="M6.5 11.5A5.5 5.5 0 0 1 17 8"/></svg>;
+const IconNose  = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 0-3 4-3 9 0 2 1 3 3 3s3-1 3-3c0-5-3-9-3-9z"/><path d="M9 14c-2 1-4 2-4 4h14c0-2-2-3-4-4"/></svg>;
+const IconHand  = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V7a2 2 0 1 1 4 0"/></svg>;
+const IconBrain = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.84A2.5 2.5 0 0 1 9.5 2"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.84A2.5 2.5 0 0 0 14.5 2"/></svg>;
+const IconCheck = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>;
+const IconX     = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+const IconStar  = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+const IconHome  = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+const IconArrow = ({c}) => <svg className={c} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>;
+
+// ─── Storage helpers ──────────────────────────────────────────────────────────
+const LS = {
+  get: (k, def) => { try { const v=localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch{ return def; } },
+  set: (k, v)   => { try { localStorage.setItem(k, JSON.stringify(v)); } catch{} },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATION 1 – DAS AUGE
+// ═══════════════════════════════════════════════════════════════════════════════
+const EyeParts = [
+  { id:'hornhaut',  label:'Hornhaut',       color:'#86efac', desc:'Die transparente, gewölbte Außenschicht des Auges. Sie bricht das Licht als erste Struktur und liefert den größten Anteil der Brechkraft (~2/3).' },
+  { id:'iris',      label:'Iris (Regenbogenhaut)', color:'#4ade80', desc:'Der farbige Ring des Auges. Enthält Muskeln, die die Pupillengröße regulieren – bei Helligkeit kleiner, bei Dunkelheit größer.' },
+  { id:'pupille',   label:'Pupille',         color:'#052e16', desc:'Die Öffnung in der Mitte der Iris. Kein eigenes Gewebe – nur eine Lücke! Reguliert die einfallende Lichtmenge.' },
+  { id:'linse',     label:'Linse',           color:'#d9f99d', desc:'Elastische, bikonvexe Linse hinter der Iris. Verfeinert die Brechung und ermöglicht Akkommodation (Nah-/Fernsehen) durch den Ziliarmuskel.' },
+  { id:'glaskoerper',label:'Glaskörper',     color:'#bbf7d0', desc:'Gallertartige, transparente Masse, die den Augapfel ausfüllt. Hält die Form aufrecht und leitet Licht zur Netzhaut weiter.' },
+  { id:'netzhaut',  label:'Netzhaut (Retina)', color:'#fde68a', desc:'Die lichtempfindliche Schicht innen am Augapfel. Enthält ~120 Mio. Stäbchen (Schwarz-Weiß) und ~6 Mio. Zapfen (Farbsehen).' },
+  { id:'sehnerv',   label:'Sehnerv',         color:'#fca5a5', desc:'Bündel aus ~1,2 Mio. Nervenfasern. Leitet elektrische Impulse von der Netzhaut zum Sehzentrum im Gehirn (Okzipitallappen).' },
+  { id:'gelb',      label:'Gelber Fleck (Fovea)', color:'#fbbf24', desc:'Stelle des schärfsten Sehens – dichte Ansammlung von Zapfen, keine Stäbchen. Hier trifft das Bild beim direkten Hinschauen auf.' },
+  { id:'blind',     label:'Blinder Fleck',   color:'#d1d5db', desc:'Stelle ohne Fotorezeptoren – hier tritt der Sehnerv aus. Das Gehirn "ergänzt" fehlende Information. Kannst du ihn finden? (Blinder-Fleck-Test)' },
+];
+
+const EyeSVG = ({ activePart, setActivePart }) => (
+  <svg viewBox="0 0 340 200" className="w-full max-w-md mx-auto" style={{maxHeight:220}}>
+    {/* Sklera / Augapfel */}
+    <ellipse cx="170" cy="100" rx="100" ry="90" fill="#f8fafc" stroke="#94a3b8" strokeWidth="2"/>
+    {/* Glaskoerper */}
+    <ellipse cx="170" cy="100" rx="88" ry="78" fill="#ecfdf5" className="svg-part" onClick={()=>setActivePart('glaskoerper')}
+      style={{opacity: activePart==='glaskoerper'?1:0.7}}/>
+    {/* Netzhaut (arc) */}
+    <path d="M 80 100 A 90 90 0 0 0 260 100" fill="none" stroke="#fde68a" strokeWidth="10"
+      className="svg-part" onClick={()=>setActivePart('netzhaut')}
+      style={{opacity: activePart==='netzhaut'?1:0.8}}/>
+    {/* Sehnerv */}
+    <rect x="258" y="88" width="28" height="24" rx="6" fill="#fca5a5" className="svg-part" onClick={()=>setActivePart('sehnerv')}/>
+    <text x="290" y="103" fontSize="9" fill="#374151">Sehnerv</text>
+    {/* Blinder Fleck */}
+    <circle cx="248" cy="100" r="9" fill="#d1d5db" stroke="#9ca3af" strokeWidth="1.5" className="svg-part" onClick={()=>setActivePart('blind')}/>
+    <text x="240" y="122" fontSize="8" fill="#6b7280">Blind.</text>
+    {/* Gelber Fleck */}
+    <circle cx="200" cy="100" r="10" fill="#fbbf24" className="svg-part" onClick={()=>setActivePart('gelb')}/>
+    <text x="193" y="122" fontSize="8" fill="#92400e">Fovea</text>
+    {/* Hornhaut */}
+    <ellipse cx="75" cy="100" rx="18" ry="30" fill="#86efac" stroke="#22c55e" strokeWidth="1.5" className="svg-part" onClick={()=>setActivePart('hornhaut')}/>
+    <text x="52" y="145" fontSize="9" fill="#166534">Hornhaut</text>
+    {/* Iris */}
+    <circle cx="105" cy="100" r="26" fill="#4ade80" className="svg-part" onClick={()=>setActivePart('iris')}/>
+    {/* Pupille */}
+    <circle cx="105" cy="100" r="12" fill="#052e16" className="svg-part" onClick={()=>setActivePart('pupille')}/>
+    {/* Linse */}
+    <ellipse cx="128" cy="100" rx="16" ry="22" fill="#d9f99d" stroke="#86efac" strokeWidth="1.5" className="svg-part" onClick={()=>setActivePart('linse')}/>
+    {/* Labels */}
+    <text x="92" y="155" fontSize="9" fill="#15803d">Iris</text>
+    <text x="100" y="70" fontSize="9" fill="#052e16">Pupille</text>
+    <text x="120" y="68" fontSize="9" fill="#4d7c0f">Linse</text>
+    <text x="155" y="60" fontSize="9" fill="#15803d">Glaskörper</text>
+    {/* Active highlight ring */}
+    {activePart && (() => {
+      const p = EyeParts.find(p=>p.id===activePart);
+      return p ? <circle cx="105" cy="100" r="4" fill={p.color} className="pulse" opacity="0.6"/> : null;
+    })()}
+  </svg>
+);
+
+const AkkommodationDemo = () => {
+  const [mode, setMode] = useState('fern'); // 'nah' | 'fern'
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900">
+      <h3 className="font-bold text-green-800 dark:text-green-300 mb-3">Akkommodation – Nah vs. Fern</h3>
+      <div className="flex gap-3 mb-4">
+        {['fern','nah'].map(m => (
+          <button key={m} onClick={()=>setMode(m)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${mode===m?'bg-green-600 text-white shadow':'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-200'}`}>
+            {m==='nah'?'Nahsehen':'Fernsehen'}
+          </button>
+        ))}
+      </div>
+      <svg viewBox="0 0 240 100" className="w-full max-w-xs mx-auto">
+        {/* Licht-Strahlen */}
+        {mode==='fern' ? <>
+          <line x1="10" y1="40" x2="120" y2="50" stroke="#86efac" strokeWidth="1.5"/>
+          <line x1="10" y1="50" x2="120" y2="50" stroke="#86efac" strokeWidth="1.5"/>
+          <line x1="10" y1="60" x2="120" y2="50" stroke="#86efac" strokeWidth="1.5"/>
+          <line x1="120" y1="50" x2="220" y2="50" stroke="#4ade80" strokeWidth="1.5"/>
+        </> : <>
+          <line x1="10" y1="20" x2="120" y2="50" stroke="#86efac" strokeWidth="1.5"/>
+          <line x1="10" y1="50" x2="120" y2="50" stroke="#86efac" strokeWidth="1.5"/>
+          <line x1="10" y1="80" x2="120" y2="50" stroke="#86efac" strokeWidth="1.5"/>
+          <line x1="120" y1="50" x2="220" y2="50" stroke="#4ade80" strokeWidth="1.5"/>
+        </>}
+        {/* Linse */}
+        <ellipse cx="120" cy="50" rx={mode==='nah'?8:14} ry={mode==='nah'?20:12}
+          fill="#d9f99d" stroke="#16a34a" strokeWidth="2"
+          style={{transition:'all 0.5s ease'}}/>
+        {/* Retina */}
+        <rect x="210" y="30" width="6" height="40" rx="3" fill="#fde68a"/>
+        {/* Fokus-Punkt */}
+        <circle cx="220" cy="50" r="4" fill="#16a34a"/>
+        {/* Labels */}
+        <text x="108" y="85" fontSize="9" fill="#15803d">{mode==='nah'?'dick (nah)':'flach (fern)'}</text>
+        <text x="205" y="85" fontSize="9" fill="#15803d">Retina</text>
+        {/* Objekt-Symbol */}
+        <text x="2" y="38" fontSize="14">{mode==='nah'?'📱':'🏔️'}</text>
+      </svg>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 text-center">
+        {mode==='nah'
+          ? 'Ziliarmuskel kontrahiert → Linse wird dicker (stärker brechend)'
+          : 'Ziliarmuskel entspannt → Linse wird flacher (schwächer brechend)'}
+      </p>
+    </div>
+  );
+};
+
+const StationAuge = () => {
+  const [activePart, setActivePart] = useState(null);
+  const info = activePart ? EyeParts.find(p=>p.id===activePart) : null;
+
+  return (
+    <div className="fade-in space-y-5 pb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-1">Aufbau des Auges</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Klicke auf einen Teil des Auges für eine Erklärung.</p>
+        <EyeSVG activePart={activePart} setActivePart={setActivePart}/>
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
+          {EyeParts.map(p => (
+            <button key={p.id} onClick={()=>setActivePart(p.id)}
+              className={`text-xs px-2 py-1 rounded-lg border transition-all font-medium ${activePart===p.id?'bg-green-600 text-white border-green-600':'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-100'}`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+        {info && (
+          <div className="mt-3 p-3 rounded-lg text-sm fade-in" style={{background: info.color+'22', borderLeft:`4px solid ${info.color}`}}>
+            <strong className="text-green-900 dark:text-green-200">{info.label}:</strong>{' '}
+            <span className="text-gray-700 dark:text-gray-300">{info.desc}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-3">Stäbchen &amp; Zapfen</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-900 rounded-xl p-3 text-center">
+            <div className="text-3xl mb-1">🌑</div>
+            <div className="text-white font-bold">Stäbchen</div>
+            <div className="text-gray-300 text-xs mt-1">~120 Mio. Stück</div>
+            <div className="text-gray-400 text-xs mt-2">Schwarz-Weiß-Sehen, Dämmerung &amp; Nacht, sehr lichtempfindlich</div>
+          </div>
+          <div className="rounded-xl p-3 text-center" style={{background:'linear-gradient(135deg,#fca5a5,#86efac,#93c5fd)'}}>
+            <div className="text-3xl mb-1">🔵🟢🔴</div>
+            <div className="font-bold text-gray-900">Zapfen</div>
+            <div className="text-gray-700 text-xs mt-1">~6 Mio. Stück</div>
+            <div className="text-gray-800 text-xs mt-2">Farbsehen, benötigen helles Licht, 3 Typen: Rot, Grün, Blau</div>
+          </div>
+        </div>
+        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <p className="text-sm font-semibold text-green-800 dark:text-green-300">💡 Merkhilfe:</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+            <strong>S</strong>täbchen → <strong>S</strong>chatten (Schwarz-Weiß) | <strong>Z</strong>apfen → buntes <strong>Z</strong>elt (Farbe)
+          </p>
+        </div>
+      </div>
+
+      <AkkommodationDemo/>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-3">Kurz- und Weitsichtigkeit</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { title:'Kurzsichtigkeit (Myopie)', icon:'🔴', desc:'Augapfel zu lang → Bild fällt vor die Netzhaut. Fernere Objekte unscharf. Korrektur: Zerstreuungslinse (konkav, Minus-Glas).' },
+            { title:'Weitsichtigkeit (Hyperopie)', icon:'🔵', desc:'Augapfel zu kurz → Bild fällt hinter die Netzhaut. Nahe Objekte unscharf. Korrektur: Sammellinse (konvex, Plus-Glas).' },
+          ].map(item => (
+            <div key={item.title} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+              <div className="font-semibold text-green-800 dark:text-green-300 text-sm mb-1">{item.icon} {item.title}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">{item.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATION 2 – DAS OHR
+// ═══════════════════════════════════════════════════════════════════════════════
+const EarParts = [
+  { id:'ohrmuschel', label:'Ohrmuschel', color:'#a7f3d0', desc:'Sammelt Schallwellen und leitet sie in den Gehörgang. Die Form hilft, die Richtung von Geräuschen zu bestimmen.' },
+  { id:'gehoergang', label:'Gehörgang', color:'#6ee7b7', desc:'Kanal (~3,5 cm lang), der den Schall zum Trommelfell leitet. Enthält Ohrenschmalz-Drüsen zum Schutz.' },
+  { id:'trommelfell', label:'Trommelfell', color:'#fde68a', desc:'Dünne elastische Membran, die Schallwellen in mechanische Schwingungen umwandelt. Trennt Außen- und Mittelohr.' },
+  { id:'hammer', label:'Hammer (Malleus)', color:'#fca5a5', desc:'Erstes der drei Gehörknöchelchen. Ist mit dem Trommelfell verwachsen und nimmt dessen Schwingungen auf.' },
+  { id:'amboss', label:'Amboss (Incus)', color:'#fdba74', desc:'Mittleres Gehörknöchelchen. Verbindet Hammer und Steigbügel, verstärkt und überträgt die Schwingungen.' },
+  { id:'steigbuegel', label:'Steigbügel (Stapes)', color:'#f9a8d4', desc:'Kleinstes Knochen des menschlichen Körpers (~3 mm)! Überträgt Schwingungen auf das ovale Fenster der Cochlea.' },
+  { id:'cochlea', label:'Schnecke (Cochlea)', color:'#86efac', desc:'Spiralförmiges, flüssigkeitsgefülltes Organ. Enthält die Haarzellen, die mechanische Schwingungen in Nervenimpulse umwandeln.' },
+  { id:'bogengang', label:'Bogengänge', color:'#a5b4fc', desc:'Drei senkrecht zueinander stehende Halbkreiskanäle – das Gleichgewichtsorgan! Melden Drehbewegungen des Kopfes.' },
+  { id:'hoernerv', label:'Hörnerv', color:'#c4b5fd', desc:'Überträgt die Nervenimpulse der Cochlea zum Hörzentrum im Schläfenlappen des Gehirns.' },
+];
+
+const EarSVG = ({ activePart, setActivePart }) => (
+  <svg viewBox="0 0 320 200" className="w-full max-w-sm mx-auto" style={{maxHeight:200}}>
+    {/* Außenohr */}
+    <path d="M10,80 Q30,40 60,50 Q80,55 80,100 Q80,140 60,150 Q40,158 30,145" fill="none" stroke="#a7f3d0" strokeWidth="8" strokeLinecap="round"
+      className="svg-part" onClick={()=>setActivePart('ohrmuschel')}/>
+    <text x="5" y="170" fontSize="9" fill="#065f46">Ohrmuschel</text>
+    {/* Gehörgang */}
+    <rect x="70" y="88" width="60" height="24" rx="8" fill="#6ee7b7" className="svg-part" onClick={()=>setActivePart('gehoergang')}/>
+    <text x="72" y="122" fontSize="9" fill="#065f46">Gehörgang</text>
+    {/* Trommelfell */}
+    <ellipse cx="134" cy="100" rx="6" ry="18" fill="#fde68a" stroke="#ca8a04" strokeWidth="1.5" className="svg-part" onClick={()=>setActivePart('trommelfell')}/>
+    <text x="122" y="128" fontSize="9" fill="#854d0e">Trommel-fell</text>
+    {/* Mittelohr Knochen */}
+    {/* Hammer */}
+    <line x1="140" y1="92" x2="160" y2="88" stroke="#fca5a5" strokeWidth="5" strokeLinecap="round" className="svg-part" onClick={()=>setActivePart('hammer')}/>
+    <circle cx="140" cy="92" r="5" fill="#fca5a5" className="svg-part" onClick={()=>setActivePart('hammer')}/>
+    {/* Amboss */}
+    <line x1="160" y1="88" x2="175" y2="96" stroke="#fdba74" strokeWidth="4" strokeLinecap="round" className="svg-part" onClick={()=>setActivePart('amboss')}/>
+    {/* Steigbügel */}
+    <path d="M175,96 Q188,88 188,100 Q188,112 175,108" fill="none" stroke="#f9a8d4" strokeWidth="4" strokeLinecap="round" className="svg-part" onClick={()=>setActivePart('steigbuegel')}/>
+    <text x="138" y="75" fontSize="9" fill="#9f1239">Hammer</text>
+    <text x="157" y="75" fontSize="9" fill="#9a3412">Amboss</text>
+    <text x="172" y="75" fontSize="9" fill="#9d174d">Steig.</text>
+    {/* Bogengänge */}
+    <path d="M200,60 Q240,40 250,80 Q255,100 240,105" fill="none" stroke="#a5b4fc" strokeWidth="5" strokeLinecap="round" className="svg-part" onClick={()=>setActivePart('bogengang')}/>
+    <path d="M205,65 Q225,50 235,70" fill="none" stroke="#a5b4fc" strokeWidth="3" strokeDasharray="3,2" className="svg-part" onClick={()=>setActivePart('bogengang')}/>
+    <text x="245" y="58" fontSize="9" fill="#4338ca">Bogen-gänge</text>
+    {/* Cochlea */}
+    <path d="M195,100 Q210,85 225,100 Q235,112 225,122 Q212,135 200,125 Q193,118 198,110" fill="#86efac" stroke="#16a34a" strokeWidth="1.5" className="svg-part" onClick={()=>setActivePart('cochlea')}/>
+    <circle cx="207" cy="110" r="6" fill="#4ade80" className="svg-part" onClick={()=>setActivePart('cochlea')}/>
+    <text x="192" y="148" fontSize="9" fill="#166534">Cochlea</text>
+    {/* Hörnerv */}
+    <line x1="225" y1="110" x2="295" y2="110" stroke="#c4b5fd" strokeWidth="4" strokeLinecap="round" className="svg-part" onClick={()=>setActivePart('hoernerv')}/>
+    <text x="255" y="126" fontSize="9" fill="#5b21b6">Hörnerv</text>
+    {/* Gehirn-Symbol */}
+    <circle cx="305" cy="110" r="12" fill="#ede9fe" stroke="#8b5cf6" strokeWidth="1.5"/>
+    <text x="298" y="114" fontSize="10">🧠</text>
+  </svg>
+);
+
+const SoundWaveDemo = () => {
+  const [playing, setPlaying] = useState(false);
+  const [freq, setFreq] = useState(440);
+  const ref = useRef(null);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900">
+      <h3 className="font-bold text-green-800 dark:text-green-300 mb-3">Schallwellen-Visualisierung</h3>
+      <div className="flex gap-2 mb-3 flex-wrap">
+        {[{f:200,l:'Tief (200 Hz)'},{f:440,l:'Mittel (440 Hz)'},{f:1000,l:'Hoch (1000 Hz)'}].map(({f,l}) => (
+          <button key={f} onClick={()=>setFreq(f)}
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${freq===f?'bg-green-600 text-white':'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300'}`}>{l}</button>
+        ))}
+      </div>
+      <svg viewBox="0 0 300 60" className="w-full">
+        {/* Schallwelle animiert */}
+        {Array.from({length:6}, (_,i) => {
+          const amp = freq===200 ? 20 : freq===440 ? 14 : 8;
+          const period = freq===200 ? 60 : freq===440 ? 40 : 24;
+          return (
+            <g key={i}>
+              <circle cx={20+i*50} cy="30" r={amp*0.9} fill="none" stroke="#4ade80" strokeWidth="1.5" opacity={1-i*0.15}/>
+            </g>
+          );
+        })}
+        {/* Speaker */}
+        <rect x="2" y="22" width="12" height="16" rx="2" fill="#16a34a"/>
+        <text x="1" y="55" fontSize="8" fill="#15803d">Quelle</text>
+        {/* Ohr symbol */}
+        <text x="275" y="35" fontSize="18">👂</text>
+      </svg>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+        Frequenz = Tonhöhe. Bei {freq} Hz: {freq===200?'Basston, lange Wellen':freq===440?'Kammerton A, mittlere Wellen':'Hoher Ton, kurze Wellen'}.
+      </p>
+    </div>
+  );
+};
+
+const StationOhr = () => {
+  const [activePart, setActivePart] = useState(null);
+  const info = activePart ? EarParts.find(p=>p.id===activePart) : null;
+
+  return (
+    <div className="fade-in space-y-5 pb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900 shadow-sm">
+        <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-300 mb-1">Aufbau des Ohres</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Klicke auf einen Teil für die Erklärung.</p>
+        <EarSVG activePart={activePart} setActivePart={setActivePart}/>
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
+          {EarParts.map(p => (
+            <button key={p.id} onClick={()=>setActivePart(p.id)}
+              className={`text-xs px-2 py-1 rounded-lg border transition-all font-medium ${activePart===p.id?'bg-emerald-600 text-white border-emerald-600':'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100'}`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+        {info && (
+          <div className="mt-3 p-3 rounded-lg text-sm fade-in" style={{background: info.color+'33', borderLeft:`4px solid ${info.color}`}}>
+            <strong className="text-emerald-900 dark:text-emerald-200">{info.label}:</strong>{' '}
+            <span className="text-gray-700 dark:text-gray-300">{info.desc}</span>
+          </div>
+        )}
+      </div>
+
+      <SoundWaveDemo/>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900 shadow-sm">
+        <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-300 mb-3">Schallweg durch das Ohr</h2>
+        <div className="flex flex-wrap gap-1 items-center text-sm">
+          {['Ohrmuschel','Gehörgang','Trommelfell','Hammer → Amboss → Steigbügel','Ovales Fenster','Cochlea (Haarzellen)','Hörnerv','Gehirn'].map((s,i,arr) => (
+            <React.Fragment key={s}>
+              <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-md text-xs font-medium">{s}</span>
+              {i < arr.length-1 && <span className="text-emerald-400">→</span>}
+            </React.Fragment>
+          ))}
+        </div>
+        <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100 dark:border-emerald-800">
+          <p className="text-xs text-emerald-800 dark:text-emerald-300 font-semibold">💡 Merkhilfe Gehörknöchelchen:</p>
+          <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">"<strong>H</strong>ammer schlägt auf den <strong>A</strong>mboss, der <strong>S</strong>teigbügel läuft davon" – <strong>H-A-S</strong></p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900 shadow-sm">
+        <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-300 mb-3">Gleichgewichtsorgan</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Die <strong>drei Bogengänge</strong> stehen senkrecht aufeinander (wie x-, y-, z-Achse). Sie sind mit Flüssigkeit (Endolymphe) gefüllt. Bei Kopfbewegungen verschiebt sich die Flüssigkeit → Haarzellen registrieren die Drehrichtung.</p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {['Horizontale Drehung (Nein-Bewegung)','Sagittale Drehung (Ja-Bewegung)','Frontale Drehung (Kopf neigen)'].map((d,i) => (
+            <div key={i} className="text-xs p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-800 dark:text-indigo-300 text-center border border-indigo-100 dark:border-indigo-800">{d}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATION 3 – NASE & ZUNGE
+// ═══════════════════════════════════════════════════════════════════════════════
+const TasteBubble = ({ taste, color, bg, x, y, active, onClick }) => (
+  <g onClick={onClick} className="svg-part" style={{cursor:'pointer'}}>
+    <circle cx={x} cy={y} r={active?28:22} fill={active?color:bg} stroke={color} strokeWidth={active?3:1.5}
+      style={{transition:'all 0.25s'}}/>
+    <text x={x} y={y+4} textAnchor="middle" fontSize={active?11:9} fill={active?"white":"#374151"} fontWeight="600">{taste}</text>
+  </g>
+);
+
+const TongueSVG = ({ activeTaste, setActiveTaste }) => {
+  const tastes = [
+    { taste:'Süß', color:'#f59e0b', bg:'#fef3c7', x:130, y:145 },
+    { taste:'Salzig', color:'#3b82f6', bg:'#dbeafe', x:90, y:120 },
+    { taste:'Salzig', color:'#3b82f6', bg:'#dbeafe', x:170, y:120 },
+    { taste:'Sauer', color:'#10b981', bg:'#d1fae5', x:80, y:85 },
+    { taste:'Sauer', color:'#10b981', bg:'#d1fae5', x:180, y:85 },
+    { taste:'Bitter', color:'#8b5cf6', bg:'#ede9fe', x:130, y:50 },
+    { taste:'Umami', color:'#ef4444', bg:'#fee2e2', x:130, y:95 },
+  ];
+  return (
+    <svg viewBox="0 0 260 200" className="w-full max-w-xs mx-auto">
+      {/* Zungenform */}
+      <path d="M80,170 Q60,160 55,130 Q50,100 60,70 Q70,40 130,25 Q190,40 200,70 Q210,100 205,130 Q200,160 180,170 Q160,185 130,188 Q100,185 80,170 Z"
+        fill="#fecdd3" stroke="#f43f5e" strokeWidth="2"/>
+      {/* Mittel-Linie */}
+      <line x1="130" y1="35" x2="130" y2="175" stroke="#f43f5e" strokeWidth="1" strokeDasharray="4,3" opacity="0.5"/>
+      {tastes.map((t,i) => (
+        <TasteBubble key={i} {...t} active={activeTaste===t.taste} onClick={()=>setActiveTaste(t.taste===activeTaste?null:t.taste)}/>
+      ))}
+    </svg>
+  );
+};
+
+const tasteInfo = {
+  'Süß':   { desc:'Hinweis auf Kohlenhydrate/Energie. Süßrezeptoren reagieren auf Zucker und Zuckerersatzstoffe.', foods:'Zucker, Honig, reifes Obst, Schokolade' },
+  'Salzig':{ desc:'Signalisiert Salze (Na⁺-Ionen). Wichtig für die Regulation des Wasserhaushalts und der Nervenimpulse.', foods:'Kochsalz, Chips, Käse, Sojasoße' },
+  'Sauer': { desc:'Zeigt Säuren an (H⁺-Ionen). Kann verdorbene Nahrung anzeigen, aber auch frisches Obst (Ascorbinsäure).', foods:'Zitrone, Essig, Joghurt, Sauerteig' },
+  'Bitter': { desc:'Warnt vor Giftstoffen (viele Gifte sind bitter). Höchste Sensitivität – schon bei winzigen Mengen wahrnehmbar.', foods:'Kaffee, Bier (Hopfen), dunkle Schokolade, Tonic Water' },
+  'Umami': { desc:'Japanisch für „wohlschmeckend". Hinweis auf Protein/Glutamat. Erst 1985 offiziell als 5. Grundgeschmack anerkannt.', foods:'Fleisch, Parmesan, Tomaten, Pilze, Sojasoße' },
+};
+
+const StationNaseZunge = () => {
+  const [tab, setTab] = useState('nase');
+  const [activeTaste, setActiveTaste] = useState(null);
+  const [lockKeyStep, setLockKeyStep] = useState(0);
+
+  return (
+    <div className="fade-in space-y-5 pb-8">
+      {/* Tab Switch */}
+      <div className="flex bg-lime-100 dark:bg-lime-900/20 p-1 rounded-xl">
+        {[{id:'nase',label:'👃 Nase'},{id:'zunge',label:'👅 Zunge'}].map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${tab===t.id?'bg-lime-600 text-white shadow':'text-lime-800 dark:text-lime-300 hover:bg-lime-200 dark:hover:bg-lime-800/30'}`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'nase' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-lime-100 dark:border-lime-900 shadow-sm">
+            <h2 className="text-lg font-bold text-lime-800 dark:text-lime-300 mb-2">Wie funktioniert Riechen?</h2>
+            <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+              <p>In der Nasenhöhle befindet sich die <strong>Riechschleimhaut</strong> (ca. 5 cm²) mit ~10–20 Millionen <strong>Riechzellen</strong>. Diese Nervenzellen tragen an ihrem Ende spezialisierte <strong>Riechrezeptoren</strong>.</p>
+              <p>Der Mensch besitzt ~400 verschiedene Rezeptortypen – zum Vergleich: Hunde haben ~800!</p>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-lime-100 dark:border-lime-900 shadow-sm">
+            <h2 className="text-lg font-bold text-lime-800 dark:text-lime-300 mb-3">Lock-and-Key-Prinzip</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Jedes Duftmolekül passt nur in bestimmte Rezeptoren – wie ein Schlüssel ins Schloss.</p>
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl border-4 transition-all duration-500 cursor-pointer
+                  ${lockKeyStep>=1?'bg-lime-100 border-lime-500':'bg-gray-100 border-gray-300'}`}
+                  onClick={()=>setLockKeyStep(s=>s<2?s+1:0)}>
+                  {lockKeyStep>=1?'🔑':'🔑'}
+                </div>
+                <div className="text-xs mt-1 text-gray-600 dark:text-gray-400">Duftmolekül</div>
+              </div>
+              <div className="text-2xl text-lime-500">{lockKeyStep===0?'→':lockKeyStep===1?'⟶':'✓'}</div>
+              <div className="text-center">
+                <div className={`w-16 h-16 rounded-lg flex items-center justify-center text-2xl border-4 transition-all duration-500 cursor-pointer
+                  ${lockKeyStep>=2?'bg-lime-100 border-lime-500 scale-110':'bg-gray-100 border-gray-300'}`}
+                  onClick={()=>setLockKeyStep(s=>s<2?s+1:0)}>
+                  {lockKeyStep>=2?'🔓':'🔒'}
+                </div>
+                <div className="text-xs mt-1 text-gray-600 dark:text-gray-400">Rezeptor</div>
+              </div>
+              {lockKeyStep>=2 && (
+                <div className="text-center fade-in">
+                  <div className="text-2xl">⚡</div>
+                  <div className="text-xs text-lime-600 font-bold">Impuls!</div>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-center mt-3 text-gray-500 dark:text-gray-400">Klicke auf die Symbole um den Ablauf zu sehen</p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-lime-100 dark:border-lime-900 shadow-sm">
+            <h2 className="text-lg font-bold text-lime-800 dark:text-lime-300 mb-2">Riechen &amp; Schmecken</h2>
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 text-sm">
+              <p className="text-amber-800 dark:text-amber-300 font-semibold">🤧 Der Erkältungseffekt</p>
+              <p className="text-gray-700 dark:text-gray-300 mt-1">Bei Schnupfen schmeckt das Essen fade. Das liegt daran, dass <strong>~80% des Geschmackseindrucks</strong> eigentlich durch das Riechen entsteht! Die Zunge unterscheidet nur 5 Grundgeschmäcke – das Gehirn kombiniert sie mit dem Geruch zu komplexen Aromen.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'zunge' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-lime-100 dark:border-lime-900 shadow-sm">
+            <h2 className="text-lg font-bold text-lime-800 dark:text-lime-300 mb-1">Die 5 Grundgeschmäcke</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Klicke auf eine Region der Zunge.</p>
+            <TongueSVG activeTaste={activeTaste} setActiveTaste={setActiveTaste}/>
+            {activeTaste && tasteInfo[activeTaste] && (
+              <div className="mt-3 p-3 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 fade-in">
+                <strong className="text-lime-800 dark:text-lime-300">{activeTaste}:</strong>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{tasteInfo[activeTaste].desc}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Beispiele: {tasteInfo[activeTaste].foods}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-lime-100 dark:border-lime-900 shadow-sm">
+            <h2 className="text-lg font-bold text-lime-800 dark:text-lime-300 mb-2">Mythos: Zungenlandkarte ❌</h2>
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 text-sm">
+              <p className="text-red-800 dark:text-red-300 font-semibold">Das ist falsch!</p>
+              <p className="text-gray-700 dark:text-gray-300 mt-1">Die alte "Zungenlandkarte" (Süß vorne, Bitter hinten…) ist ein wissenschaftlicher <strong>Irrtum aus dem 19. Jahrhundert</strong>. Tatsächlich sind <strong>alle 5 Geschmäcke über die gesamte Zunge verteilt</strong>. Geschmacksknospen gibt es überall – sogar im Rachen und auf dem weichen Gaumen.</p>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-lime-100 dark:border-lime-900 shadow-sm">
+            <h2 className="text-lg font-bold text-lime-800 dark:text-lime-300 mb-2">Geschmacksknospen</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Der Mensch hat ~10.000 Geschmacksknospen, die in Papillen (Erhebungen) sitzen. Jede Knospe enthält 50–100 Geschmackssinneszellen. Die Lebensdauer einer Zelle beträgt nur ~10 Tage – sie werden ständig erneuert.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATION 4 – DIE HAUT
+// ═══════════════════════════════════════════════════════════════════════════════
+const skinReceptors = [
+  { id:'meissner', label:'Meissner-Körperchen', color:'#86efac', layer:'Dermis (oben)', reiz:'Leichte Berührung, Textur', where:'Fingerspitzen, Lippen (sehr dicht!)', desc:'Befinden sich in den Hautpapillen. Spezialisiert auf feine taktile Wahrnehmung. Ermöglichen das Lesen von Braille-Schrift.' },
+  { id:'pacini', label:'Pacini-Körperchen', color:'#fde68a', layer:'Tiefe Dermis/Subkutis', reiz:'Vibration, starker Druck', where:'Fußsohlen, Handflächen, Gelenke', desc:'Groß, zwiebelförmig (erkennbar unter dem Mikroskop). Reagieren sehr schnell auf Veränderungen, nicht auf anhaltenden Druck.' },
+  { id:'ruffini', label:'Ruffini-Körperchen', color:'#fdba74', layer:'Dermis (tief)', reiz:'Dehnung, anhaltende Wärme', where:'Hände, Fußsohlen', desc:'Reagieren auf Hautzug und Dehnung. Helfen, Gelenkwinkel wahrzunehmen. Auch temperaturempfindlich (Wärme).' },
+  { id:'merkel', label:'Merkel-Scheiben', color:'#a5b4fc', layer:'Epidermis-Grenze', reiz:'Dauerhafter Druck, Formen', where:'Fingerspitzen, Lippen', desc:'Langsam adaptierende Rezeptoren – senden Dauerimpulse bei anhaltender Berührung. Wichtig für das Erkennen von Formen und Texturen.' },
+  { id:'frei', label:'Freie Nervenendigungen', color:'#fca5a5', layer:'Epidermis & Dermis', reiz:'Schmerz, Kälte, Wärme', where:'Überall in der Haut', desc:'Häufigster Rezeptortyp. Unverzweigt, nicht eingeschlossene Nervenfasern. Reagieren auf schädliche Reize (Nozizeptoren) und Temperatur.' },
+];
+
+const SkinSVG = ({ activeRec, setActiveRec }) => (
+  <svg viewBox="0 0 300 180" className="w-full max-w-sm mx-auto">
+    {/* Epidermis */}
+    <rect x="10" y="15" width="280" height="35" rx="4" fill="#fde68a" stroke="#ca8a04" strokeWidth="1.5"/>
+    <text x="18" y="37" fontSize="10" fill="#854d0e" fontWeight="600">Epidermis</text>
+    {/* Dermis */}
+    <rect x="10" y="48" width="280" height="75" rx="4" fill="#fecdd3" stroke="#f43f5e" strokeWidth="1.5"/>
+    <text x="18" y="68" fontSize="10" fill="#9f1239" fontWeight="600">Dermis (Lederhaut)</text>
+    {/* Subkutis */}
+    <rect x="10" y="121" width="280" height="50" rx="4" fill="#e0e7ff" stroke="#818cf8" strokeWidth="1.5"/>
+    <text x="18" y="145" fontSize="10" fill="#3730a3" fontWeight="600">Subkutis (Unterhaut)</text>
+
+    {/* Meissner */}
+    <ellipse cx="70" cy="55" rx="10" ry="14" fill="#86efac" stroke="#16a34a" strokeWidth="1.5"
+      className="svg-part" onClick={()=>setActiveRec(activeRec==='meissner'?null:'meissner')}/>
+    <text x="56" y="78" fontSize="8" fill="#166534">Meissner</text>
+
+    {/* Merkel */}
+    <rect x="115" y="44" width="20" height="10" rx="3" fill="#a5b4fc" stroke="#4f46e5" strokeWidth="1.5"
+      className="svg-part" onClick={()=>setActiveRec(activeRec==='merkel'?null:'merkel')}/>
+    <text x="108" y="66" fontSize="8" fill="#3730a3">Merkel</text>
+
+    {/* Ruffini */}
+    <ellipse cx="185" cy="95" rx="22" ry="8" fill="#fdba74" stroke="#d97706" strokeWidth="1.5"
+      className="svg-part" onClick={()=>setActiveRec(activeRec==='ruffini'?null:'ruffini')}/>
+    <text x="170" y="115" fontSize="8" fill="#92400e">Ruffini</text>
+
+    {/* Freie Nervenendigungen */}
+    <path d="M240,18 Q248,25 245,35 M250,15 Q255,24 252,38 M258,17 Q262,28 260,40"
+      stroke="#fca5a5" strokeWidth="2" fill="none" strokeLinecap="round"
+      className="svg-part" onClick={()=>setActiveRec(activeRec==='frei'?null:'frei')}/>
+    <text x="235" y="55" fontSize="8" fill="#9f1239">Freie NE</text>
+
+    {/* Pacini */}
+    <g className="svg-part" onClick={()=>setActiveRec(activeRec==='pacini'?null:'pacini')}>
+      {[0,4,8,12,16].map(r => (
+        <ellipse key={r} cx="80" cy="148" rx={16-r*0.8} ry={11-r*0.6} fill="none" stroke="#fde68a" strokeWidth="1.2"/>
+      ))}
+      <ellipse cx="80" cy="148" rx="4" ry="3" fill="#fde68a"/>
+    </g>
+    <text x="60" y="170" fontSize="8" fill="#92400e">Pacini</text>
+  </svg>
+);
+
+const StationHaut = () => {
+  const [activeRec, setActiveRec] = useState(null);
+  const rec = activeRec ? skinReceptors.find(r=>r.id===activeRec) : null;
+
+  return (
+    <div className="fade-in space-y-5 pb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-1">Schichten der Haut</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Klicke auf einen Rezeptor für Details.</p>
+        <SkinSVG activeRec={activeRec} setActiveRec={setActiveRec}/>
+        <div className="mt-3 grid grid-cols-1 gap-1.5">
+          {skinReceptors.map(r => (
+            <button key={r.id} onClick={()=>setActiveRec(activeRec===r.id?null:r.id)}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-all font-medium text-left flex items-center gap-2
+                ${activeRec===r.id?'bg-green-600 text-white border-green-600':'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 hover:bg-green-100'}`}>
+              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{background:r.color}}/>
+              <span className="font-semibold">{r.label}</span>
+              <span className="opacity-60 ml-auto">{r.reiz}</span>
+            </button>
+          ))}
+        </div>
+        {rec && (
+          <div className="mt-3 p-3 rounded-lg text-sm fade-in" style={{background:rec.color+'22',borderLeft:`4px solid ${rec.color}`}}>
+            <strong className="text-green-900 dark:text-green-200">{rec.label}</strong>
+            <div className="mt-1 grid grid-cols-2 gap-1 text-xs">
+              <span className="text-gray-500 dark:text-gray-400">Schicht:</span><span className="text-gray-700 dark:text-gray-300">{rec.layer}</span>
+              <span className="text-gray-500 dark:text-gray-400">Reiz:</span><span className="text-gray-700 dark:text-gray-300">{rec.reiz}</span>
+              <span className="text-gray-500 dark:text-gray-400">Dicht bei:</span><span className="text-gray-700 dark:text-gray-300">{rec.where}</span>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 mt-2">{rec.desc}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-3">Zwei-Punkt-Diskriminierung</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">Der minimale Abstand, den man als zwei getrennte Punkte wahrnimmt, variiert je nach Körperregion:</p>
+        <div className="space-y-2">
+          {[
+            { region:'Fingerspitze', dist:'2–3 mm', density:'Sehr hoch', bar:95 },
+            { region:'Lippen', dist:'3–5 mm', density:'Hoch', bar:85 },
+            { region:'Handrücken', dist:'30 mm', density:'Mittel', bar:40 },
+            { region:'Rücken', dist:'40–70 mm', density:'Niedrig', bar:15 },
+          ].map(({region,dist,density,bar}) => (
+            <div key={region} className="flex items-center gap-3">
+              <div className="w-24 text-xs text-gray-700 dark:text-gray-300 font-medium">{region}</div>
+              <div className="flex-1 h-4 bg-green-100 dark:bg-green-900/30 rounded-full overflow-hidden">
+                <div className="h-full rounded-full bg-green-500" style={{width:`${bar}%`,transition:'width 1s ease'}}/>
+              </div>
+              <div className="text-xs text-gray-500 w-16">{dist}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">An Fingerspitzen sind Meissner-Körperchen und Merkel-Scheiben besonders dicht → höchste taktile Auflösung des Körpers.</p>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATION 5 – VERGLEICH & WISSEN
+// ═══════════════════════════════════════════════════════════════════════════════
+const compData = [
+  { organ:'Auge', reiz:'Licht (elektromagn. Wellen)', rezeptor:'Fotorezeptoren (Stäbchen/Zapfen)', weiterleitung:'Sehnerv → Sehzentrum (Okzipitallappen)' },
+  { organ:'Ohr', reiz:'Schallwellen (mech. Schwingung)', rezeptor:'Haarzellen (Cochlea)', weiterleitung:'Hörnerv → Hörzentrum (Schläfenlappen)' },
+  { organ:'Nase', reiz:'Chemische Stoffe (Duftmoleküle)', rezeptor:'Riechrezeptorzellen (~400 Typen)', weiterleitung:'Riechnerv → Riechzentrum (Limbisches System)' },
+  { organ:'Zunge', reiz:'Chemische Stoffe (gelöst)', rezeptor:'Geschmackssinneszellen (Knospen)', weiterleitung:'Gesichts-/Zungen-Nerven → Thalamus → Cortex' },
+  { organ:'Haut', reiz:'Mechanisch, Wärme, Schmerz', rezeptor:'Diverse Körperchen + freie NE', weiterleitung:'Sensible Nerven → Rückenmark → Somatosenso. Cortex' },
+];
+
+const triviaCards = [
+  { icon:'🧠', title:'Mehr als 5 Sinne!', text:'Der Mensch hat mindestens 9 Sinne: Sehen, Hören, Riechen, Schmecken, Tastsinn + Gleichgewichtssinn, Propriozeption (Körperwahrnehmung), Thermorezeption (Temperatur), Nozizeption (Schmerz).' },
+  { icon:'🎨', title:'Synästhesie', text:'Manche Menschen "sehen" Töne als Farben oder "schmecken" Formen. Diese Vermischung der Sinne heißt Synästhesie – sie entsteht durch ungewöhnliche Vernetzungen im Gehirn. Ca. 4% der Menschen sind betroffen.' },
+  { icon:'👻', title:'Phantom-Schmerzen', text:'Nach Amputationen können Betroffene noch Schmerzen in der fehlenden Gliedmaße spüren. Grund: Das Gehirn hat noch ein Körperbild (Body Map) der Extremität – die Nervenzellen senden weiter Signale.' },
+  { icon:'🐕', title:'Geruch: Hund vs. Mensch', text:'Hunde haben ~300 Mio. Riechrezeptoren (Mensch: 10–20 Mio.) und können Gerüche bis zu 100.000× besser wahrnehmen. Ihr Riechzentrum ist 40× größer (relativ zum Gehirn).' },
+  { icon:'🦅', title:'Adleraugen', text:'Adler sehen 4–8× schärfer als Menschen und haben Zapfen für UV-Licht. Sie können aus 3 km Höhe eine Maus erkennen!' },
+  { icon:'🦇', title:'Echolotung', text:'Fledermäuse "sehen" mit Ultraschall – sie senden Töne bis 100 kHz aus (Menschen: max. 20 kHz) und hören das Echo. Einige blinde Menschen können diese Technik ebenfalls erlernen.' },
+];
+
+const StationVergleich = () => {
+  const [openCard, setOpenCard] = useState(null);
+
+  return (
+    <div className="fade-in space-y-5 pb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-3">Übersichtstabelle: Alle Sinnesorgane</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-green-700 text-white">
+                <th className="p-2 text-left rounded-tl-lg">Organ</th>
+                <th className="p-2 text-left">Reiz</th>
+                <th className="p-2 text-left">Rezeptor</th>
+                <th className="p-2 text-left rounded-tr-lg">Weiterleitung</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compData.map((r,i) => (
+                <tr key={r.organ} className={i%2===0?'bg-green-50 dark:bg-green-900/20':'bg-white dark:bg-gray-800'}>
+                  <td className="p-2 font-semibold text-green-800 dark:text-green-300">{r.organ}</td>
+                  <td className="p-2 text-gray-700 dark:text-gray-300">{r.reiz}</td>
+                  <td className="p-2 text-gray-700 dark:text-gray-300">{r.rezeptor}</td>
+                  <td className="p-2 text-gray-700 dark:text-gray-300">{r.weiterleitung}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-3">Wissenskarten 🃏</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Klicke auf eine Karte zum Aufklappen:</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {triviaCards.map((card,i) => (
+            <div key={i} onClick={()=>setOpenCard(openCard===i?null:i)}
+              className={`rounded-xl border cursor-pointer transition-all overflow-hidden ${openCard===i?'border-green-400 shadow-md':'border-green-100 dark:border-green-800 hover:border-green-300'}`}>
+              <div className="p-3 bg-green-50 dark:bg-green-900/20 flex items-center gap-2">
+                <span className="text-2xl">{card.icon}</span>
+                <span className="font-semibold text-green-800 dark:text-green-300 text-sm">{card.title}</span>
+                <IconArrow c={`w-4 h-4 ml-auto text-green-500 transition-transform ${openCard===i?'rotate-90':''}`}/>
+              </div>
+              {openCard===i && (
+                <div className="p-3 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 fade-in border-t border-green-100 dark:border-green-800">
+                  {card.text}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════════════════════════════════════════
+const questions = [
+  { q:'Welche Zellen der Netzhaut sind für das Farbsehen zuständig?', opts:['Stäbchen','Zapfen','Ganglionzellen','Horizontalzellen'], correct:1, explain:'Zapfen (ca. 6 Mio.) sind für das Farbsehen zuständig und benötigen helles Licht. Es gibt 3 Typen: rot-, grün- und blauempfindlich.' },
+  { q:'Was ist der Blinde Fleck?', opts:['Eine Region mit besonders vielen Zapfen','Die Stelle des schärfsten Sehens','Der Bereich, wo der Sehnerv austritt – ohne Fotorezeptoren','Ein Defekt bei Kurzsichtigkeit'], correct:2, explain:'Am Blinden Fleck treten die Nervenfasern des Sehnervs aus dem Augapfel – hier gibt es keine Fotorezeptoren, also ein kleines "Loch" im Sehfeld.' },
+  { q:'Welches ist das kleinste Knochen im menschlichen Körper?', opts:['Hammer','Amboss','Steigbügel','Trommelfell'], correct:2, explain:'Der Steigbügel (Stapes) ist nur ca. 3 mm groß und damit der kleinste Knochen im menschlichen Körper.' },
+  { q:'Was ist die richtige Reihenfolge der Gehörknöchelchen?', opts:['Amboss → Hammer → Steigbügel','Hammer → Amboss → Steigbügel','Steigbügel → Amboss → Hammer','Amboss → Steigbügel → Hammer'], correct:1, explain:'Hammer (am Trommelfell) → Amboss → Steigbügel (am ovalen Fenster zur Cochlea). Merkhilfe: H-A-S' },
+  { q:'Warum schmeckt Essen bei Erkältung fade?', opts:['Die Zunge ist geschwollen','Viren zerstören Geschmacksknospen','Ca. 80% des Geschmacks entsteht durch Riechen – das ist blockiert','Fieber verändert die Rezeptoren'], correct:2, explain:'Der Großteil unseres Geschmackseindrucks entsteht durch Riechen. Bei verstopfter Nase fehlen die Duftsignale, sodass nur die 5 Grundgeschmäcke bleiben.' },
+  { q:'Wie viele verschiedene Grundgeschmäcke erkennt die Zunge?', opts:['3 (süß, sauer, salzig)','4 (+ bitter)','5 (+ umami)','7 (+ scharf, fettig)'], correct:2, explain:'Die 5 wissenschaftlich anerkannten Grundgeschmäcke sind: süß, sauer, salzig, bitter und umami. Scharf ist kein Geschmack, sondern ein Schmerzreiz (Capsaicin).' },
+  { q:'Was ist falsch an der "klassischen Zungenlandkarte"?', opts:['Sie gilt nur für Kinder','Alle 5 Geschmäcke sind über die gesamte Zunge verteilt, nicht in Zonen','Die Zunge hat keine Regionen','Sie verwechselt Süß und Sauer'], correct:1, explain:'Die klassische Zungenlandkarte ist ein wissenschaftlicher Irrtum. Tatsächlich sind alle Geschmacksqualitäten über die gesamte Zunge verteilt.' },
+  { q:'Welcher Hautsensor ist auf Vibration spezialisiert?', opts:['Meissner-Körperchen','Merkel-Scheiben','Pacini-Körperchen','Ruffini-Körperchen'], correct:2, explain:'Pacini-Körperchen (Vater-Pacini-Körperchen) reagieren besonders stark auf Vibration und schnelle Druckveränderungen. Sie sind zwiebelförmig und liegen tief in der Haut.' },
+  { q:'Wo befinden sich die meisten Meissner-Körperchen?', opts:['Am Rücken','In der Fußsohle','An den Fingerspitzen und Lippen','In der Kopfhaut'], correct:2, explain:'Meissner-Körperchen sind an Fingerspitzen und Lippen besonders dicht – daher die hohe taktile Empfindlichkeit dort. Das ermöglicht auch das Lesen von Braille-Schrift.' },
+  { q:'Was passiert bei der Akkommodation des Auges beim Nahsehen?', opts:['Der Ziliarmuskel entspannt, die Linse wird flacher','Der Ziliarmuskel kontrahiert, die Linse wird dicker','Die Pupille vergrößert sich','Die Hornhaut verändert ihre Krümmung'], correct:1, explain:'Beim Nahsehen kontrahiert der Ziliarmuskel, der Zonulafaden erschlafft → die elastische Linse wird durch ihre eigene Elastizität dicker und stärker brechend.' },
+  { q:'Welche Funktion haben die Bogengänge des Ohres?', opts:['Hören von hohen Tönen','Verstärken des Schalls','Wahrnehmen von Drehbewegungen (Gleichgewicht)','Regulieren der Ohrenschmalzproduktion'], correct:2, explain:'Die drei Bogengänge (senkrecht aufeinander) registrieren Drehbewegungen des Kopfes. Bei Bewegung verschiebt sich die Endolymphe → Haarzellen werden aktiviert.' },
+  { q:'Was ist Synästhesie?', opts:['Eine Form der Kurzsichtigkeit','Das Fehlen eines Sinnesorgans','Eine Vermischung von Sinneswahrnehmungen (z.B. Töne als Farben sehen)','Ein Geruchsverlust nach Virusinfektionen'], correct:2, explain:'Synästhesie ist eine neurologische Erscheinung, bei der ein Sinnesreiz gleichzeitig eine Wahrnehmung in einem anderen Sinnesbereich auslöst, z.B. Buchstaben als Farben wahrnehmen.' },
+];
+
+const QuizStation = ({ onScoreUpdate }) => {
+  const [idx, setIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+  const [answers, setAnswers] = useState([]);
+
+  const q = questions[idx];
+
+  const handleAnswer = (i) => {
+    if (selected !== null) return;
+    setSelected(i);
+    const correct = i === q.correct;
+    const newScore = correct ? score + 1 : score;
+    if (correct) setScore(newScore);
+    setAnswers(a => [...a, { q: q.q, selected: i, correct: q.correct, ok: correct }]);
+  };
+
+  const next = () => {
+    if (idx + 1 >= questions.length) {
+      // answers state may not yet include the last answer (async setState), so compute directly
+      const s = answers.filter(a=>a.ok).length + (selected===q.correct?1:0);
+      setDone(true);
+      LS.set('sinnesorgane_quiz_score', { score: s, total: questions.length, date: new Date().toLocaleDateString('de-DE') });
+      onScoreUpdate(s);
+    } else {
+      setIdx(i => i + 1);
+      setSelected(null);
+    }
+  };
+
+  const restart = () => {
+    setIdx(0); setSelected(null); setScore(0); setDone(false); setAnswers([]);
+  };
+
+  if (done) {
+    const finalScore = score;
+    const pct = Math.round(finalScore/questions.length*100);
+    return (
+      <div className="fade-in space-y-5 pb-8 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-green-100 dark:border-green-900 shadow-sm">
+          <div className="text-5xl mb-3">{pct>=80?'🏆':pct>=60?'👍':'📚'}</div>
+          <h2 className="text-2xl font-bold text-green-800 dark:text-green-300">Quiz abgeschlossen!</h2>
+          <div className="mt-4 text-5xl font-bold text-green-600">{finalScore}/{questions.length}</div>
+          <div className="mt-2 text-gray-600 dark:text-gray-400">{pct}% richtig</div>
+          <div className="mt-4 h-4 bg-green-100 dark:bg-green-900/30 rounded-full overflow-hidden">
+            <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{width:`${pct}%`}}/>
+          </div>
+          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+            {pct>=80?'Ausgezeichnet! Du kennst die Sinnesorgane sehr gut.':pct>=60?'Gut gemacht! Schau dir die falschen Antworten nochmal an.':'Übe die Stationen nochmal – du schaffst das!'}
+          </div>
+          <button onClick={restart} className="mt-5 px-6 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors">
+            Quiz wiederholen
+          </button>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm text-left">
+          <h3 className="font-bold text-green-800 dark:text-green-300 mb-3">Auswertung:</h3>
+          {answers.map((a,i) => (
+            <div key={i} className={`mb-2 p-2 rounded-lg text-xs ${a.ok?'bg-green-50 dark:bg-green-900/20 border border-green-200':'bg-red-50 dark:bg-red-900/20 border border-red-200'}`}>
+              <div className="flex items-start gap-2">
+                {a.ok ? <IconCheck c="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5"/> : <IconX c="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5"/>}
+                <div>
+                  <div className="font-medium text-gray-800 dark:text-gray-200">{questions[i].q}</div>
+                  {!a.ok && <div className="text-red-600 dark:text-red-400 mt-1">Richtig: {questions[i].opts[questions[i].correct]}</div>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fade-in space-y-5 pb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900 shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm font-semibold text-green-700 dark:text-green-400">Frage {idx+1} von {questions.length}</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{score} Punkt{score!==1?'e':''}</span>
+        </div>
+        <div className="h-2 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
+          <div className="h-full bg-green-500 rounded-full transition-all" style={{width:`${((idx)/questions.length)*100}%`}}/>
+        </div>
+        <h3 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-4">{q.q}</h3>
+        <div className="space-y-2">
+          {q.opts.map((opt, i) => {
+            let cls = 'w-full text-left p-3 rounded-xl border text-sm font-medium transition-all ';
+            if (selected === null) {
+              cls += 'border-gray-200 dark:border-gray-700 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+            } else if (i === q.correct) {
+              cls += 'border-green-500 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300';
+            } else if (i === selected) {
+              cls += 'border-red-400 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+            } else {
+              cls += 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 text-gray-500 dark:text-gray-500 opacity-60';
+            }
+            return (
+              <button key={i} onClick={()=>handleAnswer(i)} className={cls}>
+                <span className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {selected!==null && i===q.correct ? <IconCheck c="w-3 h-3"/> : selected===i && i!==q.correct ? <IconX c="w-3 h-3"/> : 'ABCD'[i]}
+                  </span>
+                  {opt}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {selected !== null && (
+          <div className={`mt-3 p-3 rounded-lg text-sm fade-in ${selected===q.correct?'bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-800 dark:text-green-300':'bg-red-50 dark:bg-red-900/20 border border-red-200 text-red-700 dark:text-red-300'}`}>
+            <strong>{selected===q.correct?'✓ Richtig!':'✗ Leider falsch.'}</strong> {q.explain}
+          </div>
+        )}
+        {selected !== null && (
+          <button onClick={next} className="mt-4 w-full py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors fade-in">
+            {idx+1>=questions.length ? 'Ergebnis anzeigen' : 'Nächste Frage →'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OVERVIEW / HOME
+// ═══════════════════════════════════════════════════════════════════════════════
+const stationMeta = [
+  { id:'auge',    label:'Das Auge',        icon:'👁️',  color:'bg-green-600',  border:'border-green-300 dark:border-green-700',  accent:'text-green-700 dark:text-green-400',  desc:'Aufbau, Stäbchen/Zapfen, Akkommodation' },
+  { id:'ohr',     label:'Das Ohr',         icon:'👂',  color:'bg-emerald-600', border:'border-emerald-300 dark:border-emerald-700', accent:'text-emerald-700 dark:text-emerald-400', desc:'Gehörknöchelchen, Cochlea, Gleichgewicht' },
+  { id:'nasezunge',label:'Nase & Zunge',   icon:'👃',  color:'bg-lime-600',   border:'border-lime-300 dark:border-lime-700',    accent:'text-lime-700 dark:text-lime-400',    desc:'Geruch, Schmecken, 5 Grundgeschmäcke' },
+  { id:'haut',    label:'Die Haut',        icon:'✋',  color:'bg-green-700',  border:'border-green-300 dark:border-green-700',  accent:'text-green-800 dark:text-green-300',  desc:'Schichten, Rezeptoren, Berührung' },
+  { id:'vergleich',label:'Vergleich',      icon:'🧠',  color:'bg-green-800',  border:'border-green-300 dark:border-green-700',  accent:'text-green-900 dark:text-green-200',  desc:'Tabelle, Tierwelt, Wissenskarten' },
+  { id:'quiz',    label:'Quiz',            icon:'🎯',  color:'bg-green-600',  border:'border-green-300 dark:border-green-700',  accent:'text-green-700 dark:text-green-400',  desc:'12 Fragen zu allen Sinnesorganen' },
+];
+
+const Overview = ({ visited, quizScore, onNavigate }) => (
+  <div className="fade-in space-y-5 pb-8">
+    <div className="bg-gradient-to-br from-green-700 to-green-600 rounded-2xl p-5 text-white">
+      <div className="text-4xl mb-2">🫀👁️👂👃✋</div>
+      <h2 className="text-xl font-bold">Sinnesorgane</h2>
+      <p className="text-green-100 text-sm mt-1">Biologie 8. Klasse · Gymnasium Bayern</p>
+      <p className="text-green-200 text-xs mt-2">Erkunde alle 5 Sinnesorgane und beantworte das Quiz!</p>
+      {quizScore !== null && (
+        <div className="mt-3 bg-white/20 rounded-lg px-3 py-2 text-sm font-semibold">
+          Quiz-Rekord: {quizScore}/{questions.length} Punkte 🏆
+        </div>
+      )}
+    </div>
+
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {stationMeta.map(s => (
+        <button key={s.id} onClick={()=>onNavigate(s.id)}
+          className={`relative p-4 bg-white dark:bg-gray-800 rounded-xl border-2 ${s.border} text-left transition-all hover:shadow-md hover:scale-[1.02] active:scale-95`}>
+          {visited.has(s.id) && (
+            <span className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+              <IconCheck c="w-3 h-3 text-white"/>
+            </span>
+          )}
+          <div className="text-3xl mb-2">{s.icon}</div>
+          <div className={`font-bold text-sm ${s.accent}`}>{s.label}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{s.desc}</div>
+        </button>
+      ))}
+    </div>
+
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-100 dark:border-green-900">
+      <div className="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Fortschritt</div>
+      <div className="flex gap-2">
+        {stationMeta.slice(0,5).map(s => (
+          <div key={s.id} className={`flex-1 h-2.5 rounded-full transition-all ${visited.has(s.id)?'bg-green-500':'bg-green-100 dark:bg-green-900/30'}`}/>
+        ))}
+      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{[...visited].filter(v=>v!=='quiz').length}/5 Stationen besucht</div>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════════════════════
+const App = () => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [visited, setVisited] = useState(() => new Set(LS.get('sinnesorgane_visited', [])));
+  const [quizScore, setQuizScore] = useState(() => {
+    const s = LS.get('sinnesorgane_quiz_score', null);
+    return s ? s.score : null;
+  });
+
+  const navigate = (id) => {
+    setActiveTab(id);
+    const nv = new Set(visited);
+    nv.add(id);
+    setVisited(nv);
+    LS.set('sinnesorgane_visited', [...nv]);
+  };
+
+  const handleScoreUpdate = (s) => { setQuizScore(s); };
+
+  const tabs = [
+    { id:'overview', label:'Start', icon:'🏠' },
+    { id:'auge',     label:'Auge',  icon:'👁️' },
+    { id:'ohr',      label:'Ohr',   icon:'👂' },
+    { id:'nasezunge',label:'Nase/Zunge', icon:'👃' },
+    { id:'haut',     label:'Haut',  icon:'✋' },
+    { id:'vergleich',label:'Vergleich', icon:'🧠' },
+    { id:'quiz',     label:'Quiz',  icon:'🎯' },
+  ];
+
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'overview':  return <Overview visited={visited} quizScore={quizScore} onNavigate={navigate}/>;
+      case 'auge':      return <StationAuge/>;
+      case 'ohr':       return <StationOhr/>;
+      case 'nasezunge': return <StationNaseZunge/>;
+      case 'haut':      return <StationHaut/>;
+      case 'vergleich': return <StationVergleich/>;
+      case 'quiz':      return <QuizStation onScoreUpdate={handleScoreUpdate}/>;
+      default:          return <Overview visited={visited} quizScore={quizScore} onNavigate={navigate}/>;
+    }
+  };
+
+  const current = stationMeta.find(s=>s.id===activeTab);
+
+  return (
+    <div className="min-h-screen bg-green-50 dark:bg-gray-900 flex flex-col">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-green-800 to-green-700 text-white sticky top-0 z-50 shadow-lg">
+        <div className="max-w-3xl mx-auto px-3 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <a href="../index.html" className="p-1.5 rounded-lg hover:bg-white/20 transition-colors" title="Zurück zur Startseite">
+              <IconHome c="w-5 h-5 text-white"/>
+            </a>
+            <div>
+              <h1 className="text-sm font-bold leading-tight">Sinnesorgane</h1>
+              <p className="text-xs text-green-200">Bio 8. Klasse · Bayern</p>
+            </div>
+          </div>
+          {/* Progress dots */}
+          <div className="flex items-center gap-1.5 mr-2">
+            {stationMeta.slice(0,5).map(s => (
+              <div key={s.id} className={`w-2.5 h-2.5 rounded-full transition-all ${visited.has(s.id)?'bg-green-300':'bg-white/30'}`} title={s.label}/>
+            ))}
+          </div>
+          <button onClick={()=>window.toggleDarkMode && window.toggleDarkMode()}
+            data-dark-toggle aria-pressed="false" title="Dunkles Design"
+            className="p-2 rounded-lg hover:bg-white/20 transition-colors">
+            <span className="dark-mode-icon text-lg">🌙</span>
+          </button>
+        </div>
+        {/* Tab Bar */}
+        <div className="max-w-3xl mx-auto px-2 pb-2">
+          <nav className="flex bg-black/20 rounded-xl p-1 overflow-x-auto no-scrollbar gap-0.5">
+            {tabs.map(tab => (
+              <button key={tab.id} onClick={()=>navigate(tab.id)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0
+                  ${activeTab===tab.id?'bg-white text-green-700 shadow-md':'text-green-100 hover:bg-white/10'}`}>
+                <span>{tab.icon}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="flex-1 max-w-3xl mx-auto w-full px-3 pt-4">
+        {activeTab !== 'overview' && (
+          <div className="flex items-center gap-2 mb-4">
+            <button onClick={()=>setActiveTab('overview')} className="text-xs text-green-600 dark:text-green-400 hover:underline flex items-center gap-1">
+              ← Übersicht
+            </button>
+            {current && <span className="text-xs text-gray-400">/ {current.label}</span>}
+          </div>
+        )}
+        {renderContent()}
+      </main>
+
+      <footer className="text-center py-4 text-xs text-gray-400 dark:text-gray-600">
+        Sinnesorgane · Bio 8. Klasse · Gymnasium Bayern
+      </footer>
+    </div>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

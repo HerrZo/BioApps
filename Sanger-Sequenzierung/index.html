@@ -6,7 +6,10 @@
     <title>Sanger-Sequenzierung - Bio Lern-App</title>
     <meta name="theme-color" content="#166534">
 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/dark-mode.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../shared/tailwind-config.js"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -89,21 +92,73 @@
             scrollbar-width: none;
         }
         
-        @keyframes slideRight { 
-            0% { left: 0%; opacity: 1; } 
+        @keyframes slideRight {
+            0% { left: 0%; opacity: 1; }
             90% { left: 100%; opacity: 1; }
             100% { left: 100%; opacity: 0; }
         }
         .laser-scan {
             animation: slideRight 2s linear forwards;
         }
+
+        @keyframes fragmentAppear {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fragment-appear {
+            animation: fragmentAppear 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes bandSlide {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .band-slide {
+            animation: bandSlide 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes baseReveal {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .base-reveal {
+            animation: baseReveal 0.35s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes bandPulse {
+            0% { box-shadow: 0 0 0 0 rgba(250,204,21,0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(250,204,21,0); }
+            100% { box-shadow: 0 0 0 0 rgba(250,204,21,0); }
+        }
+        .band-highlight {
+            animation: bandPulse 0.8s ease-out forwards;
+        }
     </style>
 </head>
 <body class="bg-green-50 text-gray-900 min-h-screen flex flex-col font-sans selection:bg-green-200">
+<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between" style="background:rgba(255,255,255,0.92)">
+  <a href="../index.html"
+     class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
+     aria-label="Zurück zur Startseite">
+    <span class="group-hover:-translate-x-1 transition-transform inline-block">←</span>
+    <span>Startseite</span>
+  </a>
+  <button
+    data-dark-toggle
+    onclick="toggleDarkMode()"
+    aria-pressed="false"
+    title="Dunkles Design"
+    aria-label="Dark Mode umschalten">
+    <span class="dark-mode-icon">🌙</span>
+  </button>
+</nav>
     <div id="root" class="flex-grow flex flex-col"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useCallback, useRef } = React;
 
         // ── Icons ──────────────────────────────────────────────────────────────
         const IconDna = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993M9 22c1.798-1.998 2.518-3.995 2.807-5.993M2 15c6.667-6 13.333 0 20-6M20 9c-6.667 6-13.333 0-20 6"/></svg>;
@@ -506,6 +561,456 @@
             );
         };
 
+        // ── Tab: Interaktive Simulation ────────────────────────────────────────────
+        const DD_COLORS = {
+            A: { hex: '#16a34a', bg: 'bg-green-600',  text: 'text-green-700',  border: 'border-green-500',  light: 'bg-green-50',  label: 'ddATP' },
+            C: { hex: '#2563eb', bg: 'bg-blue-600',   text: 'text-blue-700',   border: 'border-blue-500',   light: 'bg-blue-50',   label: 'ddCTP' },
+            T: { hex: '#dc2626', bg: 'bg-red-600',    text: 'text-red-700',    border: 'border-red-500',    light: 'bg-red-50',    label: 'ddTTP' },
+            G: { hex: '#d97706', bg: 'bg-amber-500',  text: 'text-amber-700',  border: 'border-amber-500',  light: 'bg-amber-50',  label: 'ddGTP' },
+        };
+
+        function complement(base) {
+            return { A:'T', T:'A', C:'G', G:'C' }[base] || base;
+        }
+
+        function generateFragments(template) {
+            // Build complementary strand (template read 5'->3', complement synthesised 5'->3')
+            const comp = template.split('').map(complement);
+            const result = { A: [], C: [], T: [], G: [] };
+            comp.forEach((base, i) => {
+                // fragment is complement[0..i]
+                result[base].push(comp.slice(0, i + 1).join(''));
+            });
+            return result;
+        }
+
+        // Y-position for a band: shorter fragment → lower (larger y value in SVG)
+        function getFragmentY(length, maxLength, gelHeight, topPad, bottomPad) {
+            // length 1 → near bottom (gelHeight - bottomPad), maxLength → near top (topPad)
+            const usable = gelHeight - topPad - bottomPad;
+            return topPad + usable * (1 - (length - 1) / Math.max(maxLength - 1, 1));
+        }
+
+        const SangerSimulation = () => {
+            const EXAMPLE = 'ATCGATCGGCTA';
+            const [templateDNA, setTemplateDNA] = useState('');
+            const [inputError, setInputError] = useState('');
+            const [step, setStep] = useState(0);
+            // 0 = input, 1 = fragments visible, 2 = gel animated, 3 = read sequence
+            const [fragments, setFragments] = useState({ A:[], C:[], T:[], G:[] });
+            const [visibleFragments, setVisibleFragments] = useState({ A:0, C:0, T:0, G:0 });
+            const [animating, setAnimating] = useState(false);
+            const [gelBandsVisible, setGelBandsVisible] = useState(false);
+            const [highlightedBand, setHighlightedBand] = useState(null); // { ddType, fragIndex }
+            const [revealedBases, setRevealedBases] = useState(0);
+            const [readingDone, setReadingDone] = useState(false);
+            const timerRef = useRef([]);
+
+            const clearTimers = () => { timerRef.current.forEach(clearTimeout); timerRef.current = []; };
+
+            const validate = (val) => /^[ATCGatcg]*$/.test(val) && val.length <= 20;
+
+            const handleInput = (e) => {
+                const val = e.target.value.toUpperCase();
+                if (!validate(val) && val !== '') {
+                    setInputError('Nur A, T, C, G erlaubt – max. 20 Zeichen.');
+                } else {
+                    setInputError('');
+                }
+                if (/^[ATCGatcg]*$/.test(val) && val.length <= 20) setTemplateDNA(val);
+            };
+
+            const loadExample = () => { setTemplateDNA(EXAMPLE); setInputError(''); };
+
+            const startSimulation = useCallback(() => {
+                if (templateDNA.length < 2) { setInputError('Bitte mindestens 2 Nukleotide eingeben.'); return; }
+                clearTimers();
+                const frags = generateFragments(templateDNA);
+                setFragments(frags);
+                setVisibleFragments({ A:0, C:0, T:0, G:0 });
+                setGelBandsVisible(false);
+                setHighlightedBand(null);
+                setRevealedBases(0);
+                setReadingDone(false);
+                setStep(1);
+                setAnimating(true);
+
+                // Reveal fragments per ddNTP type one by one
+                const types = ['A','C','T','G'];
+                let delay = 100;
+                types.forEach(type => {
+                    frags[type].forEach((_, idx) => {
+                        const t = setTimeout(() => {
+                            setVisibleFragments(prev => ({ ...prev, [type]: idx + 1 }));
+                        }, delay);
+                        timerRef.current.push(t);
+                        delay += 220;
+                    });
+                });
+                const doneT = setTimeout(() => setAnimating(false), delay + 200);
+                timerRef.current.push(doneT);
+            }, [templateDNA]);
+
+            const startGel = useCallback(() => {
+                clearTimers();
+                setGelBandsVisible(false);
+                setStep(2);
+                setAnimating(true);
+                const t = setTimeout(() => { setGelBandsVisible(true); setAnimating(false); }, 300);
+                timerRef.current.push(t);
+            }, []);
+
+            const readSequence = useCallback(() => {
+                if (step < 2) return;
+                clearTimers();
+                setHighlightedBand(null);
+                setRevealedBases(0);
+                setReadingDone(false);
+                setStep(3);
+
+                // Build sorted band list (by fragment length ascending = bottom to top)
+                const sortedBands = [];
+                ['A','C','T','G'].forEach(type => {
+                    fragments[type].forEach((frag, fi) => {
+                        sortedBands.push({ type, fi, length: frag.length, base: type });
+                    });
+                });
+                sortedBands.sort((a,b) => a.length - b.length);
+
+                let delay = 300;
+                sortedBands.forEach((band, i) => {
+                    const t1 = setTimeout(() => setHighlightedBand({ type: band.type, fi: band.fi }), delay);
+                    const t2 = setTimeout(() => setRevealedBases(i + 1), delay + 400);
+                    timerRef.current.push(t1, t2);
+                    delay += 700;
+                });
+                const tDone = setTimeout(() => { setHighlightedBand(null); setReadingDone(true); }, delay + 300);
+                timerRef.current.push(tDone);
+            }, [step, fragments]);
+
+            const resetAll = () => {
+                clearTimers();
+                setStep(0);
+                setTemplateDNA('');
+                setFragments({ A:[], C:[], T:[], G:[] });
+                setVisibleFragments({ A:0, C:0, T:0, G:0 });
+                setGelBandsVisible(false);
+                setHighlightedBand(null);
+                setRevealedBases(0);
+                setReadingDone(false);
+                setAnimating(false);
+                setInputError('');
+            };
+
+            useEffect(() => () => clearTimers(), []);
+
+            // Derived: complement strand (5'->3')
+            const compStrand = templateDNA.split('').map(complement).join('');
+
+            // All bands sorted by length for reading
+            const allBandsSorted = [];
+            ['A','C','T','G'].forEach(type => {
+                fragments[type].forEach((frag, fi) => {
+                    allBandsSorted.push({ type, fi, length: frag.length, base: type });
+                });
+            });
+            allBandsSorted.sort((a,b) => a.length - b.length);
+            const readSequenceStr = allBandsSorted.slice(0, revealedBases).map(b => b.base).join('');
+
+            // SVG Gel dimensions
+            const GEL_W = 320;
+            const GEL_H = 220;
+            const TOP_PAD = 20;
+            const BOT_PAD = 20;
+            const LANE_POSITIONS = { A: 40, C: 110, T: 180, G: 250 };
+            const maxLen = templateDNA.length;
+
+            return (
+                <div className="animate-fade-in space-y-5 pb-8 h-full overflow-y-auto">
+
+                    {/* ── Teil A: Eingabe ── */}
+                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                        <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                            <span className="text-2xl">🧬</span> Teil A – DNA-Template eingeben
+                        </h2>
+                        <p className="text-gray-600 text-sm mb-4">Gib eine Template-DNA (5'→3') ein oder nutze das Beispiel. Nur A, T, C, G, max. 20 Basen.</p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 bg-gray-50 border-2 border-green-200 rounded-xl px-3 py-2 focus-within:border-green-500 transition">
+                                    <span className="text-xs font-bold text-gray-400 shrink-0">5'</span>
+                                    <input
+                                        type="text"
+                                        value={templateDNA}
+                                        onChange={handleInput}
+                                        placeholder="z.B. ATCGATCGGCTA"
+                                        maxLength={20}
+                                        className="flex-1 bg-transparent font-mono text-base font-bold text-green-800 outline-none tracking-widest uppercase placeholder:normal-case placeholder:font-normal placeholder:text-gray-300"
+                                    />
+                                    <span className="text-xs font-bold text-gray-400 shrink-0">3'</span>
+                                    <span className="text-xs text-gray-400 shrink-0">{templateDNA.length}/20</span>
+                                </div>
+                                {inputError && <p className="text-red-600 text-xs mt-1 font-medium">{inputError}</p>}
+                            </div>
+                            <button onClick={loadExample} className="shrink-0 px-4 py-2 rounded-xl border-2 border-green-300 text-green-700 font-bold text-sm hover:bg-green-50 transition">
+                                Beispiel laden
+                            </button>
+                        </div>
+
+                        {templateDNA.length >= 2 && (
+                            <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3 flex flex-wrap items-center gap-3 text-sm animate-fade-in">
+                                <div>
+                                    <span className="text-xs text-gray-500 font-semibold mr-1">Template 5'→3':</span>
+                                    <span className="font-mono font-bold text-green-800 tracking-widest">{templateDNA}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 font-semibold mr-1">Komplement 5'→3':</span>
+                                    <span className="font-mono font-bold text-blue-700 tracking-widest">{compStrand}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-4 flex gap-3">
+                            <button
+                                onClick={startSimulation}
+                                disabled={templateDNA.length < 2 || animating}
+                                className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 disabled:opacity-50 transition shadow-md shadow-green-200"
+                            >
+                                {animating && step === 1 ? 'Fragmente werden berechnet…' : 'Simulation starten'}
+                            </button>
+                            {step > 0 && (
+                                <button onClick={resetAll} className="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition">
+                                    Zurücksetzen
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── Teil B: Fragmente ── */}
+                    {step >= 1 && (
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 animate-fade-in">
+                            <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <span className="text-2xl">⚗️</span> Teil B – Kettenabbruch-Reaktion
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Die DNA-Polymerase synthetisiert den Komplementärstrang. Wenn ein ddNTP eingebaut wird, bricht die Kette ab – es entstehen Fragmente verschiedener Länge.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                                {['A','C','T','G'].map(type => {
+                                    const col = DD_COLORS[type];
+                                    const frags = fragments[type];
+                                    const visible = visibleFragments[type];
+                                    return (
+                                        <div key={type} className={`rounded-xl border-2 ${col.border} ${col.light} p-4`}>
+                                            <div className={`font-bold text-sm mb-3 ${col.text} flex items-center gap-1.5`}>
+                                                <span className={`w-5 h-5 rounded-full ${col.bg} inline-block`}></span>
+                                                {col.label}-Ansatz
+                                            </div>
+                                            <div className="space-y-2 min-h-[60px]">
+                                                {frags.slice(0, visible).map((frag, fi) => (
+                                                    <div
+                                                        key={fi}
+                                                        className="fragment-appear font-mono text-xs bg-white rounded-lg px-2 py-1.5 border border-gray-100 shadow-sm flex items-center gap-1 overflow-x-auto"
+                                                        style={{ animationDelay: `${fi * 0.05}s` }}
+                                                    >
+                                                        {frag.split('').map((base, bi) => (
+                                                            <span
+                                                                key={bi}
+                                                                className={`font-bold text-sm ${bi === frag.length - 1 ? `${col.text} underline` : 'text-gray-600'}`}
+                                                                title={bi === frag.length - 1 ? `dd${type}TP – Abbruch` : `d${base}TP`}
+                                                            >{base}</span>
+                                                        ))}
+                                                        <span className="ml-auto text-gray-300 text-[10px] shrink-0">{frag.length}bp</span>
+                                                    </div>
+                                                ))}
+                                                {visible < frags.length && (
+                                                    <div className="text-center text-gray-300 text-xs animate-pulse">…</div>
+                                                )}
+                                                {frags.length === 0 && visible === 0 && step >= 1 && (
+                                                    <div className="text-gray-400 text-xs italic">Kein Abbruch an {type}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {!animating && step === 1 && (
+                                <div className="mt-5 text-center animate-fade-in">
+                                    <button onClick={startGel} className="px-8 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition shadow-md shadow-green-200">
+                                        Weiter zur Gel-Elektrophorese →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Teil C: Gel ── */}
+                    {step >= 2 && (
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 animate-fade-in">
+                            <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <span className="text-2xl">🔋</span> Teil C – Gel-Elektrophorese
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Die Fragmente wandern im Gel – kurze Fragmente schneller (weiter unten), lange langsamer (weiter oben). Jede Spur enthält Fragmente eines ddNTP-Ansatzes.
+                            </p>
+
+                            <div className="overflow-x-auto flex justify-center">
+                                <div className="bg-slate-900 rounded-2xl p-4 border-4 border-slate-700 inline-block shadow-xl">
+                                    {/* Lane labels */}
+                                    <div className="flex justify-between px-2 mb-1" style={{width: GEL_W}}>
+                                        {['A','C','T','G'].map(type => (
+                                            <div key={type} className="w-14 text-center">
+                                                <span className={`text-xs font-bold ${DD_COLORS[type].text.replace('text-','text-').replace('700','400')}`}
+                                                    style={{color: DD_COLORS[type].hex}}>
+                                                    dd{type}TP
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="text-center text-[10px] text-slate-500 mb-1 tracking-widest font-bold">― KATHODE (Start) ―</div>
+
+                                    <svg
+                                        width={GEL_W}
+                                        height={GEL_H}
+                                        className="rounded-lg overflow-visible"
+                                        style={{background: 'rgba(15,23,42,0.7)'}}
+                                    >
+                                        {/* Lane separators */}
+                                        {[70,140,210].map(x => (
+                                            <line key={x} x1={x} y1={0} x2={x} y2={GEL_H} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+                                        ))}
+
+                                        {/* Bands */}
+                                        {gelBandsVisible && ['A','C','T','G'].map(type =>
+                                            fragments[type].map((frag, fi) => {
+                                                const x = LANE_POSITIONS[type];
+                                                const y = getFragmentY(frag.length, maxLen, GEL_H, TOP_PAD, BOT_PAD);
+                                                const isHl = highlightedBand && highlightedBand.type === type && highlightedBand.fi === fi;
+                                                const delay = (frag.length * 0.08 + fi * 0.05).toFixed(2);
+                                                return (
+                                                    <g key={`${type}-${fi}`}>
+                                                        <rect
+                                                            x={x - 22}
+                                                            y={y - 4}
+                                                            width={44}
+                                                            height={8}
+                                                            rx={3}
+                                                            fill={DD_COLORS[type].hex}
+                                                            opacity={isHl ? 1 : 0.75}
+                                                            className="band-slide"
+                                                            style={{ animationDelay: `${delay}s`, filter: isHl ? `drop-shadow(0 0 6px ${DD_COLORS[type].hex})` : 'none' }}
+                                                        />
+                                                        {isHl && (
+                                                            <rect
+                                                                x={x - 24}
+                                                                y={y - 6}
+                                                                width={48}
+                                                                height={12}
+                                                                rx={4}
+                                                                fill="none"
+                                                                stroke="white"
+                                                                strokeWidth={2}
+                                                                opacity={0.9}
+                                                            />
+                                                        )}
+                                                        <text
+                                                            x={x}
+                                                            y={y - 7}
+                                                            textAnchor="middle"
+                                                            className="band-slide"
+                                                            style={{ animationDelay: `${delay}s`, fontSize: '8px', fill: '#94a3b8', fontFamily: 'monospace' }}
+                                                        >{frag.length}bp</text>
+                                                    </g>
+                                                );
+                                            })
+                                        )}
+                                    </svg>
+
+                                    <div className="text-center text-[10px] text-pink-500 mt-1 tracking-widest font-bold">― ANODE (+) ―</div>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3 text-xs text-green-800 font-medium">
+                                <strong>Leserichtung:</strong> Von unten nach oben liest man den Komplementärstrang 5'→3' ab – jede Bande entspricht der letzten eingebauten Base (dem ddNTP der jeweiligen Spur).
+                            </div>
+
+                            {step === 2 && !animating && (
+                                <div className="mt-5 text-center animate-fade-in">
+                                    <button onClick={readSequence} className="px-8 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition shadow-md shadow-green-200">
+                                        Sequenz ablesen →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Teil D: Sequenz ablesen ── */}
+                    {step >= 3 && (
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 animate-fade-in">
+                            <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <span className="text-2xl">📖</span> Teil D – Sequenz ablesen
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Die Banden werden von unten (kurze Fragmente = früh abgebrochen = erste Basen) nach oben abgelesen. Jede Bande verrät die nächste Base des Komplementärstrangs.
+                            </p>
+
+                            {/* Reading display */}
+                            <div className="bg-slate-900 rounded-xl p-4 flex flex-col items-center gap-3 border-2 border-slate-700">
+                                <div className="text-xs text-slate-400 font-semibold tracking-widest">KOMPLEMENTÄRSTRANG 5' → 3'</div>
+                                <div className="flex flex-wrap gap-2 justify-center min-h-[52px]">
+                                    {readSequenceStr.split('').map((base, i) => {
+                                        const col = DD_COLORS[base];
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-xl text-white base-reveal border-2`}
+                                                style={{ backgroundColor: col.hex, borderColor: col.hex, animationDelay: `${i * 0.05}s` }}
+                                            >
+                                                {base}
+                                            </div>
+                                        );
+                                    })}
+                                    {!readingDone && (
+                                        <div className="w-10 h-10 rounded-lg border-2 border-dashed border-slate-600 animate-pulse"></div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {readingDone && (
+                                <div className="mt-4 space-y-3 animate-fade-in">
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-semibold mb-1">Abgelesener Komplementärstrang (5'→3')</div>
+                                            <div className="font-mono font-bold text-green-800 tracking-widest text-base">{readSequenceStr}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-semibold mb-1">Original-Template (3'→5' antiparallel)</div>
+                                            <div className="font-mono font-bold text-blue-800 tracking-widest text-base">
+                                                {readSequenceStr.split('').map(complement).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className={`rounded-xl p-3 text-sm font-bold flex items-center gap-2 ${readSequenceStr === compStrand ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+                                        {readSequenceStr === compStrand ? (
+                                            <><span>✅</span> Korrekt! Der abgelesene Komplementärstrang stimmt mit dem berechneten überein.</>
+                                        ) : (
+                                            <><span>⏳</span> Sequenz wird noch aufgedeckt…</>
+                                        )}
+                                    </div>
+                                    <div className="text-center mt-2">
+                                        <button onClick={resetAll} className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition shadow-md shadow-green-200">
+                                            Neue Simulation starten
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         // ── Main App Shell (Tabbed) ──────────────────────────────────────────────────
         const App = () => {
             const [activeTab, setActiveTab] = useState('grundlagen');
@@ -515,6 +1020,7 @@
                     case 'grundlagen': return <GrundlagenTab />;
                     case 'chemie': return <ChemieTab />;
                     case 'simulation': return <SimulationTab />;
+                    case 'interaktiv': return <SangerSimulation />;
                     case 'auswertung': return <AuswertungTab />;
                     case 'quiz': return <QuizTab />;
                     default: return <GrundlagenTab />;
@@ -539,6 +1045,7 @@
                                 { id: 'grundlagen', label: 'Grundlagen', icon: IconFlask },
                                 { id: 'chemie', label: 'Chemie', icon: IconZap },
                                 { id: 'simulation', label: 'Simulation', icon: IconLayers },
+                                { id: 'interaktiv', label: '🔬 Simulation', icon: IconDna },
                                 { id: 'auswertung', label: 'Auswertung', icon: IconMonitor },
                                 { id: 'quiz', label: 'Quiz', icon: IconBrain },
                             ].map(tab => (
@@ -568,5 +1075,6 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
+<script src="../shared/dark-mode.js"></script>
 </body>
 </html>

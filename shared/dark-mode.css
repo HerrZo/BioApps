@@ -1,0 +1,111 @@
+/* Dark Mode Overrides für alle BioApps */
+/* Nutzt Tailwind's 'dark' Klasse am <html> Element */
+
+/* ===== BASIS-FARBEN ===== */
+.dark body {
+  background-color: #052e16 !important;
+  color: #dcfce7 !important;
+}
+
+/* ===== KARTEN & CONTAINER ===== */
+.dark .bg-white {
+  background-color: #14532d !important;
+  color: #dcfce7 !important;
+}
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: #166534 !important;
+  color: #dcfce7 !important;
+}
+.dark .bg-green-50 {
+  background-color: #14532d !important;
+}
+.dark .bg-green-100 {
+  background-color: #166534 !important;
+}
+
+/* ===== GRADIENT HINTERGRÜNDE ===== */
+.dark .from-green-50,
+.dark .via-emerald-50,
+.dark .to-teal-50,
+.dark .from-green-50\/80 {
+  --tw-gradient-from: #052e16 !important;
+  --tw-gradient-via: #14532d !important;
+  --tw-gradient-to: #166534 !important;
+}
+
+/* ===== TEXT ===== */
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #86efac !important;
+}
+.dark .text-gray-700,
+.dark .text-gray-800,
+.dark .text-gray-900 {
+  color: #dcfce7 !important;
+}
+.dark .text-green-800 {
+  color: #4ade80 !important;
+}
+.dark .text-green-700 {
+  color: #4ade80 !important;
+}
+
+/* ===== BORDERS ===== */
+.dark .border-green-100,
+.dark .border-green-200 {
+  border-color: #166534 !important;
+}
+.dark .border-gray-200 {
+  border-color: #15803d !important;
+}
+
+/* ===== HEADER & NAV ===== */
+.dark header,
+.dark nav {
+  background-color: #052e16 !important;
+  border-color: #166534 !important;
+}
+
+/* ===== INPUTS & BUTTONS ===== */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #14532d !important;
+  color: #dcfce7 !important;
+  border-color: #15803d !important;
+}
+.dark input::placeholder { color: #86efac !important; }
+
+/* ===== HOVER STATES ===== */
+.dark .hover\:bg-green-50:hover { background-color: #14532d !important; }
+.dark .hover\:bg-green-100:hover { background-color: #166534 !important; }
+
+/* ===== SCROLLBAR ===== */
+.dark ::-webkit-scrollbar-track { background: #052e16 !important; }
+.dark ::-webkit-scrollbar-thumb { background: #15803d !important; }
+
+/* ===== TOGGLE BUTTON ===== */
+[data-dark-toggle] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  background: rgba(22, 101, 52, 0.15);
+  transition: background 0.2s;
+  padding: 0;
+}
+[data-dark-toggle]:hover {
+  background: rgba(22, 101, 52, 0.3);
+}
+.dark [data-dark-toggle] {
+  background: rgba(187, 247, 208, 0.15);
+}
+.dark [data-dark-toggle]:hover {
+  background: rgba(187, 247, 208, 0.25);
+}
