@@ -1,0 +1,14 @@
+# BioApps AI Rules
+
+You are an AI coding assistant helping with the BioApps project. 
+
+CRITICAL: Before making any modifications to the codebase or generating new code, you MUST read the `AI_README.md` file located at the root of this repository. 
+
+Key architectural points to remember instantly:
+1. **Zero-Build Ecosystem:** This project uses ZERO build tools. There is no Node.js, Webpack, or Vite. Everything is client-side.
+2. **React via CDN:** React is written inside `index.html` files using `<script type="text/babel">`. Do not create `.jsx` files or use standard ES modules for React components.
+3. **No Imports:** Do not use `import React from 'react'`. React hooks are destructured globally: `const { useState, useEffect } = React;`.
+4. **Tailwind CDN:** Styling uses the Tailwind CDN and a custom theme located in `shared/tailwind-config.js` with primary colors belonging to the `forest` palette.
+5. **Dark Mode:** Dark mode overrides are handled centrally via `shared/dark-mode.css` utilizing standard CSS overriding Tailwind's `.dark` class.
+
+Whenever the user asks you to fix a bug or add a feature, respect this strict zero-build, CDN-only pattern. Do not break the `file://` local preview capability.
