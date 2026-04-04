@@ -2,26 +2,28 @@
 /* Nutzt Tailwind's 'dark' Klasse am <html> Element */
 
 /* ===== BASIS-FARBEN ===== */
+/* body hat keine Tailwind-Utility-Konkurrenz → !important als Absicherung */
 .dark body {
   background-color: #052e16 !important;
   color: #dcfce7 !important;
 }
 
 /* ===== KARTEN & CONTAINER ===== */
+/* .dark + Klasse = Spezifität (0,2,0) > Tailwind-Utility (0,1,0) → kein !important nötig */
 .dark .bg-white {
-  background-color: #14532d !important;
-  color: #dcfce7 !important;
+  background-color: #14532d;
+  color: #dcfce7;
 }
 .dark .bg-gray-50,
 .dark .bg-gray-100 {
-  background-color: #166534 !important;
-  color: #dcfce7 !important;
+  background-color: #166534;
+  color: #dcfce7;
 }
 .dark .bg-green-50 {
-  background-color: #14532d !important;
+  background-color: #14532d;
 }
 .dark .bg-green-100 {
-  background-color: #166534 !important;
+  background-color: #166534;
 }
 
 /* ===== GRADIENT HINTERGRÜNDE ===== */
@@ -29,59 +31,60 @@
 .dark .via-emerald-50,
 .dark .to-teal-50,
 .dark .from-green-50\/80 {
-  --tw-gradient-from: #052e16 !important;
-  --tw-gradient-via: #14532d !important;
-  --tw-gradient-to: #166534 !important;
+  --tw-gradient-from: #052e16;
+  --tw-gradient-via: #14532d;
+  --tw-gradient-to: #166534;
 }
 
 /* ===== TEXT ===== */
 .dark .text-gray-600,
 .dark .text-gray-500 {
-  color: #86efac !important;
+  color: #86efac;
 }
 .dark .text-gray-700,
 .dark .text-gray-800,
 .dark .text-gray-900 {
-  color: #dcfce7 !important;
+  color: #dcfce7;
 }
 .dark .text-green-800 {
-  color: #4ade80 !important;
+  color: #4ade80;
 }
 .dark .text-green-700 {
-  color: #4ade80 !important;
+  color: #4ade80;
 }
 
 /* ===== BORDERS ===== */
 .dark .border-green-100,
 .dark .border-green-200 {
-  border-color: #166534 !important;
+  border-color: #166534;
 }
 .dark .border-gray-200 {
-  border-color: #15803d !important;
+  border-color: #15803d;
 }
 
 /* ===== HEADER & NAV ===== */
 .dark header,
 .dark nav {
-  background-color: #052e16 !important;
-  border-color: #166534 !important;
+  background-color: #052e16;
+  border-color: #166534;
 }
 
 /* ===== INPUTS & BUTTONS ===== */
 .dark input,
 .dark select,
 .dark textarea {
-  background-color: #14532d !important;
-  color: #dcfce7 !important;
-  border-color: #15803d !important;
+  background-color: #14532d;
+  color: #dcfce7;
+  border-color: #15803d;
 }
-.dark input::placeholder { color: #86efac !important; }
+.dark input::placeholder { color: #86efac; }
 
 /* ===== HOVER STATES ===== */
-.dark .hover\:bg-green-50:hover { background-color: #14532d !important; }
-.dark .hover\:bg-green-100:hover { background-color: #166534 !important; }
+.dark .hover\:bg-green-50:hover { background-color: #14532d; }
+.dark .hover\:bg-green-100:hover { background-color: #166534; }
 
 /* ===== SCROLLBAR ===== */
+/* Pseudo-Elemente haben unklare Browser-Spezifität → !important behalten */
 .dark ::-webkit-scrollbar-track { background: #052e16 !important; }
 .dark ::-webkit-scrollbar-thumb { background: #15803d !important; }
 
