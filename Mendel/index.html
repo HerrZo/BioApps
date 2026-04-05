@@ -6,6 +6,7 @@
     <title>Bio-Abi: Genetik Master</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/dark-mode.css">
+    <link rel="stylesheet" href="../shared/animations.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/tailwind-config.js"></script>
 
@@ -48,9 +49,6 @@
 
         .blood-drop { color: #dc2626; font-weight: 800; font-size: 1.2rem; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-
         /* Pedigree SVG styles */
         .pedigree-shape { stroke: #1e3a1e; stroke-width: 2; }
         .pedigree-affected { fill: #166534; }
@@ -64,10 +62,9 @@
         .mini-header { background-color: #dcfce7; color: #166534; }
         .mini-corner { background-color: #166534; color: white; }
     </style>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans selection:bg-green-200">
-<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between" style="background:rgba(255,255,255,0.92)">
+<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between">
   <a href="../index.html"
      class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
      aria-label="Zurück zur Startseite">

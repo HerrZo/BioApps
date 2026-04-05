@@ -10,6 +10,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/dark-mode.css">
+    <link rel="stylesheet" href="../shared/animations.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/tailwind-config.js"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -17,22 +18,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
         .chromosome-shadow {
             filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.25));
         }
@@ -82,7 +67,7 @@
 </head>
 
 <body class="bg-green-50 text-gray-900 min-h-screen font-sans selection:bg-green-200">
-<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between" style="background:rgba(255,255,255,0.92)">
+<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between">
   <a href="../index.html"
      class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
      aria-label="Zurück zur Startseite">

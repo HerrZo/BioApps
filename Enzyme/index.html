@@ -1549,7 +1549,8 @@ const TOPICS_DATA = {
 // ── THEME MANAGER ──────────────────────────────────────────────
 const ThemeManager = {
   init() {
-    const saved = localStorage.getItem('enzyme-theme') || 'light';
+    let saved = 'light';
+    try { saved = localStorage.getItem('enzyme-theme') || 'light'; } catch(e) {}
     document.documentElement.setAttribute('data-theme', saved);
     this.updateBtn();
   },
@@ -1557,7 +1558,7 @@ const ThemeManager = {
     const current = document.documentElement.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('enzyme-theme', next);
+    try { localStorage.setItem('enzyme-theme', next); } catch(e) {}
     this.updateBtn();
     if (App.currentChapter === 'energy') App.renderEnergy();
     if (App.currentChapter === 'factors') App.renderFactorGraph();
@@ -1572,10 +1573,10 @@ const ThemeManager = {
 
 // ── PROGRESS CONTROLLER ────────────────────────────────────────
 const Progress = {
-  completed: new Set(JSON.parse(localStorage.getItem('enzyme-progress') || '[]')),
+  completed: new Set((() => { try { return JSON.parse(localStorage.getItem('enzyme-progress') || '[]'); } catch(e) { return []; } })()),
   markDone(id) {
     this.completed.add(id);
-    localStorage.setItem('enzyme-progress', JSON.stringify([...this.completed]));
+    try { localStorage.setItem('enzyme-progress', JSON.stringify([...this.completed])); } catch(e) {}
     this.updateUI();
   },
   getPercent() { return Math.round((this.completed.size / TOPICS_DATA.chapters.length) * 100); },
@@ -1594,10 +1595,10 @@ const Progress = {
 
 // ── SCORING SYSTEM ─────────────────────────────────────────────
 const Scoring = {
-  score: parseInt(localStorage.getItem('enzyme-score') || '0'),
+  score: (() => { try { return parseInt(localStorage.getItem('enzyme-score') || '0'); } catch(e) { return 0; } })(),
   add(pts) {
     this.score += pts;
-    localStorage.setItem('enzyme-score', this.score);
+    try { localStorage.setItem('enzyme-score', this.score); } catch(e) {}
     this.updateUI();
   },
   updateUI() {

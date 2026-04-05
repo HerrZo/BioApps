@@ -9,6 +9,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/dark-mode.css">
+    <link rel="stylesheet" href="../shared/animations.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/tailwind-config.js"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -16,38 +17,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-6px);
-            }
-
-            100% {
-                transform: translateY(0px);
-            }
-        }
-
-        .animate-float {
-            animation: float 2.8s ease-in-out infinite;
-        }
-
         @keyframes pulse-glow {
             0% {
                 box-shadow: 0 0 4px 2px rgba(34, 197, 94, 0.3);
@@ -125,7 +94,7 @@
 </head>
 
 <body class="bg-green-50 text-gray-900 min-h-screen font-sans">
-<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between" style="background:rgba(255,255,255,0.92)">
+<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between">
   <a href="../index.html"
      class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
      aria-label="Zurück zur Startseite">

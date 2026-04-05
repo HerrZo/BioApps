@@ -8,6 +8,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/dark-mode.css">
+    <link rel="stylesheet" href="../shared/animations.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/tailwind-config.js"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -15,7 +16,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeIn 0.3s ease-out; }
         * { box-sizing: border-box; }
         .chrom-selectable { cursor: pointer; transition: filter 0.15s, transform 0.15s; }
@@ -26,10 +26,9 @@
     </style>
 </head>
 <body class="bg-green-50 min-h-screen text-slate-900">
-    <nav class="sticky top-0 z-50 backdrop-blur-md border-b px-4 py-2 flex items-center justify-between" style="background:rgba(255,255,255,0.92); border-color: #bbf7d0;">
+    <nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-200 dark:border-green-800 px-4 py-2 flex items-center justify-between">
       <a href="../index.html"
-         class="flex items-center gap-2 font-medium text-sm transition-colors group"
-         style="color: #166534;"
+         class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
          aria-label="Zurück zur Startseite">
         <span class="group-hover:-translate-x-1 transition-transform inline-block">←</span>
         <span>Startseite</span>
@@ -39,8 +38,7 @@
         onclick="toggleDarkMode()"
         aria-pressed="false"
         title="Dunkles Design"
-        aria-label="Dark Mode umschalten"
-        style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; font-size:18px; background:rgba(22,101,52,0.15);">
+        aria-label="Dark Mode umschalten">
         <span class="dark-mode-icon">🌙</span>
       </button>
     </nav>
