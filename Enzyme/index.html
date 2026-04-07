@@ -103,7 +103,7 @@
 }
 
 /* Dark Mode */
-[data-theme="dark"] {
+.dark {
   --bg-app: #0c1a12;
   --bg-card: #162416;
   --bg-glass: rgba(22,37,22,0.8);
@@ -240,7 +240,7 @@ p, li { line-height: 1.7; }
   color: var(--clr-primary-700);
 }
 
-[data-theme="dark"] .nav-item:hover {
+.dark .nav-item:hover {
   background: rgba(34,197,94,0.1);
   color: var(--clr-primary-300);
 }
@@ -392,7 +392,7 @@ p, li { line-height: 1.7; }
   overflow: hidden;
 }
 
-[data-theme="dark"] .progress-bar-wrapper {
+.dark .progress-bar-wrapper {
   background: var(--clr-slate-700);
 }
 
@@ -423,7 +423,7 @@ p, li { line-height: 1.7; }
   color: var(--clr-accent-600);
 }
 
-[data-theme="dark"] .score-badge {
+.dark .score-badge {
   background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.15));
   color: var(--clr-accent-300);
 }
@@ -476,7 +476,7 @@ p, li { line-height: 1.7; }
   flex-shrink: 0;
 }
 
-[data-theme="dark"] .section-icon {
+.dark .section-icon {
   background: linear-gradient(135deg, rgba(22,163,74,0.2), rgba(34,197,94,0.15));
   color: var(--clr-primary-300);
 }
@@ -553,7 +553,7 @@ p, li { line-height: 1.7; }
   margin-bottom: 4px;
 }
 
-[data-theme="dark"] .timeline-year {
+.dark .timeline-year {
   color: var(--clr-primary-300);
 }
 
@@ -578,7 +578,7 @@ p, li { line-height: 1.7; }
   animation: slideDown 0.3s var(--ease-out);
 }
 
-[data-theme="dark"] .timeline-detail {
+.dark .timeline-detail {
   background: rgba(34,197,94,0.08);
   border-color: rgba(34,197,94,0.2);
   color: var(--clr-primary-200);
@@ -651,7 +651,7 @@ p, li { line-height: 1.7; }
   overflow: hidden;
 }
 
-[data-theme="dark"] .enzyme-animation-container {
+.dark .enzyme-animation-container {
   background: linear-gradient(135deg, rgba(15,23,42,0.5), rgba(20,83,45,0.2));
 }
 
@@ -743,7 +743,7 @@ p, li { line-height: 1.7; }
   border-radius: var(--radius-full);
 }
 
-[data-theme="dark"] .factor-tabs {
+.dark .factor-tabs {
   background: var(--clr-slate-800);
 }
 
@@ -770,7 +770,7 @@ p, li { line-height: 1.7; }
   box-shadow: var(--shadow-sm);
 }
 
-[data-theme="dark"] .factor-tab.active {
+.dark .factor-tab.active {
   background: var(--clr-slate-700);
   color: var(--clr-primary-300);
 }
@@ -914,7 +914,7 @@ p, li { line-height: 1.7; }
   transform: translateY(-2px);
 }
 
-[data-theme="dark"] .quiz-option:hover:not(.disabled) {
+.dark .quiz-option:hover:not(.disabled) {
   background: rgba(34,197,94,0.08);
 }
 
@@ -954,8 +954,8 @@ p, li { line-height: 1.7; }
   color: #b91c1c;
 }
 
-[data-theme="dark"] .quiz-feedback.correct { color: var(--clr-primary-300); }
-[data-theme="dark"] .quiz-feedback.wrong { color: #fca5a5; }
+.dark .quiz-feedback.correct { color: var(--clr-primary-300); }
+.dark .quiz-feedback.wrong { color: #fca5a5; }
 
 /* Quiz Progress */
 .quiz-progress {
@@ -971,7 +971,7 @@ p, li { line-height: 1.7; }
   transition: all 0.3s var(--ease-out);
 }
 
-[data-theme="dark"] .quiz-dot {
+.dark .quiz-dot {
   background: var(--clr-slate-700);
 }
 
@@ -1053,7 +1053,7 @@ p, li { line-height: 1.7; }
   font-size: 0.85rem;
 }
 
-[data-theme="dark"] .info-box {
+.dark .info-box {
   background: rgba(34,197,94,0.08);
   border-left-color: var(--clr-primary-400);
   color: var(--clr-primary-200);
@@ -1063,7 +1063,7 @@ p, li { line-height: 1.7; }
   color: var(--clr-primary-700);
 }
 
-[data-theme="dark"] .info-box strong {
+.dark .info-box strong {
   color: var(--clr-primary-300);
 }
 
@@ -1284,7 +1284,7 @@ p, li { line-height: 1.7; }
   background: var(--clr-slate-400);
 }
 
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb {
   background: var(--clr-slate-600);
 }
 
@@ -1453,8 +1453,9 @@ p, li { line-height: 1.7; }
       </nav>
 
       <div class="sidebar-footer">
-        <button class="theme-toggle" id="theme-btn" onclick="ThemeManager.toggle()">
-          ðŸŒ™ Dark
+        <button class="theme-toggle" id="theme-btn" data-dark-toggle onclick="ThemeManager.toggle()"
+          aria-pressed="false" title="Dunkles Design" aria-label="Dark Mode umschalten">
+          <span class="dark-mode-icon">🌙</span>
         </button>
       </div>
     </aside>
@@ -1549,16 +1550,24 @@ const TOPICS_DATA = {
 // ── THEME MANAGER ──────────────────────────────────────────────
 const ThemeManager = {
   init() {
-    let saved = 'light';
-    try { saved = localStorage.getItem('enzyme-theme') || 'light'; } catch(e) {}
-    document.documentElement.setAttribute('data-theme', saved);
+    let saved = null;
+    try { saved = localStorage.getItem('bioApps_darkMode'); } catch(e) {}
+    if (saved === 'dark' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     this.updateBtn();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      try { if (localStorage.getItem('bioApps_darkMode') === null) {
+        e.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+        this.updateBtn();
+      } } catch(e2) {}
+    });
   },
   toggle() {
-    const current = document.documentElement.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('enzyme-theme', next); } catch(e) {}
+    const isDark = document.documentElement.classList.toggle('dark');
+    try { localStorage.setItem('bioApps_darkMode', isDark ? 'dark' : 'light'); } catch(e) {}
     this.updateBtn();
     if (App.currentChapter === 'energy') App.renderEnergy();
     if (App.currentChapter === 'factors') App.renderFactorGraph();
@@ -1566,10 +1575,14 @@ const ThemeManager = {
   updateBtn() {
     const btn = document.getElementById('theme-btn');
     if (!btn) return;
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    btn.innerHTML = isDark ? '☀️ Light' : '🌙 Dark';
+    const isDark = document.documentElement.classList.contains('dark');
+    btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+    btn.title = isDark ? 'Helles Design' : 'Dunkles Design';
+    btn.innerHTML = isDark ? '<span class="dark-mode-icon">☀️</span>' : '<span class="dark-mode-icon">🌙</span>';
   }
 };
+// Shared API compatibility
+window.toggleDarkMode = ThemeManager.toggle.bind(ThemeManager);
 
 // ── PROGRESS CONTROLLER ────────────────────────────────────────
 const Progress = {
@@ -1961,7 +1974,7 @@ const App = {
     canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
     const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
     const W = rect.width, H = rect.height;
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.classList.contains('dark');
     const textCol = isDark ? '#c0e0c0' : '#334155';
     const axisCol = isDark ? '#4a6a4a' : '#b0bec5';
     const bgCol   = isDark ? '#1a2e1a' : '#fafff5';
@@ -2128,7 +2141,7 @@ const App = {
     canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
     const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
     const w = rect.width, h = rect.height;
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.classList.contains('dark');
     ctx.fillStyle = isDark ? '#1a2e1a' : '#fafff5'; ctx.fillRect(0, 0, w, h);
     const mx = 60, my = 30, bx = w - 30, by = h - 50, rw = bx - mx, rh = by - my;
     ctx.strokeStyle = isDark ? '#4a6a4a' : '#94a3b8'; ctx.lineWidth = 1.5;
