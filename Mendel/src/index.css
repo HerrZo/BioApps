@@ -1,0 +1,45 @@
+
+        /* Custom Styles für Punnett-Quadrate */
+        .punnett-grid-mono { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; border: 2px solid #166534; background-color: #166534; width: 100%; max-width: 400px; margin: 0 auto; }
+        .punnett-grid-di { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; border: 2px solid #166534; background-color: #166534; width: 100%; max-width: 600px; min-width: 500px; margin: 0 auto; }
+
+        .punnett-cell {
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            font-weight: bold;
+            min-height: 80px;
+            text-align: center;
+        }
+        .punnett-header { background-color: #dcfce7; color: #166534; font-weight: 800; }
+        .punnett-corner { background-color: #166534; color: white; }
+
+        /* Phenotype Visuals */
+        .pea-circle { width: 24px; height: 24px; border-radius: 50%; display: inline-block; border: 1px solid #666; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2); }
+        .pea-yellow { background-color: #facc15; }
+        .pea-green { background-color: #4ade80; }
+        .pea-round { border-radius: 50%; }
+        .pea-wrinkled { border-radius: 50%; border: 2px dashed #444; background-image: radial-gradient(circle, transparent 40%, #000 41%); background-size: 5px 5px; transform: scale(0.9); }
+
+        .flower-red { background-color: #ef4444; }
+        .flower-white { background-color: #f8fafc; border: 1px solid #ccc; }
+        .flower-pink { background-color: #f9a8d4; }
+
+        .blood-drop { color: #dc2626; font-weight: 800; font-size: 1.2rem; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
+
+        /* Pedigree SVG styles */
+        .pedigree-shape { stroke: #1e3a1e; stroke-width: 2; }
+        .pedigree-affected { fill: #166534; }
+        .pedigree-unaffected { fill: #ffffff; }
+        .pedigree-carrier { fill: url(#carrierPattern); }
+        .pedigree-line { stroke: #1e3a1e; stroke-width: 2; fill: none; }
+
+        /* Züchter mini punnett */
+        .mini-punnett { display: grid; gap: 1px; background-color: #166534; border: 2px solid #166534; margin: 0 auto; width: fit-content; }
+        .mini-cell { background: white; display: flex; align-items: center; justify-content: center; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; min-width: 48px; min-height: 40px; }
+        .mini-header { background-color: #dcfce7; color: #166534; }
+        .mini-corner { background-color: #166534; color: white; }
+    

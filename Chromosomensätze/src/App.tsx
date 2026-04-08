@@ -1,0 +1,1026 @@
+
+        import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
+        // ─── Icons ───────────────────────────────────────────────────────────────
+        const IconHome = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>;
+        const IconExperiment = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20M7 4v16M17 4v16" /></svg>;
+        const IconCheck = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
+        const IconX = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
+        const IconBook = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>;
+        const IconTarget = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>;
+        const IconArrowRight = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>;
+        const IconStar = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
+
+        // ─── SVG Chromosome Shapes ────────────────────────────────────────────────
+        // Single-chromatid: drawn as a simple oval/rod shape
+        // Double-chromatid: drawn as a proper X-shape (two arms meeting at centromere)
+
+        const ChromosomeSVG1C = ({ color, w = 14, h = 36 }) => {
+            const rx = w / 2;
+            const ry = h / 2;
+            const cx = w / 2;
+            const cy = h / 2;
+            return (
+                <g>
+                    {/* rounded rod / oval */}
+                    <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
+                        fill={color} stroke="rgba(0,0,0,0.35)" strokeWidth="1" />
+                    {/* centromere band */}
+                    <rect x={1} y={cy - 2.5} width={w - 2} height={5}
+                        rx={2} fill="rgba(0,0,0,0.25)" />
+                </g>
+            );
+        };
+
+        // X-shape: two chromatids mirrored, connected at a small centromere circle
+        const ChromosomeSVG2C = ({ color, size = 44 }) => {
+            const s = size;
+            const half = s / 2;
+            const armW = s * 0.22;   // half-width of each arm
+            const cRad = s * 0.11;   // centromere radius
+
+            // Each arm is a tapered path from centromere outward
+            // Top-left arm
+            const tlPath = `M ${half} ${half}
+                            C ${half - armW * 0.6} ${half - s * 0.18},
+                              ${half - armW * 1.1} ${half - s * 0.35},
+                              ${half - armW * 0.9} ${half - s * 0.46}
+                            C ${half - armW * 0.4} ${half - s * 0.5},
+                              ${half + armW * 0.4} ${half - s * 0.5},
+                              ${half + armW * 0.9} ${half - s * 0.46}
+                            C ${half + armW * 1.1} ${half - s * 0.35},
+                              ${half + armW * 0.6} ${half - s * 0.18},
+                              ${half} ${half} Z`;
+
+            // Bottom-right arm (mirror of top-left)
+            const brPath = `M ${half} ${half}
+                            C ${half + armW * 0.6} ${half + s * 0.18},
+                              ${half + armW * 1.1} ${half + s * 0.35},
+                              ${half + armW * 0.9} ${half + s * 0.46}
+                            C ${half + armW * 0.4} ${half + s * 0.5},
+                              ${half - armW * 0.4} ${half + s * 0.5},
+                              ${half - armW * 0.9} ${half + s * 0.46}
+                            C ${half - armW * 1.1} ${half + s * 0.35},
+                              ${half - armW * 0.6} ${half + s * 0.18},
+                              ${half} ${half} Z`;
+
+            // Top-right arm
+            const trPath = `M ${half} ${half}
+                            C ${half + armW * 0.6} ${half - s * 0.18},
+                              ${half + armW * 1.1} ${half - s * 0.35},
+                              ${half + armW * 0.9} ${half - s * 0.46}
+                            C ${half + armW * 0.4} ${half - s * 0.5},
+                              ${half - armW * 0.4} ${half - s * 0.5},
+                              ${half - armW * 0.9} ${half - s * 0.46}
+                            C ${half - armW * 1.1} ${half - s * 0.35},
+                              ${half - armW * 0.6} ${half - s * 0.18},
+                              ${half} ${half} Z`;
+
+            // Bottom-left arm
+            const blPath = `M ${half} ${half}
+                            C ${half - armW * 0.6} ${half + s * 0.18},
+                              ${half - armW * 1.1} ${half + s * 0.35},
+                              ${half - armW * 0.9} ${half + s * 0.46}
+                            C ${half - armW * 0.4} ${half + s * 0.5},
+                              ${half + armW * 0.4} ${half + s * 0.5},
+                              ${half + armW * 0.9} ${half + s * 0.46}
+                            C ${half + armW * 1.1} ${half + s * 0.35},
+                              ${half + armW * 0.6} ${half + s * 0.18},
+                              ${half} ${half} Z`;
+
+            return (
+                <g className="chromosome-shadow">
+                    <path d={tlPath} fill={color} stroke="rgba(0,0,0,0.3)" strokeWidth="0.8" strokeLinejoin="round" />
+                    <path d={brPath} fill={color} stroke="rgba(0,0,0,0.3)" strokeWidth="0.8" strokeLinejoin="round" />
+                    <path d={trPath} fill={color} stroke="rgba(0,0,0,0.3)" strokeWidth="0.8" strokeLinejoin="round" />
+                    <path d={blPath} fill={color} stroke="rgba(0,0,0,0.3)" strokeWidth="0.8" strokeLinejoin="round" />
+                    {/* centromere */}
+                    <circle cx={half} cy={half} r={cRad} fill="#1f2937" opacity="0.85" />
+                </g>
+            );
+        };
+
+        // ─── Small inline chromosome icons (for buttons / legend) ─────────────────
+        const ChromoIcon = ({ type, color, size = 40 }) => {
+            if (type === '1cc') {
+                const w = size * 0.38, h = size * 0.9;
+                return (
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} overflow="visible">
+                        <g transform={`translate(${(size - w) / 2}, ${(size - h) / 2})`}>
+                            <ChromosomeSVG1C color={color} w={w} h={h} />
+                        </g>
+                    </svg>
+                );
+            }
+            return (
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} overflow="visible">
+                    <ChromosomeSVG2C color={color} size={size} />
+                </svg>
+            );
+        };
+
+        // ─── Nucleus SVG display ──────────────────────────────────────────────────
+        // Positions chromosomes in homologous PAIRS (red+blue side by side per pair).
+        // Returns an SVG element directly – cleaner than absolute-positioned divs.
+
+        const NucleusDisplay = ({ ploidy, chromatidType, seed = 0, size = 320 }) => {
+            const R = size / 2;          // nucleus radius
+            const cx = R, cy = R;        // center
+
+            // For each "pair slot" we place one red and one blue chromosome side by side.
+            // With ploidy > 2 we get multiple copies of each homologous pair.
+            // Layout: arrange pair-groups around a circle.
+
+            const chromosomeData = useMemo(() => {
+                const pseudoRandom = (i) => {
+                    const x = Math.sin(i * 127.1 + seed * 311.7) * 43758.5453;
+                    return x - Math.floor(x);
+                };
+
+                // Two chromosome sizes for visual variety (large/small pair type)
+                const pairDefs = [
+                    { armH: size * 0.16, armW: size * 0.055 },
+                    { armH: size * 0.12, armW: size * 0.042 },
+                ];
+
+                const groups = [];
+                const totalGroups = ploidy; // one group = one set of homologs (red + blue)
+
+                for (let g = 0; g < totalGroups; g++) {
+                    const def = pairDefs[g % pairDefs.length];
+
+                    // Spread groups evenly around the nucleus interior
+                    const baseAngle = (g / totalGroups) * 2 * Math.PI - Math.PI / 2;
+                    // Jitter the radius and angle a bit
+                    const jitterAngle = (pseudoRandom(g * 3 + seed) - 0.5) * (Math.PI / (totalGroups + 1));
+                    const angle = baseAngle + jitterAngle;
+                    const maxR = R * 0.60;
+                    const r = R * 0.18 + pseudoRandom(g * 5 + seed + 1) * maxR;
+
+                    const groupCx = cx + r * Math.cos(angle);
+                    const groupCy = cy + r * Math.sin(angle);
+
+                    // Rotation of the whole pair
+                    const rot = pseudoRandom(g * 7 + seed + 2) * 360;
+
+                    // Gap between the two homologs
+                    const gap = def.armW * 1.4;
+
+                    groups.push({
+                        id: g,
+                        cx: groupCx,
+                        cy: groupCy,
+                        rot,
+                        gap,
+                        def,
+                        colors: ['#ef4444', '#3b82f6'],  // red=maternal, blue=paternal
+                    });
+                }
+                return groups;
+            }, [ploidy, chromatidType, seed, size]);
+
+            const chrSize = size * 0.38; // viewBox size for 2cc chromosome
+
+            return (
+                <svg
+                    width={size} height={size}
+                    viewBox={`0 0 ${size} ${size}`}
+                    className="mx-auto"
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                >
+                    {/* Nucleus membrane */}
+                    <circle cx={R} cy={R} r={R - 4} fill="white" stroke="#bbf7d0" strokeWidth="4" />
+                    {/* Inner glow */}
+                    <radialGradient id="nglw" cx="35%" cy="35%">
+                        <stop offset="0%" stopColor="#86efac" stopOpacity="0.18" />
+                        <stop offset="100%" stopColor="white" stopOpacity="0" />
+                    </radialGradient>
+                    <circle cx={R} cy={R} r={R - 4} fill="url(#nglw)" />
+
+                    {/* Chromosomes */}
+                    {chromosomeData.map(group =>
+                        group.colors.map((color, ci) => {
+                            // ci=0 → maternal (red), ci=1 → paternal (blue)
+                            // Offset them left/right of the group center
+                            const offset = ci === 0 ? -(group.gap / 2 + group.def.armW * 0.55)
+                                : (group.gap / 2 + group.def.armW * 0.55);
+
+                            if (chromatidType === '1cc') {
+                                const w = group.def.armW * 2;
+                                const h = group.def.armH;
+                                return (
+                                    <g key={`${group.id}-${ci}`}
+                                        transform={`translate(${group.cx}, ${group.cy}) rotate(${group.rot})`}
+                                        className="chromosome-shadow">
+                                        <g transform={`translate(${offset - w / 2}, ${-h / 2})`}>
+                                            <ChromosomeSVG1C color={color} w={w} h={h} />
+                                        </g>
+                                    </g>
+                                );
+                            } else {
+                                // 2-Chromatid X-shape
+                                const s = chrSize * 0.7;
+                                return (
+                                    <g key={`${group.id}-${ci}`}
+                                        transform={`translate(${group.cx + offset}, ${group.cy}) rotate(${group.rot})`}>
+                                        <g transform={`translate(${-s / 2}, ${-s / 2})`}>
+                                            <ChromosomeSVG2C color={color} size={s} />
+                                        </g>
+                                    </g>
+                                );
+                            }
+                        })
+                    )}
+
+                    {/* Label */}
+                    <rect x={R - 34} y={size - 26} width={68} height={18} rx={5}
+                        fill="white" fillOpacity="0.82" stroke="#bbf7d0" strokeWidth="1" />
+                    <text x={R} y={size - 13} textAnchor="middle"
+                        fontSize={size * 0.038} fill="#166534" fontFamily="monospace" fontWeight="600">
+                        Kerninhalt
+                    </text>
+                </svg>
+            );
+        };
+
+        // ─── Cell Cycle SVG Diagram ───────────────────────────────────────────────
+        const CellCycleDiagram = () => {
+            const [highlighted, setHighlighted] = useState(null);
+
+            const phases = [
+                {
+                    id: 'g1',
+                    label: 'G₁',
+                    angle: -90,
+                    sweep: 80,
+                    state: '2n, 1-Chromatid',
+                    desc: 'Wachstumsphase – Körperzellen nach der Teilung',
+                    color: '#16a34a',
+                    textColor: 'text-green-800',
+                    bg: 'bg-green-50',
+                    border: 'border-green-300',
+                },
+                {
+                    id: 's',
+                    label: 'S',
+                    angle: -10,
+                    sweep: 60,
+                    state: '2n, 2-Chromatid (entsteht)',
+                    desc: 'DNA-Replikation – jedes Chromosom verdoppelt sich',
+                    color: '#d97706',
+                    textColor: 'text-amber-800',
+                    bg: 'bg-amber-50',
+                    border: 'border-amber-300',
+                },
+                {
+                    id: 'g2',
+                    label: 'G₂',
+                    angle: 50,
+                    sweep: 70,
+                    state: '2n, 2-Chromatid',
+                    desc: 'Vorbereitung auf die Mitose – alle Chromosomen doppelt',
+                    color: '#7c3aed',
+                    textColor: 'text-purple-800',
+                    bg: 'bg-purple-50',
+                    border: 'border-purple-300',
+                },
+                {
+                    id: 'mitose',
+                    label: 'M',
+                    angle: 120,
+                    sweep: 80,
+                    state: '2n → 1n+1n, 2-Chromatid → 1-Chromatid',
+                    desc: 'Mitose – Chromosomen kondensieren, trennen sich',
+                    color: '#dc2626',
+                    textColor: 'text-red-800',
+                    bg: 'bg-red-50',
+                    border: 'border-red-300',
+                },
+                {
+                    id: 'g0',
+                    label: 'G₀',
+                    angle: 200,
+                    sweep: 60,
+                    state: '2n, 1-Chromatid',
+                    desc: 'Ruhephase – ausdifferenzierte Zellen',
+                    color: '#0891b2',
+                    textColor: 'text-cyan-800',
+                    bg: 'bg-cyan-50',
+                    border: 'border-cyan-300',
+                },
+            ];
+
+            const W = 280, H = 280, cx = 140, cy = 140, rOuter = 110, rInner = 60;
+
+            // Build arc paths
+            const toRad = (deg) => (deg * Math.PI) / 180;
+            const polar = (r, deg) => [cx + r * Math.cos(toRad(deg)), cy + r * Math.sin(toRad(deg))];
+
+            const arcPath = (startAngle, sweep) => {
+                const endAngle = startAngle + sweep - 3;
+                const [ox, oy] = polar(rOuter, startAngle + 1.5);
+                const [ox2, oy2] = polar(rOuter, endAngle);
+                const [ix, iy] = polar(rInner, endAngle);
+                const [ix2, iy2] = polar(rInner, startAngle + 1.5);
+                return `M ${ox} ${oy} A ${rOuter} ${rOuter} 0 0 1 ${ox2} ${oy2}
+                        L ${ix} ${iy} A ${rInner} ${rInner} 0 0 0 ${ix2} ${iy2} Z`;
+            };
+
+            const midAngle = (startAngle, sweep) => startAngle + sweep / 2;
+            const labelPos = (phase) => {
+                const mid = midAngle(phase.angle, phase.sweep);
+                const r = (rOuter + rInner) / 2;
+                return polar(r, mid);
+            };
+
+            const highlighted_phase = phases.find(p => p.id === highlighted);
+
+            return (
+                <div className="flex flex-col lg:flex-row items-center gap-6">
+                    <div className="flex-shrink-0">
+                        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+                            {/* Arrows indicating direction */}
+                            <defs>
+                                <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                                    <path d="M0,0 L0,6 L6,3 Z" fill="#9ca3af" />
+                                </marker>
+                            </defs>
+                            {/* Background circle */}
+                            <circle cx={cx} cy={cy} r={rInner - 2} fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1.5" />
+                            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="11" fill="#166534" fontWeight="700">Zell-</text>
+                            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="11" fill="#166534" fontWeight="700">zyklus</text>
+
+                            {phases.map(phase => {
+                                const [lx, ly] = labelPos(phase);
+                                const isHl = highlighted === phase.id;
+                                return (
+                                    <g key={phase.id} onClick={() => setHighlighted(isHl ? null : phase.id)}
+                                        style={{ cursor: 'pointer' }}>
+                                        <path d={arcPath(phase.angle, phase.sweep)}
+                                            fill={phase.color}
+                                            opacity={highlighted && !isHl ? 0.35 : 0.85}
+                                            stroke="white" strokeWidth="2"
+                                            style={{ transition: 'opacity 0.2s' }}
+                                        />
+                                        <text x={lx} y={ly + 4} textAnchor="middle"
+                                            fontSize="13" fill="white" fontWeight="800"
+                                            style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                                            {phase.label}
+                                        </text>
+                                    </g>
+                                );
+                            })}
+                            {/* Direction arrow hint */}
+                            <path d={`M ${cx + rInner - 8} ${cy - 14} A ${rInner - 8} ${rInner - 8} 0 0 1 ${cx + 10} ${cy - rInner + 9}`}
+                                fill="none" stroke="#9ca3af" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                        </svg>
+                        <p className="text-center text-xs text-gray-400 mt-1">Klicke auf eine Phase</p>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                        {highlighted_phase ? (
+                            <div className={`rounded-xl border-2 p-4 animate-fade-in ${highlighted_phase.bg} ${highlighted_phase.border}`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-lg font-black" style={{ color: highlighted_phase.color }}>
+                                        Phase {highlighted_phase.label}
+                                    </span>
+                                </div>
+                                <div className="font-mono text-sm font-bold mb-2" style={{ color: highlighted_phase.color }}>
+                                    {highlighted_phase.state}
+                                </div>
+                                <p className={`text-sm ${highlighted_phase.textColor}`}>{highlighted_phase.desc}</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {phases.map(p => (
+                                    <div key={p.id}
+                                        className="flex items-center gap-3 cursor-pointer hover:bg-white rounded-lg px-3 py-1.5 transition"
+                                        onClick={() => setHighlighted(p.id)}>
+                                        <span className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                                            style={{ background: p.color }}>{p.label}</span>
+                                        <span className="text-sm text-gray-700">
+                                            <strong className="font-mono">{p.state.split(',')[0]}</strong>
+                                            {p.state.includes(',') && <span className="text-gray-400">, {p.state.split(',').slice(1).join(',')}</span>}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── Combination Explanation ──────────────────────────────────────────────
+        const COMBO_EXPLANATIONS = {
+            '1-1cc': {
+                title: '1n, 1-Chromatid',
+                when: 'nach der Meiose II / vor der Befruchtung',
+                explanation: 'Keimzellen (Eizelle, Spermium) nach der Meiose besitzen einen einfachen Chromosomensatz ohne verdoppelte Chromatiden. Die DNA wurde noch nicht repliziert.',
+                example: 'Eizelle, Spermium',
+                color: 'green',
+            },
+            '1-2cc': {
+                title: '1n, 2-Chromatid',
+                when: 'nach der DNA-Replikation in der Meiose I',
+                explanation: 'Haploid, aber mit verdoppelter DNA: Dieser Zustand tritt kurz vor der Meiose I auf, nachdem die DNA repliziert wurde, aber bevor die homologen Paare sich getrennt haben.',
+                example: 'Primäre Oozyte / Spermatozyte vor Meiose I',
+                color: 'blue',
+            },
+            '2-1cc': {
+                title: '2n, 1-Chromatid',
+                when: 'G₁-Phase oder G₀ des Zellzyklus',
+                explanation: 'Der normale Zustand diploider Körperzellen im Ruhezustand oder nach der Zellteilung. Jedes Chromosom liegt als einzelnes Chromatid vor – die DNA wurde noch nicht repliziert.',
+                example: 'Körperzellen in G₁, Leberzellen, Neuronen',
+                color: 'green',
+            },
+            '2-2cc': {
+                title: '2n, 2-Chromatid',
+                when: 'G₂-Phase oder Prophase der Mitose',
+                explanation: 'Nach der DNA-Replikation in der S-Phase enthält jedes Chromosom zwei identische Schwesterchromatiden, die am Centromer verbunden sind. Dies ist der Zustand vor der Mitose.',
+                example: 'Körperzellen in G₂ / Prophase',
+                color: 'purple',
+            },
+            '3-1cc': {
+                title: '3n, 1-Chromatid',
+                when: 'triploide Organismen (G₁)',
+                explanation: 'Triploide Zellen haben drei Chromosomensätze. In G₁ liegen alle als 1-Chromatid-Chromosomen vor. Kommt bei manchen Pflanzen und durch Befruchtungsfehler vor.',
+                example: 'Bananen (triploid), bestimmte Amphibien',
+                color: 'amber',
+            },
+            '3-2cc': {
+                title: '3n, 2-Chromatid',
+                when: 'triploide Organismen nach DNA-Replikation (G₂)',
+                explanation: 'Nach der DNA-Replikation in triploiden Organismen. Alle drei Chromosomensätze sind verdoppelt – bereit zur Zellteilung.',
+                example: 'Triploide Zellen in G₂',
+                color: 'amber',
+            },
+            '4-1cc': {
+                title: '4n, 1-Chromatid',
+                when: 'tetraploide Organismen (G₁)',
+                explanation: 'Vier Chromosomensätze, unrepliziert. Tetraploide Organismen entstehen häufig durch Polyploidisierung und sind in der Pflanzenwelt häufig.',
+                example: 'Weizen, Kartoffeln, Erdbeeren',
+                color: 'red',
+            },
+            '4-2cc': {
+                title: '4n, 2-Chromatid',
+                when: 'tetraploide Organismen nach DNA-Replikation (G₂)',
+                explanation: 'Vier Chromosomensätze, jeweils verdoppelt. Sehr viel Erbgut – solche Zellen vor der Mitose.',
+                example: 'Tetraploide Pflanzen in G₂',
+                color: 'red',
+            },
+        };
+
+        const colorMap = {
+            green: { bg: 'bg-green-50', border: 'border-green-300', badge: 'bg-green-100 text-green-800', head: 'text-green-800' },
+            blue: { bg: 'bg-blue-50', border: 'border-blue-300', badge: 'bg-blue-100 text-blue-800', head: 'text-blue-800' },
+            purple: { bg: 'bg-purple-50', border: 'border-purple-300', badge: 'bg-purple-100 text-purple-800', head: 'text-purple-800' },
+            amber: { bg: 'bg-amber-50', border: 'border-amber-300', badge: 'bg-amber-100 text-amber-800', head: 'text-amber-800' },
+            red: { bg: 'bg-red-50', border: 'border-red-300', badge: 'bg-red-100 text-red-800', head: 'text-red-800' },
+        };
+
+        const ComboExplanation = ({ ploidy, cc }) => {
+            const key = `${ploidy}-${cc}`;
+            const info = COMBO_EXPLANATIONS[key];
+            if (!info) return null;
+            const c = colorMap[info.color] || colorMap.green;
+            return (
+                <div className={`rounded-xl border-2 p-3 mt-3 animate-fade-in ${c.bg} ${c.border}`}>
+                    <div className={`font-bold text-sm mb-1 ${c.head}`}>{info.title}</div>
+                    <div className="text-xs text-gray-600 mb-1.5">{info.explanation}</div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                        <span className={`px-2 py-0.5 rounded font-medium ${c.badge}`}>Wann: {info.when}</span>
+                        <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700">z.B. {info.example}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── Wissen section ───────────────────────────────────────────────────────
+        const SectionWissen = ({ onNext }) => {
+            const [slide, setSlide] = useState(0);
+
+            const slides = [
+                {
+                    title: "Grundlagen: Das Chromosom",
+                    content: (
+                        <div className="space-y-4">
+                            <p>Chromosomen sind die Träger der Erbinformation. Ihr Aussehen verändert sich während des Zellzyklus drastisch.</p>
+                            <div className="flex flex-col sm:flex-row justify-around items-center bg-white p-4 rounded-xl border border-green-100 shadow-sm gap-6">
+                                <div className="text-center">
+                                    <div className="flex justify-center mb-2">
+                                        <ChromoIcon type="1cc" color="#ef4444" size={52} />
+                                    </div>
+                                    <span className="text-sm font-bold text-red-600 block">1-Chromatid-Chromosom</span>
+                                    <span className="text-xs text-gray-500">Einfache DNA-Kopie (Stab/Oval)</span>
+                                </div>
+                                <div className="text-2xl text-gray-300 rotate-90 sm:rotate-0">→</div>
+                                <div className="text-center">
+                                    <div className="flex justify-center mb-2">
+                                        <ChromoIcon type="2cc" color="#3b82f6" size={52} />
+                                    </div>
+                                    <span className="text-sm font-bold text-blue-600 block">2-Chromatid-Chromosom</span>
+                                    <span className="text-xs text-gray-500">X-Form: zwei Schwesterchromatiden</span>
+                                </div>
+                            </div>
+                            <p className="text-sm bg-blue-50 p-3 rounded text-blue-800">
+                                <strong>Merke:</strong> Egal ob ein oder zwei Chromatiden – es bleibt <em>ein</em> Chromosom, solange sie am Centromer verbunden sind!
+                            </p>
+                            <div className="text-sm bg-rose-50 p-3 rounded text-rose-800 border border-rose-200">
+                                <strong>Farbcode:</strong> Rote Chromosomen = <em>maternal</em> (von der Mutter), blaue = <em>paternal</em> (vom Vater). Gleichfarbige Paare sind homologe Chromosomen.
+                            </div>
+                        </div>
+                    )
+                },
+                {
+                    title: "Ploidie: Der Chromosomensatz",
+                    content: (
+                        <div className="space-y-4">
+                            <p>Die Ploidie gibt an, wie viele Exemplare eines Chromosomentyps im Kern vorhanden sind.</p>
+                            <ul className="space-y-2 text-sm">
+                                <li className="flex items-start gap-2 bg-white p-3 rounded shadow-sm">
+                                    <span className="bg-green-100 text-green-800 font-mono px-2 py-0.5 rounded text-xs shrink-0">1n</span>
+                                    <div><strong>Haploid:</strong> Einfacher Chromosomensatz – je ein rotes Chromosom. <span className="text-gray-500 italic">Beispiel: Keimzellen.</span></div>
+                                </li>
+                                <li className="flex items-start gap-2 bg-white p-3 rounded shadow-sm">
+                                    <span className="bg-green-100 text-green-800 font-mono px-2 py-0.5 rounded text-xs shrink-0">2n</span>
+                                    <div><strong>Diploid:</strong> Doppelter Chromosomensatz – je ein rotes + ein blaues Chromosom (homologe Paare). <span className="text-gray-500 italic">Beispiel: Körperzellen.</span></div>
+                                </li>
+                                <li className="flex items-start gap-2 bg-white p-3 rounded shadow-sm">
+                                    <span className="bg-amber-100 text-amber-800 font-mono px-2 py-0.5 rounded text-xs shrink-0">3n / 4n</span>
+                                    <div><strong>Polyploid:</strong> Drei oder vier Chromosomensätze. <span className="text-gray-500 italic">Häufig bei Kulturpflanzen (Weizen, Kartoffel).</span></div>
+                                </li>
+                            </ul>
+                            <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm text-yellow-800">
+                                Im Zellkern-Diagramm stehen homologe Chromosomen immer <strong>nebeneinander</strong> (gleiche Nummer, rot + blau).
+                            </div>
+                        </div>
+                    )
+                },
+                {
+                    title: "Chromosomen im Zellzyklus",
+                    content: (
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-600">Der Chromatid-Zustand verändert sich gezielt während des Zellzyklus. Klicke auf eine Phase!</p>
+                            <CellCycleDiagram />
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                {[
+                                    { combo: '2-1cc', label: 'G₁: 2n, 1-Chromatid' },
+                                    { combo: '2-2cc', label: 'G₂: 2n, 2-Chromatid' },
+                                    { combo: '1-1cc', label: 'nach Meiose: 1n, 1-Chromatid' },
+                                    { combo: '1-2cc', label: 'vor Meiose I: 1n, 2-Chromatid' },
+                                ].map(({ combo, label }) => {
+                                    const [p, cc] = combo.split('-');
+                                    const info = COMBO_EXPLANATIONS[combo];
+                                    if (!info) return null;
+                                    const c = colorMap[info.color] || colorMap.green;
+                                    return (
+                                        <div key={combo} className={`text-xs p-2 rounded border ${c.bg} ${c.border}`}>
+                                            <span className={`font-bold ${c.head}`}>{label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )
+                },
+                {
+                    title: "Kombinationen: Wann tritt was auf?",
+                    content: (
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-600">Jede Kombination aus Ploidiegrad und Chromatid-Zustand hat eine biologische Bedeutung.</p>
+                            <div className="space-y-2">
+                                {Object.entries(COMBO_EXPLANATIONS).map(([key, info]) => {
+                                    const c = colorMap[info.color] || colorMap.green;
+                                    return (
+                                        <div key={key} className={`p-3 rounded-lg border ${c.bg} ${c.border}`}>
+                                            <div className={`font-bold text-sm ${c.head}`}>{info.title}</div>
+                                            <div className="text-xs text-gray-600 mt-0.5">{info.explanation}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )
+                }
+            ];
+
+            return (
+                <div className="max-w-2xl mx-auto animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div className="p-5 md:p-8">
+                            <h2 className="text-xl md:text-2xl font-bold text-green-700 mb-4">{slides[slide].title}</h2>
+                            <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
+                                {slides[slide].content}
+                            </div>
+                        </div>
+                        <div className="bg-gray-50 px-5 md:px-6 py-4 flex justify-between items-center border-t">
+                            <button
+                                onClick={() => setSlide(Math.max(0, slide - 1))}
+                                disabled={slide === 0}
+                                className={`text-sm px-4 py-2 rounded font-medium transition-colors ${slide === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-green-700 hover:bg-green-100'}`}
+                            >
+                                Zurück
+                            </button>
+                            <div className="flex gap-2">
+                                {slides.map((_, i) => (
+                                    <button key={i} onClick={() => setSlide(i)}
+                                        aria-label={`Folie ${i + 1}`}
+                                        className={`w-2 h-2 rounded-full transition-colors ${i === slide ? 'bg-green-600' : 'bg-gray-300 hover:bg-gray-400'}`}
+                                    />
+                                ))}
+                            </div>
+                            {slide < slides.length - 1 ? (
+                                <button
+                                    onClick={() => setSlide(slide + 1)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-lg shadow-green-200 text-sm"
+                                >
+                                    Weiter <IconArrowRight className="w-4 h-4" />
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={onNext}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-lg shadow-blue-200 text-sm"
+                                >
+                                    Zum Labor <IconExperiment className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── Labor section ────────────────────────────────────────────────────────
+        const SectionLabor = () => {
+            const [ploidy, setPloidy] = useState(2);
+            const [chromatidState, setChromatidState] = useState('1cc');
+            const [nucleusSize, setNucleusSize] = useState(300);
+            const containerRef = useRef(null);
+
+            useEffect(() => {
+                const obs = new ResizeObserver(entries => {
+                    for (let e of entries) {
+                        const w = e.contentRect.width;
+                        setNucleusSize(Math.min(300, Math.max(180, w - 20)));
+                    }
+                });
+                if (containerRef.current) obs.observe(containerRef.current);
+                return () => obs.disconnect();
+            }, []);
+
+            const ploidyLabels = { 1: "Haploid (1n)", 2: "Diploid (2n)", 3: "Triploid (3n)", 4: "Tetraploid (4n)" };
+
+            return (
+                <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start animate-fade-in">
+                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-lg border border-green-100 order-2 md:order-1">
+                        <h3 className="text-lg font-bold text-green-800 mb-6 flex items-center gap-2">
+                            <span className="bg-green-100 p-1.5 rounded-lg"><IconExperiment className="w-5 h-5 text-green-600" /></span>
+                            Konfiguration
+                        </h3>
+
+                        <div className="space-y-8">
+                            <div>
+                                <div className="flex justify-between mb-2">
+                                    <label className="font-semibold text-gray-700 text-sm">Ploidiegrad</label>
+                                    <span className="font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-bold">
+                                        {ploidyLabels[ploidy]}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range" min="1" max="4" step="1"
+                                    value={ploidy}
+                                    onChange={(e) => setPloidy(parseInt(e.target.value))}
+                                    aria-label="Ploidiegrad"
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                />
+                                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                                    <span>1n</span><span>2n</span><span>3n</span><span>4n</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="font-semibold text-gray-700 block mb-3 text-sm">Chromosomen-Zustand</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setChromatidState('1cc')}
+                                        className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${chromatidState === '1cc' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}
+                                    >
+                                        <ChromoIcon type="1cc" color={chromatidState === '1cc' ? '#15803d' : '#9ca3af'} size={38} />
+                                        <span className="text-xs font-medium">1-Chromatid</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setChromatidState('2cc')}
+                                        className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${chromatidState === '2cc' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300'}`}
+                                    >
+                                        <ChromoIcon type="2cc" color={chromatidState === '2cc' ? '#2563eb' : '#9ca3af'} size={38} />
+                                        <span className="text-xs font-medium">2-Chromatid (X-Form)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ComboExplanation ploidy={ploidy} cc={chromatidState} />
+
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 border border-gray-100">
+                            Rot = maternal, Blau = paternal – homologe Paare nebeneinander.
+                        </div>
+                    </div>
+
+                    <div ref={containerRef} className="flex justify-center items-center order-1 md:order-2 py-4">
+                        <NucleusDisplay ploidy={ploidy} chromatidType={chromatidState} size={nucleusSize} />
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── Training section ("Was bin ich?") ───────────────────────────────────
+        const SectionTraining = () => {
+            const [seed, setSeed] = useState(42);
+            const [targetState, setTargetState] = useState({ ploidy: 2, cc: '1cc' });
+            const [userGuessPloidy, setUserGuessPloidy] = useState(null);
+            const [userGuessCC, setUserGuessCC] = useState(null);
+            const [result, setResult] = useState(null); // null | 'correct' | 'wrong'
+            const [score, setScore] = useState({ correct: 0, total: 0 });
+            const [streak, setStreak] = useState(0);
+            const [nucleusSize, setNucleusSize] = useState(260);
+            const containerRef = useRef(null);
+
+            useEffect(() => {
+                const obs = new ResizeObserver(entries => {
+                    for (let e of entries) {
+                        const w = e.contentRect.width;
+                        setNucleusSize(Math.min(260, Math.max(160, w - 16)));
+                    }
+                });
+                if (containerRef.current) obs.observe(containerRef.current);
+                return () => obs.disconnect();
+            }, []);
+
+            const nextQuestion = useCallback(() => {
+                const newPloidy = Math.floor(Math.random() * 4) + 1;
+                const newCC = Math.random() > 0.5 ? '1cc' : '2cc';
+                setTargetState({ ploidy: newPloidy, cc: newCC });
+                setSeed(Date.now());
+                setUserGuessPloidy(null);
+                setUserGuessCC(null);
+                setResult(null);
+            }, []);
+
+            useEffect(() => { nextQuestion(); }, []);
+
+            const checkAnswer = () => {
+                const isPloidyCorrect = userGuessPloidy === targetState.ploidy;
+                const isCcCorrect = userGuessCC === targetState.cc;
+                const isCorrect = isPloidyCorrect && isCcCorrect;
+
+                let feedbackText = "";
+                if (!isCorrect) {
+                    if (!isPloidyCorrect && !isCcCorrect) {
+                        feedbackText = "Beides ist leider falsch. Zähle die Chromosomen desselben Typs (Größe/Form) für die Ploidie und schaue dir die Form (X-Form vs. I-Form) für die Chromatiden an.";
+                    } else if (!isPloidyCorrect) {
+                        feedbackText = `Die Ploidie war falsch. Es sind ${targetState.ploidy} Chromosomen desselben Typs vorhanden, also ist der Satz ${targetState.ploidy}n.`;
+                    } else {
+                        feedbackText = `Der Zustand war falsch. Jedes Chromosom besteht hier aus ${targetState.cc === '1cc' ? 'einem' : 'zwei'} Chromatiden.`;
+                    }
+                }
+
+                setResult({ status: isCorrect ? 'correct' : 'wrong', msg: feedbackText });
+                setScore(s => ({ correct: s.correct + (isCorrect ? 1 : 0), total: s.total + 1 }));
+                setStreak(s => isCorrect ? s + 1 : 0);
+            };
+
+            const comboInfo = COMBO_EXPLANATIONS[`${targetState.ploidy}-${targetState.cc}`];
+            const accuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : null;
+
+            return (
+                <div className="max-w-4xl mx-auto animate-fade-in space-y-4">
+                    {/* Score bar */}
+                    <div className="flex flex-wrap justify-between items-center bg-white p-3 md:p-4 rounded-xl shadow-sm border border-green-100 gap-3">
+                        <h3 className="font-bold text-gray-700 text-sm md:text-base flex items-center gap-2">
+                            <IconTarget className="w-4 h-4 text-green-600" />
+                            Was bin ich?
+                        </h3>
+                        <div className="flex gap-3 md:gap-5 text-xs md:text-sm">
+                            <span className="font-mono text-green-600 font-bold">
+                                {score.correct}/{score.total} richtig
+                            </span>
+                            {accuracy !== null && (
+                                <span className={`font-mono font-bold ${accuracy >= 70 ? 'text-green-600' : 'text-amber-600'}`}>
+                                    {accuracy}%
+                                </span>
+                            )}
+                            {streak >= 3 && (
+                                <span className="flex items-center gap-1 text-amber-500 font-bold">
+                                    <IconStar className="w-3.5 h-3.5" /> {streak}er-Serie!
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                        {/* Nucleus display */}
+                        <div ref={containerRef}
+                            className="flex justify-center items-center bg-white rounded-2xl shadow-inner p-3 min-h-[220px]"
+                            style={{ background: 'linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%)' }}>
+                            <NucleusDisplay
+                                ploidy={targetState.ploidy}
+                                chromatidType={targetState.cc}
+                                seed={seed}
+                                size={nucleusSize}
+                            />
+                        </div>
+
+                        {/* Answer panel */}
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col justify-center">
+                            {!result ? (
+                                <div className="space-y-5">
+                                    <div>
+                                        <p className="font-bold text-gray-800 mb-2 text-sm">
+                                            1. Wie lautet der Ploidiegrad?
+                                        </p>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {[1, 2, 3, 4].map(n => (
+                                                <button
+                                                    key={n}
+                                                    onClick={() => setUserGuessPloidy(n)}
+                                                    className={`py-2.5 rounded-lg font-mono font-bold border-2 transition text-sm
+                                                        ${userGuessPloidy === n
+                                                            ? 'border-green-500 bg-green-50 text-green-700 shadow-sm'
+                                                            : 'border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50/50'
+                                                        }`}
+                                                >
+                                                    {n}n
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="font-bold text-gray-800 mb-2 text-sm">
+                                            2. Welcher Chromatid-Zustand liegt vor?
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {[
+                                                { val: '1cc', label: '1-Chromatid', icon: <ChromoIcon type="1cc" color={userGuessCC === '1cc' ? '#15803d' : '#9ca3af'} size={30} /> },
+                                                { val: '2cc', label: '2-Chromatid', icon: <ChromoIcon type="2cc" color={userGuessCC === '2cc' ? '#2563eb' : '#9ca3af'} size={30} /> },
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.val}
+                                                    onClick={() => setUserGuessCC(opt.val)}
+                                                    className={`py-2 px-2 rounded-lg border-2 text-xs font-medium transition flex flex-col items-center gap-1
+                                                        ${userGuessCC === opt.val
+                                                            ? (opt.val === '1cc' ? 'border-green-500 bg-green-50 text-green-700' : 'border-blue-500 bg-blue-50 text-blue-700')
+                                                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    {opt.icon}
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Selection summary */}
+                                    {userGuessPloidy && userGuessCC && (
+                                        <div className="bg-green-50 text-green-800 text-xs px-3 py-2 rounded-lg border border-green-200 animate-fade-in">
+                                            Deine Antwort: <strong>{userGuessPloidy}n</strong>, <strong>{userGuessCC === '1cc' ? '1-Chromatid-Chromosomen' : '2-Chromatid-Chromosomen'}</strong>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={checkAnswer}
+                                        disabled={!userGuessPloidy || !userGuessCC}
+                                        className="w-full bg-green-600 disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow-lg shadow-green-200/50 transition text-sm"
+                                    >
+                                        Überprüfen
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="text-center space-y-4 animate-fade-in">
+                                    <div className={`inline-flex p-3 rounded-full ${result === 'correct' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                        {result === 'correct' ? <IconCheck className="w-10 h-10" /> : <IconX className="w-10 h-10" />}
+                                    </div>
+
+                                    <div>
+                                        <h4 className={`text-lg font-bold \${result.status === 'correct' ? 'text-green-800' : 'text-red-800'}`}>
+                                            {result.status === 'correct' ? 'Richtig!' : 'Leider falsch'}
+                                        </h4>
+                                        <p className="text-gray-600 mt-1 text-sm">
+                                            Es war: <strong>{targetState.ploidy}n</strong> und <strong>{targetState.cc === '1cc' ? '1-Chromatid' : '2-Chromatid (X-Form)'}</strong>.
+                                        </p>
+                                        {result.status === 'wrong' ? (
+                                            <div className="mt-4 p-3 bg-red-50 text-red-800 text-xs rounded-lg border border-red-200 text-left">
+                                                <strong>Tipp:</strong> {result.msg}
+                                            </div>
+                                        ) : null}
+                                    </div>
+
+                                    {/* Explanation after answer */}
+                                    {comboInfo && (
+                                        <div className={`text-left rounded-xl border-2 p-3 text-xs
+                                            ${colorMap[comboInfo.color]?.bg || 'bg-gray-50'}
+                                            ${colorMap[comboInfo.color]?.border || 'border-gray-200'}`}>
+                                            <div className={`font-bold mb-1 ${colorMap[comboInfo.color]?.head || 'text-gray-800'}`}>
+                                                {comboInfo.title} — {comboInfo.when}
+                                            </div>
+                                            <p className="text-gray-600">{comboInfo.explanation}</p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={nextQuestion}
+                                        className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg transition text-sm"
+                                    >
+                                        Nächste Aufgabe →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Hint: 8 combinations */}
+                    <div className="bg-white rounded-xl p-3 border border-green-100 shadow-sm">
+                        <p className="text-xs text-gray-500 text-center">
+                            <strong>8 mögliche Kombinationen</strong> (4 Ploidiegrade × 2 Chromatid-Zustände) —
+                            Erkennst du alle?
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+                            {[1, 2, 3, 4].map(p =>
+                                ['1cc', '2cc'].map(cc => {
+                                    const info = COMBO_EXPLANATIONS[`${p}-${cc}`];
+                                    const c = colorMap[info?.color] || colorMap.green;
+                                    return (
+                                        <span key={`${p}-${cc}`}
+                                            className={`text-xs px-2 py-0.5 rounded font-mono ${c.badge}`}>
+                                            {p}n {cc === '1cc' ? '1C' : '2C'}
+                                        </span>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── App shell ────────────────────────────────────────────────────────────
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('wissen');
+
+            const renderContent = () => {
+                switch (activeTab) {
+                    case 'wissen': return <SectionWissen onNext={() => setActiveTab('labor')} />;
+                    case 'labor': return <SectionLabor />;
+                    case 'training': return <SectionTraining />;
+                    default: return <SectionWissen onNext={() => setActiveTab('labor')} />;
+                }
+            };
+
+            const NavButton = ({ id, icon: Icon, label }) => (
+                <button
+                    onClick={() => setActiveTab(id)}
+                    className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition-all font-medium text-xs md:text-sm whitespace-nowrap
+                        ${activeTab === id ? 'bg-white text-green-700 shadow-md' : 'text-green-100 hover:bg-green-700/50'}`}
+                >
+                    <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    {label}
+                </button>
+            );
+
+            return (
+                <div className="max-w-5xl mx-auto min-h-screen bg-white shadow-2xl flex flex-col my-0 md:my-4 md:rounded-2xl overflow-hidden">
+                    <header className="bg-gradient-to-r from-green-700 to-emerald-600 text-white p-3 md:p-4 shadow-md">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                    <IconExperiment className="w-5 h-5 md:w-6 md:h-6" />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg md:text-xl font-bold leading-tight">Bio-Labor</h1>
+                                    <p className="text-green-100 text-xs opacity-80">Chromosomen &amp; Ploidie</p>
+                                </div>
+                            </div>
+
+                            <nav className="flex bg-green-800/30 p-1 rounded-full backdrop-blur-sm overflow-x-auto">
+                                <NavButton id="wissen" icon={IconBook} label="Wissen" />
+                                <NavButton id="labor" icon={IconExperiment} label="Labor" />
+                                <NavButton id="training" icon={IconTarget} label="Was bin ich?" />
+                            </nav>
+                        </div>
+                    </header>
+
+                    <main className="flex-grow p-4 md:p-8 bg-green-50 overflow-y-auto">
+                        {renderContent()}
+                    </main>
+
+                    <footer className="bg-gray-50 border-t border-gray-200 p-3 text-center text-xs text-gray-500">
+                        Johannes-Scharrer-Gymnasium • Zollfrank • &copy; {new Date().getFullYear()}
+                    </footer>
+                </div>
+            );
+        };
+
+        
+    
+export default App;

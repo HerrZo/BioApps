@@ -1,0 +1,9 @@
+
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        * { box-sizing: border-box; }
+        .chrom-selectable { cursor: pointer; transition: filter 0.15s, transform 0.15s; }
+        .chrom-selectable:hover { filter: brightness(1.25); transform: scale(1.12); }
+        .chrom-selected { filter: drop-shadow(0 0 6px #f59e0b) brightness(1.3); transform: scale(1.15); }
+        .slot-highlight { box-shadow: 0 0 0 3px #f59e0b inset; background: #fef9c3 !important; }
+        .slot-filled { background: #dcfce7 !important; }
+    

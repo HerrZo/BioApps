@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gametogenese Explorer</title>
+    <meta name="theme-color" content="#166534">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/dark-mode.css">
+    <link rel="stylesheet" href="../shared/animations.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../shared/tailwind-config.js"></script>
+    
+    
+    
+
+    
+</head>
+
+<body class="bg-green-50 text-gray-900 min-h-screen flex flex-col font-sans">
+<nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-100 dark:border-green-800 px-4 py-2 flex items-center justify-between">
+  <a href="../index.html"
+     class="flex items-center gap-2 text-green-800 hover:text-green-600 font-medium text-sm transition-colors group"
+     aria-label="Zurück zur Startseite">
+    <span class="group-hover:-translate-x-1 transition-transform inline-block">←</span>
+    <span>Startseite</span>
+  </a>
+  <button
+    data-dark-toggle
+    onclick="toggleDarkMode()"
+    aria-pressed="false"
+    title="Dunkles Design"
+    aria-label="Dark Mode umschalten">
+    <span class="dark-mode-icon">🌙</span>
+  </button>
+</nav>
+    <div id="root" class="flex-grow flex flex-col"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+<script src="../shared/dark-mode.js"></script>
+</body>
+
+</html>

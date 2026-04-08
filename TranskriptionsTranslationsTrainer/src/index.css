@@ -1,0 +1,47 @@
+
+        @keyframes ribosomeSlide {
+            from { transform: translateX(var(--from-x, 0)); }
+            to   { transform: translateX(0); }
+        }
+        .ribosome-slide { animation: ribosomeSlide 0.4s cubic-bezier(.22,.61,.36,1) forwards; }
+
+        @keyframes tRNADock {
+            0%   { opacity: 0; transform: translateY(-18px) scale(0.8); }
+            60%  { opacity: 1; transform: translateY(4px) scale(1.05); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .trna-dock { animation: tRNADock 0.5s ease-out forwards; }
+
+        @keyframes tRNALeave {
+            0%   { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-22px) scale(0.7); }
+        }
+        .trna-leave { animation: tRNALeave 0.35s ease-in forwards; }
+
+        @keyframes chainGrow {
+            from { opacity: 0; transform: scaleY(0); transform-origin: top center; }
+            to   { opacity: 1; transform: scaleY(1); }
+        }
+        .chain-grow { animation: chainGrow 0.3s ease-out forwards; }
+
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.5; }
+        }
+        .timer-pulse { animation: timerPulse 0.6s ease-in-out infinite; }
+
+        @keyframes tooltipIn {
+            from { opacity: 0; transform: translateY(4px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .tooltip-in { animation: tooltipIn 0.2s ease-out forwards; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-4px); }
+            40%       { transform: translateX(4px); }
+            60%       { transform: translateX(-3px); }
+            80%       { transform: translateX(3px); }
+        }
+        .shake { animation: shake 0.35s ease-out; }
+    

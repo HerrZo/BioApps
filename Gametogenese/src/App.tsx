@@ -1,0 +1,751 @@
+
+        import React, { useState, useEffect, useMemo } from 'react';
+
+        const PHASES = [
+            { id: 0, name: "Interphase", short: "DNA-Replikation", desc: "Die Zelle bereitet sich vor. DNA-Replikation in der S-Phase: Aus 1-Chromatid-Chromosomen werden 2-Chromatid-Chromosomen (2n, 4c)." },
+            { id: 1, name: "Prophase I", short: "Paarung & Crossing-Over", desc: "Homologe Chromosomen lagern sich aneinander (Synapsis). Crossing-Over erhöht die genetische Vielfalt." },
+            { id: 2, name: "Metaphase I", short: "Anordnung der Paare", desc: "Die homologen Chromosomenpaare ordnen sich zufällig in der Äquatorialebene an." },
+            { id: 3, name: "Anaphase I", short: "Trennung der Homologen", desc: "Die homologen Chromosomenpaare werden getrennt. Reduktion (2n → 1n)." },
+            { id: 4, name: "Telophase I", short: "Erste Teilung", desc: "Zytokinese. Beim Mann: zwei gleich große Zellen. Bei der Frau: eine große und ein Polkörperchen." },
+            { id: 5, name: "Prophase II", short: "Neubildung Spindel", desc: "Kurze Ruhephase ohne DNA-Verdopplung. Neuer Spindelapparat bildet sich." },
+            { id: 6, name: "Metaphase II", short: "Anordnung einzeln", desc: "Die 2-Chromatid-Chromosomen ordnen sich einzeln in der Äquatorialebene an." },
+            { id: 7, name: "Anaphase II", short: "Trennung der Chromatiden", desc: "Die Centromere teilen sich. Schwesterchromatiden werden getrennt." },
+            { id: 8, name: "Telophase II", short: "Zweite Teilung", desc: "Spermatogenese: 4 Spermien. Oogenese: 1 Eizelle und 3 Polkörperchen. Alle haploid (1n, 1c)." }
+        ];
+
+        // DNA content (C-value) per phase
+        const DNA_VALUES = [
+            { phase: 0, label: "Interphase", value: 4, display: "4C (2n)" },
+            { phase: 1, label: "Prophase I", value: 4, display: "4C" },
+            { phase: 2, label: "Metaphase I", value: 4, display: "4C" },
+            { phase: 3, label: "Anaphase I", value: 4, display: "4C*" },
+            { phase: 4, label: "Telophase I", value: 2, display: "2C" },
+            { phase: 5, label: "Prophase II", value: 2, display: "2C" },
+            { phase: 6, label: "Metaphase II", value: 2, display: "2C" },
+            { phase: 7, label: "Anaphase II", value: 2, display: "2C*" },
+            { phase: 8, label: "Telophase II", value: 1, display: "1C" },
+        ];
+
+        const QUIZ_DATA = [
+            { question: "Was ist das primäre Ziel der Meiose?", options: ["Wachstum", "Bildung genetisch identischer Zellen", "Bildung haploider Keimzellen", "Verdopplung des Chromosomensatzes"], correct: 2 },
+            { question: "Wann findet das Crossing-Over statt?", options: ["Prophase I", "Metaphase II", "Interphase", "Anaphase I"], correct: 0 },
+            { question: "Was wird in der Anaphase I getrennt?", options: ["Schwesterchromatiden", "Homologe Chromosomenpaare", "Zellkerne", "Zellmembranen"], correct: 1 },
+            { question: "Wie bezeichnet man den Chromosomensatz einer menschlichen Eizelle?", options: ["Diploid (2n)", "Haploid (1n)", "Polyploid", "Tetraploid"], correct: 1 },
+            { question: "Was ist das Ergebnis der Spermatogenese?", options: ["1 Spermium, 3 Polkörperchen", "2 diploide Spermien", "4 haploide Spermien", "4 diploide Spermien"], correct: 2 },
+            { question: "In welcher Phase beträgt der DNA-Gehalt 4C?", options: ["Telophase I", "Prophase I", "Telophase II", "Prophase II"], correct: 1 },
+            { question: "Welchen DNA-Gehalt hat jede Tochterzelle nach der Telophase I?", options: ["4C", "1C", "2C", "3C"], correct: 2 },
+            { question: "Nach der Telophase II beträgt der DNA-Gehalt jeder Keimzelle …", options: ["4C", "2C", "3C", "1C"], correct: 3 },
+        ];
+
+        const IconDna = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12h20M2 12c0 5.5 4.5 10 10 10s10-4.5 10-10S17.5 2 12 2 2 6.5 2 12z"></path></svg>;
+        const IconSplit = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="18" rx="2" /><path d="M12 3v18" /></svg>;
+        const IconCompare = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M9 21H4v-5" /></svg>;
+        const IconQuiz = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><circle cx="12" cy="17" r=".5" /><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>;
+        const IconChevronDown = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>;
+        const IconSort = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M7 12h10M11 18h2" /></svg>;
+
+        // ── DNA-Mengen-Diagramm (SVG line chart) ──────────────────────────
+        const DnaChart = ({ currentPhase }) => {
+            const chartW = 340;
+            const chartH = 110;
+            const padL = 38;
+            const padR = 12;
+            const padT = 10;
+            const padB = 28;
+            const innerW = chartW - padL - padR;
+            const innerH = chartH - padT - padB;
+            const maxVal = 4;
+
+            const xPos = (i) => padL + (i / (DNA_VALUES.length - 1)) * innerW;
+            const yPos = (v) => padT + innerH - (v / maxVal) * innerH;
+
+            const polyline = DNA_VALUES.map((d, i) => `${xPos(i)},${yPos(d.value)}`).join(' ');
+
+            // Y-axis ticks
+            const yTicks = [1, 2, 4];
+
+            return (
+                <div className="bg-white rounded-lg border border-green-200 shadow-sm p-2">
+                    <p className="text-xs font-bold text-green-800 mb-1 text-center">DNA-Gehalt (C-Wert) im Verlauf der Meiose</p>
+                    <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" style={{ display: 'block' }}>
+                        {/* Grid lines */}
+                        {yTicks.map(v => (
+                            <line key={v} x1={padL} y1={yPos(v)} x2={chartW - padR} y2={yPos(v)}
+                                stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3" />
+                        ))}
+                        {/* Y axis */}
+                        <line x1={padL} y1={padT} x2={padL} y2={padT + innerH} stroke="#9ca3af" strokeWidth="1" />
+                        {/* X axis */}
+                        <line x1={padL} y1={padT + innerH} x2={chartW - padR} y2={padT + innerH} stroke="#9ca3af" strokeWidth="1" />
+
+                        {/* Y-axis labels */}
+                        {yTicks.map(v => (
+                            <text key={v} x={padL - 4} y={yPos(v) + 3.5} textAnchor="end"
+                                fontSize="8" fill="#6b7280">{v}C</text>
+                        ))}
+
+                        {/* Area fill */}
+                        <polygon
+                            points={`${padL},${padT + innerH} ${polyline} ${chartW - padR},${padT + innerH}`}
+                            fill="#bbf7d0" opacity="0.5"
+                        />
+
+                        {/* Line */}
+                        <polyline points={polyline} fill="none" stroke="#166534" strokeWidth="2" strokeLinejoin="round" />
+
+                        {/* Dots */}
+                        {DNA_VALUES.map((d, i) => {
+                            const isCurrent = i === currentPhase;
+                            return (
+                                <circle key={i}
+                                    cx={xPos(i)} cy={yPos(d.value)} r={isCurrent ? 6 : 3.5}
+                                    fill={isCurrent ? "#166534" : "#4ade80"}
+                                    stroke={isCurrent ? "#fff" : "#166534"}
+                                    strokeWidth={isCurrent ? 2 : 1}
+                                />
+                            );
+                        })}
+
+                        {/* Current phase label above dot */}
+                        {(() => {
+                            const d = DNA_VALUES[currentPhase];
+                            const cx = xPos(currentPhase);
+                            const cy = yPos(d.value);
+                            const labelX = Math.min(Math.max(cx, padL + 14), chartW - padR - 14);
+                            return (
+                                <g>
+                                    <rect x={labelX - 14} y={cy - 22} width="28" height="14" rx="4" fill="#166534" />
+                                    <text x={labelX} y={cy - 12} textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">{d.display}</text>
+                                </g>
+                            );
+                        })()}
+
+                        {/* X-axis phase numbers */}
+                        {DNA_VALUES.map((d, i) => (
+                            <text key={i}
+                                x={xPos(i)} y={padT + innerH + 12}
+                                textAnchor="middle" fontSize="7"
+                                fill={i === currentPhase ? "#166534" : "#9ca3af"}
+                                fontWeight={i === currentPhase ? "bold" : "normal"}
+                            >
+                                {i === 0 ? "I" : i}
+                            </text>
+                        ))}
+                        {/* X-axis label */}
+                        <text x={padL + innerW / 2} y={chartH - 1} textAnchor="middle" fontSize="7" fill="#9ca3af">Phase (0=Interphase)</text>
+                    </svg>
+                </div>
+            );
+        };
+
+        // ── Phasen-Sortierspiel ───────────────────────────────────────────
+        const shuffleArray = (arr) => {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        };
+
+        const SORT_PHASES = PHASES.map(p => p.name);
+
+        const SortGame = () => {
+            const [cards, setCards] = useState(() => shuffleArray(SORT_PHASES.map((name, i) => ({ id: i, name }))));
+            const [slots, setSlots] = useState(Array(9).fill(null));
+            const [selected, setSelected] = useState(null); // id of selected card
+            const [checked, setChecked] = useState(false);
+
+            const availableCards = cards.filter(c => !slots.includes(c.id));
+
+            const handleCardClick = (cardId) => {
+                if (checked) return;
+                setSelected(selected === cardId ? null : cardId);
+            };
+
+            const handleSlotClick = (slotIdx) => {
+                if (checked) return;
+                if (selected !== null) {
+                    // Place selected card into this slot
+                    const newSlots = [...slots];
+                    // If slot already has a card, move it back to available (do nothing special — it stays in cards array)
+                    newSlots[slotIdx] = selected;
+                    setSlots(newSlots);
+                    setSelected(null);
+                } else if (slots[slotIdx] !== null) {
+                    // Click on a filled slot to un-place the card
+                    const newSlots = [...slots];
+                    newSlots[slotIdx] = null;
+                    setSlots(newSlots);
+                }
+            };
+
+            const getSlotState = (slotIdx) => {
+                if (!checked || slots[slotIdx] === null) return 'neutral';
+                const cardId = slots[slotIdx];
+                return cardId === slotIdx ? 'correct' : 'wrong';
+            };
+
+            const correctCount = checked
+                ? slots.filter((id, i) => id === i).length
+                : null;
+
+            const reset = () => {
+                setCards(shuffleArray(SORT_PHASES.map((name, i) => ({ id: i, name }))));
+                setSlots(Array(9).fill(null));
+                setSelected(null);
+                setChecked(false);
+            };
+
+            return (
+                <div className="animate-fade-in h-full overflow-y-auto pb-4">
+                    <p className="text-sm text-gray-600 mb-3">
+                        Klicke eine Karte an (sie wird markiert), dann klicke auf den gewünschten Slot. Klicke auf einen belegten Slot, um die Karte wieder zu entfernen.
+                    </p>
+
+                    {/* Available cards pool */}
+                    <div className="mb-4">
+                        <p className="text-xs font-bold text-green-800 uppercase mb-2 tracking-wide">Verfügbare Karten</p>
+                        <div className="flex flex-wrap gap-2 min-h-[44px] bg-green-50 rounded-lg p-2 border border-green-200">
+                            {availableCards.length === 0 && (
+                                <span className="text-xs text-gray-400 italic self-center">Alle Karten wurden platziert</span>
+                            )}
+                            {availableCards.map(card => (
+                                <button
+                                    key={card.id}
+                                    onClick={() => handleCardClick(card.id)}
+                                    className={`sort-card px-3 py-1.5 rounded-lg border-2 text-xs md:text-sm font-semibold shadow-sm
+                                        ${selected === card.id
+                                            ? 'border-green-600 bg-green-600 text-white shadow-md scale-105'
+                                            : 'border-green-300 bg-white text-gray-800 hover:border-green-500'
+                                        }`}
+                                >
+                                    {card.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Slots */}
+                    <div className="mb-4">
+                        <p className="text-xs font-bold text-green-800 uppercase mb-2 tracking-wide">Reihenfolge (Phase 0 → Phase 8)</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            {slots.map((cardId, slotIdx) => {
+                                const state = getSlotState(slotIdx);
+                                const cardName = cardId !== null ? SORT_PHASES[cardId] : null;
+                                return (
+                                    <button
+                                        key={slotIdx}
+                                        onClick={() => handleSlotClick(slotIdx)}
+                                        className={`sort-slot rounded-lg border-2 p-2 min-h-[52px] flex flex-col items-center justify-center text-xs font-semibold transition
+                                            ${state === 'correct' ? 'border-green-500 bg-green-100 text-green-800' :
+                                                state === 'wrong' ? 'border-red-400 bg-red-50 text-red-700' :
+                                                    cardId !== null ? 'border-gray-400 bg-gray-100 text-gray-800 hover:border-red-300' :
+                                                        selected !== null ? 'border-dashed border-green-400 bg-green-50 hover:bg-green-100 text-green-500' :
+                                                            'border-dashed border-gray-300 bg-gray-50 text-gray-300'
+                                            }`}
+                                    >
+                                        <span className="text-[10px] text-gray-400 mb-0.5">Phase {slotIdx}</span>
+                                        {cardName
+                                            ? <span>{cardName}</span>
+                                            : <span className="italic opacity-50">{selected !== null ? 'Hier platzieren' : 'leer'}</span>
+                                        }
+                                        {state === 'correct' && <span className="text-green-600 mt-0.5">✓</span>}
+                                        {state === 'wrong' && <span className="text-red-500 mt-0.5">✗</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex gap-3 items-center flex-wrap">
+                        <button
+                            onClick={() => setChecked(true)}
+                            disabled={slots.some(s => s === null) || checked}
+                            className="bg-green-700 text-white px-5 py-2 rounded-lg font-bold hover:bg-green-800 transition disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow"
+                        >
+                            Überprüfen
+                        </button>
+                        <button
+                            onClick={reset}
+                            className="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition text-sm"
+                        >
+                            Neu starten
+                        </button>
+                        {checked && (
+                            <span className={`font-bold text-sm px-3 py-1.5 rounded-lg ${correctCount === 9 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                {correctCount} / 9 richtig {correctCount === 9 ? '🎉' : ''}
+                            </span>
+                        )}
+                    </div>
+                    {!slots.some(s => s === null) === false && (
+                        <p className="text-xs text-gray-400 mt-2">Platziere alle 9 Karten, um zu überprüfen.</p>
+                    )}
+                </div>
+            );
+        };
+
+        const Chromosome = ({ x, y, size, color, type, rotation = 0, opacity = 1 }) => {
+            const mainColor = color === 'red' ? '#dc2626' : '#2563eb';
+            const s = size;
+
+            return (
+                <g transform={`translate(${x}, ${y}) rotate(${rotation})`} opacity={opacity}>
+                    {type === 'double' && (
+                        <g>
+                            <path d={`M -${s * 0.6} -${s} Q 0 0 -${s * 0.6} ${s}`} stroke={mainColor} strokeWidth="3" fill="none" className="chromosome-arm" />
+                            <path d={`M ${s * 0.6} -${s} Q 0 0 ${s * 0.6} ${s}`} stroke={mainColor} strokeWidth="3" fill="none" className="chromosome-arm" />
+                            <circle cx="0" cy="0" r="2.5" fill="#1f2937" />
+                        </g>
+                    )}
+                    {type === 'single' && (
+                        <g>
+                            <path d={`M 0 -${s} Q -${s * 0.2} 0 0 ${s}`} stroke={mainColor} strokeWidth="3" fill="none" strokeLinecap="round" />
+                            <circle cx="0" cy="0" r="2.5" fill="#1f2937" />
+                        </g>
+                    )}
+                </g>
+            );
+        };
+
+        const Cell = ({ x, y, r, children, label }) => (
+            <g transform={`translate(${x}, ${y})`}>
+                <circle r={r} fill="white" stroke="#374151" strokeWidth="2" />
+                {children}
+                {label && <text x="0" y={r + 15} textAnchor="middle" className="text-xs fill-gray-600 font-medium" style={{ fontSize: '10px' }}>{label}</text>}
+            </g>
+        );
+
+        const CellCanvas = ({ mode, phase, type }) => {
+            const width = 300;
+            const height = 300;
+            const cx = width / 2;
+            const cy = height / 2;
+
+            const renderContent = () => {
+                // Interphase
+                if (phase === 0) {
+                    return <Cell x={cx} y={cy} r={65} label="Urkeimzelle (2n, 4C)">
+                        <Chromosome x="-15" y="-10" size={16} color="blue" type="double" rotation={-15} />
+                        <Chromosome x="15" y="10" size={16} color="red" type="double" rotation={15} />
+                    </Cell>;
+                }
+                // Prophase I
+                if (phase === 1) {
+                    return <Cell x={cx} y={cy} r={65} label="Prophase I">
+                        {/* Synapsis/Tetrad */}
+                        <Chromosome x="-8" y="0" size={18} color="blue" type="double" />
+                        <Chromosome x="8" y="0" size={18} color="red" type="double" />
+                    </Cell>;
+                }
+                // Metaphase I
+                if (phase === 2) {
+                    return <Cell x={cx} y={cy} r={65} label="Metaphase I">
+                        {/* Spindle fibers */}
+                        <line x1="-50" y1="-50" x2="-8" y2="0" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <line x1="50" y1="50" x2="8" y2="0" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <Chromosome x="-8" y="0" size={18} color="blue" type="double" rotation={0} />
+                        <Chromosome x="8" y="0" size={18} color="red" type="double" rotation={0} />
+                    </Cell>;
+                }
+                // Anaphase I
+                if (phase === 3) {
+                    return <Cell x={cx} y={cy} r={65} label="Anaphase I">
+                        <line x1="-50" y1="-50" x2="-20" y2="-20" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <line x1="50" y1="50" x2="20" y2="20" stroke="#d1d5db" strokeWidth="1" strokeDasharray="3,3" />
+                        <Chromosome x="-20" y="-20" size={18} color="blue" type="double" rotation={45} />
+                        <Chromosome x="20" y="20" size={18} color="red" type="double" rotation={45} />
+                    </Cell>;
+                }
+                // Telophase I (2 cells)
+                if (phase === 4) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="Polkörper">
+                                <Chromosome x="0" y="0" size={10} color="blue" type="double" />
+                            </Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Oozyte II">
+                                <Chromosome x="0" y="0" size={16} color="red" type="double" />
+                            </Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Spermatozyte II">
+                                <Chromosome x="0" y="0" size={14} color="blue" type="double" />
+                            </Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Spermatozyte II">
+                                <Chromosome x="0" y="0" size={14} color="red" type="double" />
+                            </Cell>
+                        </g>;
+                    }
+                }
+                // Prophase II 
+                if (phase === 5) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="PK (Meiose II)"><Chromosome x="0" y="0" size={10} color="blue" type="double" /></Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Prophase II"><Chromosome x="0" y="0" size={16} color="red" type="double" /></Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Prophase II"><Chromosome x="0" y="0" size={14} color="blue" type="double" /></Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Prophase II"><Chromosome x="0" y="0" size={14} color="red" type="double" /></Cell>
+                        </g>;
+                    }
+                }
+                // Metaphase II
+                if (phase === 6) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="Metaphase II (PK)"><Chromosome x="0" y="0" size={10} color="blue" type="double" rotation={90} /></Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Metaphase II"><Chromosome x="0" y="0" size={16} color="red" type="double" rotation={90} /></Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Metaphase II"><Chromosome x="0" y="0" size={14} color="blue" type="double" rotation={90} /></Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Metaphase II"><Chromosome x="0" y="0" size={14} color="red" type="double" rotation={90} /></Cell>
+                        </g>;
+                    }
+                }
+                // Anaphase II (pulling apart sister chromatids)
+                if (phase === 7) {
+                    if (type === 'egg') {
+                        return <g>
+                            <Cell x={cx} y={cy - 70} r={20} label="Anaphase II (PK)">
+                                <Chromosome x="-6" y="0" size={10} color="blue" type="single" rotation={90} />
+                                <Chromosome x="6" y="0" size={10} color="blue" type="single" rotation={90} />
+                            </Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Anaphase II">
+                                <Chromosome x="-15" y="0" size={16} color="red" type="single" rotation={90} />
+                                <Chromosome x="15" y="0" size={16} color="red" type="single" rotation={90} />
+                            </Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 50} y={cy} r={40} label="Anaphase II">
+                                <Chromosome x="-10" y="0" size={14} color="blue" type="single" rotation={90} />
+                                <Chromosome x="10" y="0" size={14} color="blue" type="single" rotation={90} />
+                            </Cell>
+                            <Cell x={cx + 50} y={cy} r={40} label="Anaphase II">
+                                <Chromosome x="-10" y="0" size={14} color="red" type="single" rotation={90} />
+                                <Chromosome x="10" y="0" size={14} color="red" type="single" rotation={90} />
+                            </Cell>
+                        </g>;
+                    }
+                }
+                // Telophase II (4 cells final)
+                if (phase === 8) {
+                    if (type === 'sperm') {
+                        return <g>
+                            <Cell x={cx - 45} y={cy - 48} r={32} label="Spermium (1n, 1C)"><Chromosome x="0" y="0" size={12} color="blue" type="single" /></Cell>
+                            <Cell x={cx + 45} y={cy - 48} r={32} label="Spermium "><Chromosome x="0" y="0" size={12} color="blue" type="single" /></Cell>
+                            <Cell x={cx - 45} y={cy + 48} r={32} label="Spermium "><Chromosome x="0" y="0" size={12} color="red" type="single" /></Cell>
+                            <Cell x={cx + 45} y={cy + 48} r={32} label="Spermium "><Chromosome x="0" y="0" size={12} color="red" type="single" /></Cell>
+                        </g>;
+                    } else {
+                        return <g>
+                            <Cell x={cx - 45} y={cy - 65} r={18} label="PK"><Chromosome x="0" y="0" size={8} color="blue" type="single" /></Cell>
+                            <Cell x={cx + 0} y={cy - 85} r={18} label="PK"><Chromosome x="0" y="0" size={8} color="blue" type="single" /></Cell>
+                            <Cell x={cx + 45} y={cy - 65} r={18} label="PK"><Chromosome x="0" y="0" size={8} color="red" type="single" /></Cell>
+                            <Cell x={cx} y={cy + 25} r={55} label="Eizelle (1n, 1C)">
+                                <Chromosome x="0" y="0" size={16} color="red" type="single" />
+                            </Cell>
+                        </g>;
+                    }
+                }
+                return null;
+            };
+
+            return (
+                <svg viewBox="25 25 250 250" className="w-full h-full">
+                    {renderContent()}
+                </svg>
+            );
+        };
+
+        const ComparisonTable = () => {
+            const [isOpen, setIsOpen] = useState(false);
+
+            const tableData = [
+                { m: "Funktion", mit: "Vermehrung von Körperzellen", mei: "Bildung von Keimzellen" },
+                { m: "Ort", mit: "In wachsenden Zellen", mei: "In den Gonaden" },
+                { m: "Anzahl Tochterzellen", mit: "2", mei: "4" },
+                { m: "Chromosomensatz", mit: "2n (diploid)", mei: "1n (haploid)" },
+                { m: "Erbgut", mit: "Identisch mit Mutterzelle", mei: "Nicht identisch" },
+                { m: "Crossing over", mit: "Nein", mei: "Ja" },
+            ];
+
+            return (
+                <div className="mt-6 border border-gray-300 rounded-lg bg-white shadow-sm overflow-hidden mb-8">
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition border-b border-gray-200"
+                    >
+                        <span className="font-bold text-gray-800 flex items-center gap-2 text-sm md:text-base">
+                            <IconDna className="w-5 h-5 text-green-600" />
+                            Mitose vs. Meiose
+                        </span>
+                        <IconChevronDown className={`w-5 h-5 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isOpen && (
+                        <div className="overflow-x-auto w-full bg-white">
+                            <table className="w-full text-sm text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr className="bg-green-100 text-green-900">
+                                        <th className="p-3 border border-green-200">Merkmal</th>
+                                        <th className="p-3 border border-green-200">Mitose</th>
+                                        <th className="p-3 border border-green-200">Meiose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tableData.map((row, idx) => (
+                                        <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                                            <td className="p-3 border border-gray-200 font-semibold text-gray-700">{row.m}</td>
+                                            <td className="p-3 border border-gray-200">{row.mit}</td>
+                                            <td className="p-3 border border-gray-200">{row.mei}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const Quiz = () => {
+            const [currentQ, setCurrentQ] = useState(0);
+            const [score, setScore] = useState(0);
+            const [showResult, setShowResult] = useState(false);
+            const [selectedOption, setSelectedOption] = useState(null);
+
+            const handleAnswer = (index) => {
+                if (selectedOption !== null) return;
+                setSelectedOption(index);
+                if (index === QUIZ_DATA[currentQ].correct) setScore(score + 1);
+            };
+
+            const nextQuestion = () => {
+                if (currentQ < QUIZ_DATA.length - 1) {
+                    setCurrentQ(currentQ + 1);
+                    setSelectedOption(null);
+                } else {
+                    setShowResult(true);
+                }
+            };
+
+            const resetQuiz = () => {
+                setCurrentQ(0);
+                setScore(0);
+                setShowResult(false);
+                setSelectedOption(null);
+            };
+
+            if (showResult) {
+                return (
+                    <div className="flex flex-col items-center justify-center h-full p-6 md:p-8 animate-fade-in">
+                        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg text-center max-w-md w-full border border-green-200">
+                            <IconQuiz className="w-12 h-12 md:w-16 md:h-16 text-green-600 mx-auto mb-4" />
+                            <h2 className="text-xl md:text-2xl font-bold mb-4 text-gray-800">Quiz beendet!</h2>
+                            <p className="text-lg mb-6">Du hast <span className="font-bold text-green-600 text-xl">{score}</span> von <span className="font-bold">{QUIZ_DATA.length}</span> richtig.</p>
+                            <button onClick={resetQuiz} className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition w-full shadow-md text-sm md:text-base">
+                                Quiz erneut starten
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const question = QUIZ_DATA[currentQ];
+
+            return (
+                <div className="max-w-2xl mx-auto h-full flex flex-col justify-center animate-fade-in p-4">
+                    <div className="bg-white p-5 md:p-8 rounded-2xl shadow-lg border border-green-100">
+                        <div className="flex justify-between items-center mb-6">
+                            <span className="text-xs md:text-sm font-bold text-green-600 uppercase tracking-wider">Frage {currentQ + 1} / {QUIZ_DATA.length}</span>
+                            <span className="text-xs md:text-sm text-gray-400">Score: {score}</span>
+                        </div>
+
+                        <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-6 min-h-[60px]">{question.question}</h3>
+
+                        <div className="space-y-3">
+                            {question.options.map((opt, idx) => {
+                                let btnClass = "w-full text-left p-3 md:p-4 rounded-lg border-2 transition-all font-medium text-sm md:text-base ";
+                                if (selectedOption === null) {
+                                    btnClass += "border-gray-200 hover:border-green-400 hover:bg-green-50";
+                                } else {
+                                    if (idx === question.correct) {
+                                        btnClass += "border-green-500 bg-green-100 text-green-800";
+                                    } else if (idx === selectedOption) {
+                                        btnClass += "border-red-500 bg-red-100 text-red-800";
+                                    } else {
+                                        btnClass += "border-gray-100 text-gray-400 opacity-50";
+                                    }
+                                }
+
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleAnswer(idx)}
+                                        disabled={selectedOption !== null}
+                                        className={btnClass}
+                                    >
+                                        {opt}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {selectedOption !== null && (
+                            <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col justify-end animate-fade-in">
+                                <div className={`p-4 rounded-xl text-left border mb-4 \${selectedOption === question.correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                    <div className={`font-bold text-lg mb-2 \${selectedOption === question.correct ? 'text-green-700' : 'text-red-700'}`}>
+                                        {selectedOption === question.correct ? '✅ Richtig!' : '❌ Leider falsch.'}
+                                    </div>
+                                    <p className="text-sm text-gray-700">{question.explanation}</p>
+                                </div>
+                                <div className="flex justify-end">
+                                    <button onClick={nextQuestion} className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition flex items-center text-sm shadow-md">
+                                        {currentQ < QUIZ_DATA.length - 1 ? "Nächste Frage" : "Ergebnis anzeigen"}
+                                        <IconChevronDown className="w-4 h-4 ml-2 -rotate-90" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('gametogenese');
+            const [sliderValue, setSliderValue] = useState(0);
+
+            useEffect(() => {
+                if (activeTab === 'gametogenese' || activeTab === 'vergleich') setSliderValue(0);
+            }, [activeTab]);
+
+            const currentPhase = PHASES[sliderValue];
+
+            const renderTabContent = () => {
+                switch (activeTab) {
+                    case 'gametogenese':
+                        return (
+                            <div className="flex flex-col h-full animate-fade-in overflow-y-auto">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-4">
+                                    <div className="flex flex-col items-center bg-white/50 p-2 md:p-3 rounded-xl border border-green-100 shadow-sm h-[320px] md:h-[400px]">
+                                        <h3 className="font-bold text-blue-800 mb-2 md:mb-3 text-sm md:text-lg border-b-2 border-blue-200 pb-1 w-full text-center">Spermatogenese</h3>
+                                        <div className="flex-grow w-full relative flex items-center justify-center bg-white rounded-lg shadow-inner border border-green-200 overflow-hidden">
+                                            <div className="absolute inset-0">
+                                                <CellCanvas mode="gametogenese" type="sperm" phase={sliderValue} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center bg-white/50 p-2 md:p-3 rounded-xl border border-green-100 shadow-sm h-[320px] md:h-[400px]">
+                                        <h3 className="font-bold text-red-800 mb-2 md:mb-3 text-sm md:text-lg border-b-2 border-red-200 pb-1 w-full text-center">Oogenese</h3>
+                                        <div className="flex-grow w-full relative flex items-center justify-center bg-white rounded-lg shadow-inner border border-green-200 overflow-hidden">
+                                            <div className="absolute inset-0">
+                                                <CellCanvas mode="gametogenese" type="egg" phase={sliderValue} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-3 md:p-4 rounded-lg shadow-md border-l-4 border-green-600 mb-3">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <h4 className="font-bold text-base md:text-lg text-gray-800">{currentPhase.name}</h4>
+                                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold uppercase">{currentPhase.short}</span>
+                                    </div>
+                                    <p className="text-gray-700 leading-relaxed text-xs md:text-sm">{currentPhase.desc}</p>
+                                </div>
+
+                                {/* DNA-Mengen-Diagramm */}
+                                <div className="mb-3">
+                                    <DnaChart currentPhase={sliderValue} />
+                                </div>
+
+                                <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
+                                    <input type="range" min="0" max="8" value={sliderValue} onChange={(e) => setSliderValue(parseInt(e.target.value))} aria-label="Meiose-Phase auswählen" className="w-full" />
+                                    <div className="flex justify-between text-xs text-gray-500 mt-2 font-mono uppercase">
+                                        <span>Start</span><span>Meiose I</span><span>Meiose II</span><span>Ende</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+
+                    case 'vergleich':
+                        return (
+                            <div className="flex flex-col h-full animate-fade-in overflow-y-auto pb-8">
+                                <ComparisonTable />
+                            </div>
+                        );
+
+                    case 'quiz':
+                        return <Quiz />;
+
+                    case 'sortieren':
+                        return (
+                            <div className="flex flex-col h-full animate-fade-in overflow-y-auto">
+                                <div className="mb-3">
+                                    <h2 className="font-bold text-green-800 text-base md:text-lg">Phasen sortieren</h2>
+                                    <p className="text-xs text-gray-500">Bringe die 9 Phasen der Meiose in die richtige Reihenfolge.</p>
+                                </div>
+                                <SortGame />
+                            </div>
+                        );
+
+                    default: return null;
+                }
+            };
+
+            return (
+                <div className="container mx-auto max-w-5xl p-2 md:p-4 h-screen flex flex-col">
+                    <header className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-2xl shadow-lg p-3 md:p-4 mb-4 flex flex-col md:flex-row justify-between items-center">
+                        <div className="flex items-center space-x-3 mb-3 md:mb-0">
+                            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                                <IconDna className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg md:text-xl font-bold tracking-tight">Gametogenese</h1>
+                                <p className="text-xs text-green-100 opacity-80">Zellteilung verstehen</p>
+                            </div>
+                        </div>
+
+                        <nav className="flex bg-black/10 p-1 rounded-xl overflow-x-auto max-w-full">
+                            {[
+                                { id: 'gametogenese', label: 'Gametogenese', icon: IconSplit },
+                                { id: 'vergleich', label: 'Vergleich', icon: IconCompare },
+                                { id: 'quiz', label: 'Quiz', icon: IconQuiz },
+                                { id: 'sortieren', label: 'Sortieren', icon: IconSort },
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center space-x-1 md:space-x-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-all text-xs md:text-sm font-medium whitespace-nowrap ${activeTab === tab.id
+                                            ? 'bg-white text-green-700 shadow-sm'
+                                            : 'text-green-100 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </header>
+
+                    <main className="flex-grow bg-white/60 backdrop-blur-md rounded-2xl p-3 md:p-4 shadow-inner border border-white overflow-hidden relative">
+                        {renderTabContent()}
+                    </main>
+
+                    <footer className="text-center text-xs text-gray-400 mt-2 pb-2">
+                        Johannes-Scharrer-Gymnasium • Zollfrank • &copy; {new Date().getFullYear()}
+                    </footer>
+                </div>
+            );
+        };
+
+        
+    
+export default App;

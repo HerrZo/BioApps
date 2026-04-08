@@ -1,0 +1,37 @@
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    .pulse { animation: pulse-ring 2s ease-in-out infinite; }
+
+    @keyframes wave {
+      0%   { d: path("M0,20 Q25,5 50,20 Q75,35 100,20"); }
+      50%  { d: path("M0,20 Q25,35 50,20 Q75,5 100,20"); }
+      100% { d: path("M0,20 Q25,5 50,20 Q75,35 100,20"); }
+    }
+
+    @keyframes lensSquish {
+      0%,100% { rx:12; ry:8; }
+      50%      { rx:7;  ry:13; }
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+
+    /* SVG interactive highlights */
+    .svg-part { cursor:pointer; transition: filter .2s, opacity .2s; }
+    .svg-part:hover { filter: brightness(1.25); }
+    .svg-part.active-part { filter: drop-shadow(0 0 6px #16a34a); }
+
+    /* Dark mode card overrides */
+    .dark .card { background:#1a2e1a; border-color:#2d4a2d; }
+    .dark .card-inner { background:#1f351f; border-color:#2d4a2d; }
+    .dark body { background:#0f1f0f; color:#e2f0e2; }
+
+    @keyframes scanLine {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    .scan-line { animation: scanLine 2s linear infinite; }
+  

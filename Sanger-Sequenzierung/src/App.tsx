@@ -1,0 +1,919 @@
+
+        import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+        // ── Icons ──────────────────────────────────────────────────────────────
+        const IconDna = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993M9 22c1.798-1.998 2.518-3.995 2.807-5.993M2 15c6.667-6 13.333 0 20-6M20 9c-6.667 6-13.333 0-20 6"/></svg>;
+        const IconFlask = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>;
+        const IconZap = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+        const IconLayers = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" /></svg>;
+        const IconMonitor = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>;
+        const IconBrain = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44"/></svg>;
+        const IconCheck = ({ className }) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>;
+
+        const Tooltip = ({ text, tooltip }) => (
+            <span className="tooltip">
+                {text}
+                <span className="tooltiptext">{tooltip}</span>
+            </span>
+        );
+
+        // ── Tab 1: Grundlagen ─────────────────────────────────────────────
+        const GrundlagenTab = () => (
+            <div className="animate-fade-in space-y-6 md:space-y-8 h-full overflow-y-auto pb-8">
+                <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                    <h2 className="text-xl md:text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                        <IconFlask className="w-6 h-6 text-green-600" /> Kettenabbruch-Methode
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                        Die von Frederick Sanger entwickelte Methode dient der <Tooltip text="Sequenzierung" tooltip="Bestimmung der exakten Basenabfolge (Nukleotidsequenz) eines DNA-Moleküls." /> von DNA. 
+                        Sie ahmt die natürliche DNA-Replikation im Reagenzglas nach, stoppt diese jedoch gezielt an bestimmten Basen durch einen genialen chemischen Trick.
+                    </p>
+                    <div className="mt-6 bg-green-50 border border-green-100 rounded-xl p-6 md:p-8 flex justify-center items-center text-4xl gap-6 animate-float">
+                        <span role="img" aria-label="DNA">🧬</span>
+                        <span role="img" aria-label="Stop">🛑</span>
+                        <span role="img" aria-label="Microscope">🔬</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                    <h2 className="text-xl md:text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                        <IconFlask className="w-6 h-6 text-green-600" /> Vorbereitung: Die Ansätze
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-sm md:text-base mb-4">
+                        Die doppelsträngige DNA wird durch Hitze <Tooltip text="denaturiert" tooltip="Trennung der Wasserstoffbrücken bei ca. 90-95°C." />. 
+                        Der resultierende Einzelstrang dient als <Tooltip text="Matrize" tooltip="Die DNA-Folie, die abgelesen (kopiert) wird." /> und kommt mit Polymerase, normalen dNTPs und radioaktiv markierten <Tooltip text="Primern" tooltip="Kurzes RNA/DNA-Stück für den Start der Polymerase." /> in vier Reagenzgläser. 
+                        In jedes Glas kommt <b>zusätzlich nur eine einzige Sorte der abbrechenden ddNTPs</b> in sehr geringer Konzentration.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        {[
+                            { color: 'green', label: 'A', bg: 'bg-green-500', tx: 'text-green-600' },
+                            { color: 'blue', label: 'C', bg: 'bg-blue-500', tx: 'text-blue-600' },
+                            { color: 'yellow', label: 'G', bg: 'bg-yellow-500', tx: 'text-yellow-600' },
+                            { color: 'red', label: 'T', bg: 'bg-red-500', tx: 'text-red-600' }
+                        ].map(t => (
+                            <div key={t.label} className="flex flex-col items-center">
+                                <div className={`font-bold ${t.tx} mb-2 text-sm`}>+ dd{t.label}TP</div>
+                                <div className="w-12 h-24 rounded-b-full rounded-t-sm border-2 border-gray-300 relative overflow-hidden bg-white">
+                                    <div className={`absolute bottom-0 w-full h-1/2 opacity-70 ${t.bg}`}></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-center text-xs text-gray-500 bg-green-50 p-3 rounded-lg mt-4 border border-green-100 italic">
+                        Alle 4 Reagenzgläser enthalten ansonsten dieselben normalen Bausteine (dATP, dCTP, dGTP, dTTP) und die Matrize.
+                    </div>
+                </div>
+            </div>
+        );
+
+        // ── Tab 2: Chemie ─────────────────────────────────────────────────
+        const ChemieTab = () => (
+            <div className="animate-fade-in space-y-6 md:space-y-8 h-full overflow-y-auto pb-8">
+                <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                    <h2 className="text-xl md:text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                        <IconZap className="w-6 h-6 text-green-600" /> Der 3'-Trick (Sangers Geniestreich)
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                        Normale Nukleotide (<Tooltip text="dNTPs" tooltip="Desoxyribonukleosidtriphosphat: Besteht aus Base, Zucker und Phosphat." />) besitzen eine lebenswichtige <b>3'-OH-Gruppe</b> am Desoxyribose-Zucker. Nur an diese kann die <Tooltip text="DNA-Polymerase" tooltip="Das Enzym, das die DNA-Synthese katalysiert." /> das nächste Nukleotid per Esterbindung anknüpfen. 
+                    </p>
+                    <p className="text-gray-700 leading-relaxed text-sm md:text-base mt-2">
+                        Den künstlichen Sonden, den <b>ddNTPs</b> (<Tooltip text="Didesoxy-Nukleotiden" tooltip="Didesoxy = neben dem 2'-C-Atom fehlt auch am 3'-C-Atom der Sauerstoff." />), fehlt dieses Sauerstoffatom (O). Sie enden nur mit einem H-Atom. 
+                        Folge: Die Kette kann nicht weitergebaut werden!
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4 md:gap-6 mt-6">
+                        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-5 md:p-6 text-center shadow-sm relative overflow-hidden">
+                            <h3 className="font-bold text-green-800 mb-2">dNTP (Normal)</h3>
+                            <div className="text-5xl text-green-600 mb-4 animate-float">⬡</div>
+                            <div className="bg-white p-3 rounded-lg border border-green-100">
+                                <div className="text-sm font-medium">3'-Ende: <span className="text-green-600 font-bold text-base">-OH</span></div>
+                                <div className="text-xs text-green-700 mt-2 font-semibold">Bindung des nächsten Nukleotids möglich!</div>
+                            </div>
+                        </div>
+                        <div className="bg-pink-50 border-2 border-pink-300 rounded-xl p-5 md:p-6 text-center shadow-sm relative overflow-hidden">
+                            <h3 className="font-bold text-pink-700 mb-2">ddNTP (Abbrecher)</h3>
+                            <div className="text-5xl text-pink-500 mb-4 animate-float" style={{animationDelay: '0.5s'}}>⬡</div>
+                            <div className="bg-white p-3 rounded-lg border border-pink-100">
+                                <div className="text-sm font-medium">3'-Ende: <span className="text-red-600 font-bold text-base">-H</span></div>
+                                <div className="text-xs text-red-600 mt-2 font-bold uppercase tracking-wide">Synthese-Abbruch!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // ── Tab 3: Simulation ─────────────────────────────────────────────
+        const SimulationTab = () => {
+            const [sequence, setSequence] = useState([]);
+            const targetSeq = ['A','T','G','C','T','A'];
+            const [status, setStatus] = useState("Klicke Synthese, um im ddA-Glas zu starten...");
+            const [isAborted, setIsAborted] = useState(false);
+
+            const handleSynthese = () => {
+                if (isAborted) return;
+                const nextIndex = sequence.length;
+                if (nextIndex >= targetSeq.length) {
+                    setStatus("Matrize vollständig abgelesen. Alle Basen synthetisiert!");
+                    return;
+                }
+
+                const nextBase = targetSeq[nextIndex];
+                let isAbbruch = false;
+                
+                // ddA-Glas Simulation
+                if (nextBase === 'A') {
+                    // Ca 30% Abbruchwahrscheinlichkeit oder am Ende
+                    isAbbruch = Math.random() < 0.3 || nextIndex === targetSeq.length - 1;
+                }
+
+                if (isAbbruch) {
+                    setSequence([...sequence, { base: nextBase, type: 'dd' }]);
+                    setStatus(`Zufall: dd${nextBase}TP eingebaut -> KETTENABBRUCH!`);
+                    setIsAborted(true);
+                } else {
+                    setSequence([...sequence, { base: nextBase, type: 'd' }]);
+                    setStatus(`Normales d${nextBase}TP eingebaut. Synthese geht weiter...`);
+                }
+            };
+
+            const reset = () => {
+                setSequence([]);
+                setIsAborted(false);
+                setStatus("Neuer Versuch im ddA-Glas...");
+            };
+
+            return (
+                <div className="animate-fade-in space-y-6 md:space-y-8 h-full overflow-y-auto pb-8">
+                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                        <h2 className="text-xl md:text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                            <IconLayers className="w-6 h-6 text-green-600" /> Synthese-Simulator
+                        </h2>
+                        <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                            Da im z.B. <b>"Adenin-Glas" (ddA)</b> hauptsächlich normale dATPs und nur wenige ddATPs schwimmen, ist es purer Zufall, ob die Kette an einem A abbricht.
+                        </p>
+                        
+                        <div className="mt-6 bg-slate-800 rounded-xl p-6 shadow-inner text-white font-mono flex flex-col items-center overflow-x-auto border-4 border-slate-700">
+                            {/* Matrize 3' -> 5' */}
+                            <div className="flex w-full justify-center items-center mb-8">
+                                <span className="text-xs text-gray-400 mr-4">Matrize 3'</span>
+                                <div className="flex gap-2 text-xl md:text-2xl font-bold">
+                                    {['T','A','C','G','A','T'].map((m, i) => (
+                                        <div key={i} className="w-8 md:w-10 text-center text-slate-300 border-b-2 border-slate-500 pb-1">{m}</div>
+                                    ))}
+                                </div>
+                                <span className="text-xs text-gray-400 ml-4">5'</span>
+                            </div>
+
+                            {/* Neusynthese 5' -> 3' */}
+                            <div className="flex w-full justify-center items-center min-h-[50px]">
+                                <span className="text-xs text-green-300 mr-4 font-bold tracking-widest">Neu 5'</span>
+                                <div className="flex gap-2">
+                                    {sequence.map((n, i) => (
+                                        <div key={i} className={`w-8 md:w-10 h-10 md:h-12 flex items-center justify-center font-bold text-xl md:text-2xl rounded-md border-2 animate-fade-in bg-white
+                                            ${n.type === 'dd' ? 'border-pink-500 text-pink-600 shadow-[0_0_15px_rgba(236,72,153,0.8)] z-10 scale-110' 
+                                            : 'border-slate-400 ' + (n.base === 'A' ? 'text-green-600' : n.base === 'T' ? 'text-red-500' : n.base === 'C' ? 'text-blue-500' : 'text-yellow-600')}
+                                        `}>
+                                            {n.base}
+                                        </div>
+                                    ))}
+                                    {/* Empty placeholders */}
+                                    {Array.from({length: targetSeq.length - sequence.length}).map((_, i) => (
+                                        <div key={`e-${i}`} className="w-8 md:w-10 h-10 md:h-12 rounded-md border-2 border-slate-600 border-dashed bg-slate-800/50"></div>
+                                    ))}
+                                </div>
+                                <span className="text-xs text-green-300 ml-4 font-bold tracking-widest">3'</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <div className={`text-sm md:text-base font-bold flex-1 text-center md:text-left ${isAborted ? 'text-pink-600' : 'text-green-700'}`}>
+                                {status}
+                            </div>
+                            <div className="flex gap-3 w-full md:w-auto">
+                                <button onClick={reset} className="flex-1 md:flex-none px-5 py-2.5 rounded-lg border-2 border-gray-200 text-gray-700 hover:bg-gray-100 font-bold transition text-sm">Zurücksetzen</button>
+                                <button onClick={handleSynthese} disabled={isAborted || sequence.length >= targetSeq.length} 
+                                    className="flex-1 md:flex-none px-5 py-2.5 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 disabled:opacity-50 transition shadow-md shadow-green-200 text-sm whitespace-nowrap">
+                                    Synthese (+1 Base)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ── Tab 4: Auswertung ─────────────────────────────────────────────
+        const AuswertungTab = () => {
+            const [scanned, setScanned] = useState(false);
+            const scan = () => setScanned(true);
+
+            return (
+                <div className="animate-fade-in space-y-6 md:space-y-8 h-full overflow-y-auto pb-8">
+                    {/* Gel-Auswertung */}
+                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                        <h2 className="text-xl md:text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                            <IconLayers className="w-6 h-6 text-green-600" /> Auswertung im Gel
+                        </h2>
+                        <p className="text-gray-700 leading-relaxed text-sm md:text-base mb-6">
+                            Die DNA-Fragmente wandern während der Gelelektrophorese im Gel in Richtung der <Tooltip text="Anode (+)" tooltip="DNA ist wegen der Phosphatgruppen negativ geladen."/>. 
+                            Die Poren im Gel wirken als Sieb: <b>Kurze Fragmente wandern deutlich schneller</b> als lange und sind daher <b>am Ende ganz unten</b> im Gel zu finden!
+                        </p>
+                        
+                        <div className="grid md:grid-cols-2 gap-6 bg-green-50/50 p-4 rounded-xl border border-green-100 justify-items-center">
+                            {/* Fake Gel */}
+                            <div className="bg-white border-2 border-gray-200 rounded-lg p-5 flex flex-col items-center shadow-inner w-full max-w-[220px]">
+                                <div className="w-full space-y-2 relative h-full">
+                                    <div className="text-xs text-center text-gray-500 font-bold border-b-2 border-gray-300 pb-2 mb-3 tracking-widest">- KATHODE (Start) -</div>
+                                    
+                                    <div className="flex justify-between w-full font-bold text-sm text-gray-700 mb-2 px-1">
+                                        <span className="w-6 flex justify-center text-green-600">A</span>
+                                        <span className="w-6 flex justify-center text-red-500">T</span>
+                                        <span className="w-6 flex justify-center text-yellow-500">G</span>
+                                        <span className="w-6 flex justify-center text-blue-500">C</span>
+                                    </div>
+
+                                    <div className="h-[210px] w-full border-x-2 border-b-2 border-gray-300 bg-sky-50/40 relative rounded-b">
+                                        <div className="absolute top-[10%] left-[32%] w-6 h-2 bg-red-400 rounded-sm opacity-80 shadow-[0_0_8px_rgba(248,113,113,0.5)]"></div> {/* T */}
+                                        <div className="absolute top-[35%] left-[6%] w-6 h-2 bg-green-400 rounded-sm opacity-80 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div> {/* A */}
+                                        <div className="absolute top-[55%] left-[58%] w-6 h-2 bg-yellow-400 rounded-sm opacity-80 shadow-[0_0_8px_rgba(250,204,21,0.5)]"></div> {/* G */}
+                                        <div className="absolute top-[75%] left-[84%] w-6 h-2 bg-blue-400 rounded-sm opacity-80 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div> {/* C */}
+                                        <div className="absolute top-[90%] left-[6%] w-6 h-2 bg-green-400 rounded-sm opacity-80 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div> {/* A */}
+                                    </div>
+                                    <div className="text-xs text-center text-pink-600 font-bold border-t-2 border-gray-300 pt-2 mt-3 tracking-widest">+ ANODE +</div>
+                                </div>
+                            </div>
+
+                            {/* Erklärung */}
+                            <div className="flex flex-col justify-center space-y-4 w-full">
+                                <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm border border-blue-100 relative">
+                                    <div className="absolute -top-3 left-4 bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Schritt 1</div>
+                                    <strong className="text-blue-900 block mt-1 mb-2">Ablesen (von Unten nach Oben)</strong>
+                                    <span className="text-sm text-gray-700">Da die kürzesten Stücke unten sind, liest man <b>5' → 3'</b> des <i>neu synthetisierten Strangs</i> ab:</span> 
+                                    <div className="font-mono font-bold text-lg mt-3 bg-blue-50 text-blue-800 py-2 rounded text-center tracking-[0.2em]">5'- A C G A T -3'</div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm border border-green-200 relative">
+                                    <div className="absolute -top-3 left-4 bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Schritt 2</div>
+                                    <strong className="text-green-900 block mt-1 mb-2">Ziel-Matrize ermitteln</strong>
+                                    <span className="text-sm text-gray-700">Gesucht war der Originalstrang (Matrize). Dieser ist <Tooltip text="komplementär und antiparallel" tooltip="Aus A wird T, aus 5' wird 3'." />:</span>
+                                    <div className="font-mono font-bold text-lg mt-3 bg-green-50 text-green-800 py-2 rounded text-center tracking-[0.2em]">3'- T G C T A -5'</div>
+                                </div>
+                                <div className="text-red-600 font-bold text-xs bg-red-50 p-3 rounded-lg border border-red-100 flex gap-2 items-start">
+                                    <span className="text-lg leading-none">⚠️</span> Vorsicht in Klausuren! Lies immer erst genau, ob nach der Matrize oder nach dem komplementären Sequenzierprodukt gefragt ist.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Automatisierung */}
+                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 mt-6">
+                        <h2 className="text-xl md:text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                            <IconMonitor className="w-6 h-6 text-green-600" /> Moderne Automatisierung
+                        </h2>
+                        <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                            In heutigen Kapillarsequenzierern braucht man keine 4 Reagenzgläser mehr. Man koppelt die ddNTPs einfach an <Tooltip text="fluoreszierende Farbstoffe" tooltip="Z.B. A=grün, T=rot" /> und führt die Synthese in <b>einem</b> einzigen Röhrchen durch! 
+                            Die Gelelektrophorese findet in einer winzigen Kapillare statt. Unten liest ein Laser die durchlaufenden Basen ab und erstellt automatisch das Chromatogramm.
+                        </p>
+
+                        <div className="mt-6 bg-slate-900 rounded-xl p-4 md:p-6 overflow-hidden relative flex flex-col items-center justify-end border-4 border-slate-700 shadow-inner min-h-[160px]">
+                            {scanned ? (
+                                <div className="flex items-end gap-1 px-4 relative justify-center w-full h-[100px]">
+                                    {/* Laser Beam effect */}
+                                    <div className="laser-scan absolute top-0 bottom-0 w-1.5 bg-red-400 shadow-[0_0_15px_#ef4444] z-10 rounded-full"></div>
+
+                                    {['A','T','C','G','T','T','A','G','C','A'].map((base, idx) => {
+                                        const targetH = 40 + Math.random() * 55; // random h between 40px and 95px
+                                        const colorCls = base==='A' ? 'bg-green-500' : base==='T' ? 'bg-red-500' : base==='C' ? 'bg-blue-500' : 'bg-yellow-400';
+                                        return (
+                                            <div key={idx} className="flex flex-col items-center justify-end h-full">
+                                                <div className="relative w-4 md:w-6 h-full flex flex-col justify-end mx-0.5">
+                                                    <div className={`chrom-peak ${colorCls}`} style={{'--target-height': `${targetH}px`, animationDelay: `${idx * 0.15}s`}}></div>
+                                                </div>
+                                                <span className="text-xs md:text-sm font-bold font-mono text-slate-300 mt-2">{base}</span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-slate-500 italic text-sm py-8 font-medium">Warte auf Start durch den Anwender...</div>
+                            )}
+                        </div>
+                        
+                        <div className="mt-5 text-center">
+                            <button onClick={scan} disabled={scanned} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-3 px-8 rounded-xl transition shadow-md text-sm md:text-base">
+                                {scanned ? "Scan läuft..." : "Laser-Scan (Chromatogramm) starten"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+        };
+
+        // ── Tab 5: Quiz ─────────────────────────────────────────────
+        const QuizTab = () => {
+            const [qIndex, setQIndex] = useState(0);
+            const [score, setScore] = useState(0);
+            const [showResult, setShowResult] = useState(false);
+            const [feedback, setFeedback] = useState(null);
+
+            const questions = [
+                { q: "Worin liegt chemisch der primäre Grund für den Kettenabbruch bei Sangers ddNTPs?", options: ["Dem Nukleotid fehlt die Phosphatgruppe am 5'-Ende.", "Dem Desoxyribose-Zucker fehlt die OH-Gruppe am 3'-C-Atom.", "Die Basen der ddNTPs bilden keine Wasserstoffbrücken aus."], correct: 1 },
+                { q: "Warum wandert die DNA in der Gelelektrophorese in Richtung Anode (Pluspol)?", options: ["Aufgrund der negativ geladenen Phosphatgruppen im DNA-Rückgrat.", "Weil die Stickstoffbasen stark negativ polarisiert sind.", "Die Wanderung erfolgt passiv durch den osmotischen Fluss."], correct: 0 },
+                { q: "Ein Gel der Sangers-Methode zeigt von ganz Unten nach Oben gelesen: 5'- A T C G -3'. Wie lautet der Originalstrang (Matrize)?", options: ["5'- T A G C -3'", "3'- A T C G -5'", "3'- T A G C -5'"], correct: 2 },
+                { q: "Warum funktioniert die Sanger-Sequenzierung nur, wenn man ddNTPs in sehr geringer Konzentration zugibt?", options: ["Wären es zu viele, würden alle Ketten sofort abbrechen und man hätte nur extrem kurze Stücke.", "ddNTPs sind sehr giftig für die hitzestabile Taq-Polymerase.", "Es würde zu unkontrollierten Mutationen am 5'-Ende führen."], correct: 0 }
+            ];
+
+            const handleAnswer = (optIndex) => {
+                if (feedback) return;
+                const isCorrect = optIndex === questions[qIndex].correct;
+                if (isCorrect) setScore(s => s + 1);
+                setFeedback(isCorrect ? 'Richtig!' : `Falsch. Richtig: "${questions[qIndex].options[questions[qIndex].correct]}"`);
+                setTimeout(() => {
+                    setFeedback(null);
+                    if (qIndex < questions.length - 1) setQIndex(q => q + 1);
+                    else { setShowResult(true); }
+                }, 2500);
+            };
+
+            const reset = () => {
+                setQIndex(0); setScore(0); setShowResult(false); setFeedback(null);
+            };
+
+            if (showResult) {
+                const pct = Math.round((score / questions.length) * 100);
+                return (
+                    <div className="flex flex-col items-center justify-center p-6 md:p-10 animate-fade-in h-full bg-white rounded-2xl border border-green-100 shadow-sm">
+                        <div className="inline-block p-5 rounded-full bg-green-100 text-green-600 mb-6 shadow-sm">
+                            <IconCheck className="w-16 h-16" />
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-800 mb-2">Lernkontrolle beendet</h2>
+                        <p className="text-lg md:text-xl text-gray-700 mb-6">Du hast <strong>{score}</strong> von <strong>{questions.length}</strong> Fragen richtig gelöst.</p>
+                        
+                        <div className="w-full bg-gray-100 rounded-full h-4 max-w-sm mx-auto mb-6 shadow-inner overflow-hidden">
+                            <div className={`h-full transition-all ${pct === 100 ? 'bg-green-500' : pct > 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        
+                        <p className="font-bold text-gray-800 text-lg mb-8 bg-gray-50 px-6 py-3 rounded-xl border">
+                            {pct === 100 ? 'Exzellent! Du hast die Methode komplett verstanden!' : 'Gute Leistung! Ein kleiner Blick in die Lektionen schadet jedoch nie.'}
+                        </p>
+                        
+                        <button onClick={reset} className="bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-md hover:bg-green-700 transition">
+                            Quiz erneut starten
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="animate-fade-in space-y-6 md:space-y-8 max-w-2xl mx-auto py-4">
+                    <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-green-100">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-green-800 flex items-center gap-2">
+                                <IconBrain className="w-6 h-6" /> Abitur-Wissen prüfen
+                            </h2>
+                            <span className="text-xs font-bold bg-green-100 text-green-800 px-3 py-1 rounded-full uppercase">Frage {qIndex + 1} / {questions.length}</span>
+                        </div>
+                        
+                        <div className="w-full bg-gray-100 rounded-full h-2 mb-8 overflow-hidden shadow-inner">
+                            <div className="bg-green-600 h-full transition-all duration-300" style={{ width: `${(qIndex / questions.length) * 100}%` }} />
+                        </div>
+                        
+                        <h3 className="text-lg md:text-xl font-bold text-gray-800 min-h-[70px] leading-snug">{questions[qIndex].q}</h3>
+                        
+                        <div className="space-y-3 mt-4">
+                            {questions[qIndex].options.map((opt, idx) => (
+                                <button key={idx} onClick={() => handleAnswer(idx)} disabled={feedback !== null}
+                                    className={`w-full p-4 rounded-xl border-2 text-left font-medium transition duration-200 text-sm md:text-base ${
+                                        feedback && idx === questions[qIndex].correct ? 'bg-green-50 border-green-500 text-green-800 shadow-sm' :
+                                        feedback && idx !== questions[qIndex].correct ? 'opacity-40 border-gray-100 bg-gray-50 cursor-not-allowed' :
+                                        'bg-white border-gray-200 hover:border-green-400 hover:bg-green-50 hover:shadow-sm text-gray-700'
+                                    }`}>
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {feedback && (
+                            <div className={`mt-6 text-center text-sm md:text-base font-bold p-4 rounded-xl animate-fade-in shadow-sm border ${feedback.startsWith('Richtig') ? 'text-green-800 bg-green-50 border-green-200' : 'text-red-800 bg-red-50 border-red-200'}`}>
+                                {feedback}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // ── Tab: Interaktive Simulation ────────────────────────────────────────────
+        const DD_COLORS = {
+            A: { hex: '#16a34a', bg: 'bg-green-600',  text: 'text-green-700',  border: 'border-green-500',  light: 'bg-green-50',  label: 'ddATP' },
+            C: { hex: '#2563eb', bg: 'bg-blue-600',   text: 'text-blue-700',   border: 'border-blue-500',   light: 'bg-blue-50',   label: 'ddCTP' },
+            T: { hex: '#dc2626', bg: 'bg-red-600',    text: 'text-red-700',    border: 'border-red-500',    light: 'bg-red-50',    label: 'ddTTP' },
+            G: { hex: '#d97706', bg: 'bg-amber-500',  text: 'text-amber-700',  border: 'border-amber-500',  light: 'bg-amber-50',  label: 'ddGTP' },
+        };
+
+        function complement(base) {
+            return { A:'T', T:'A', C:'G', G:'C' }[base] || base;
+        }
+
+        function generateFragments(template) {
+            // Build complementary strand (template read 5'->3', complement synthesised 5'->3')
+            const comp = template.split('').map(complement);
+            const result = { A: [], C: [], T: [], G: [] };
+            comp.forEach((base, i) => {
+                // fragment is complement[0..i]
+                result[base].push(comp.slice(0, i + 1).join(''));
+            });
+            return result;
+        }
+
+        // Y-position for a band: shorter fragment → lower (larger y value in SVG)
+        function getFragmentY(length, maxLength, gelHeight, topPad, bottomPad) {
+            // length 1 → near bottom (gelHeight - bottomPad), maxLength → near top (topPad)
+            const usable = gelHeight - topPad - bottomPad;
+            return topPad + usable * (1 - (length - 1) / Math.max(maxLength - 1, 1));
+        }
+
+        const SangerSimulation = () => {
+            const EXAMPLE = 'ATCGATCGGCTA';
+            const [templateDNA, setTemplateDNA] = useState('');
+            const [inputError, setInputError] = useState('');
+            const [step, setStep] = useState(0);
+            // 0 = input, 1 = fragments visible, 2 = gel animated, 3 = read sequence
+            const [fragments, setFragments] = useState({ A:[], C:[], T:[], G:[] });
+            const [visibleFragments, setVisibleFragments] = useState({ A:0, C:0, T:0, G:0 });
+            const [animating, setAnimating] = useState(false);
+            const [gelBandsVisible, setGelBandsVisible] = useState(false);
+            const [highlightedBand, setHighlightedBand] = useState(null); // { ddType, fragIndex }
+            const [revealedBases, setRevealedBases] = useState(0);
+            const [readingDone, setReadingDone] = useState(false);
+            const timerRef = useRef([]);
+
+            const clearTimers = () => { timerRef.current.forEach(clearTimeout); timerRef.current = []; };
+
+            const validate = (val) => /^[ATCGatcg]*$/.test(val) && val.length <= 20;
+
+            const handleInput = (e) => {
+                const val = e.target.value.toUpperCase();
+                if (!validate(val) && val !== '') {
+                    setInputError('Nur A, T, C, G erlaubt – max. 20 Zeichen.');
+                } else {
+                    setInputError('');
+                }
+                if (/^[ATCGatcg]*$/.test(val) && val.length <= 20) setTemplateDNA(val);
+            };
+
+            const loadExample = () => { setTemplateDNA(EXAMPLE); setInputError(''); };
+
+            const startSimulation = useCallback(() => {
+                if (templateDNA.length < 2) { setInputError('Bitte mindestens 2 Nukleotide eingeben.'); return; }
+                clearTimers();
+                const frags = generateFragments(templateDNA);
+                setFragments(frags);
+                setVisibleFragments({ A:0, C:0, T:0, G:0 });
+                setGelBandsVisible(false);
+                setHighlightedBand(null);
+                setRevealedBases(0);
+                setReadingDone(false);
+                setStep(1);
+                setAnimating(true);
+
+                // Reveal fragments per ddNTP type one by one
+                const types = ['A','C','T','G'];
+                let delay = 100;
+                types.forEach(type => {
+                    frags[type].forEach((_, idx) => {
+                        const t = setTimeout(() => {
+                            setVisibleFragments(prev => ({ ...prev, [type]: idx + 1 }));
+                        }, delay);
+                        timerRef.current.push(t);
+                        delay += 220;
+                    });
+                });
+                const doneT = setTimeout(() => setAnimating(false), delay + 200);
+                timerRef.current.push(doneT);
+            }, [templateDNA]);
+
+            const startGel = useCallback(() => {
+                clearTimers();
+                setGelBandsVisible(false);
+                setStep(2);
+                setAnimating(true);
+                const t = setTimeout(() => { setGelBandsVisible(true); setAnimating(false); }, 300);
+                timerRef.current.push(t);
+            }, []);
+
+            const readSequence = useCallback(() => {
+                if (step < 2) return;
+                clearTimers();
+                setHighlightedBand(null);
+                setRevealedBases(0);
+                setReadingDone(false);
+                setStep(3);
+
+                // Build sorted band list (by fragment length ascending = bottom to top)
+                const sortedBands = [];
+                ['A','C','T','G'].forEach(type => {
+                    fragments[type].forEach((frag, fi) => {
+                        sortedBands.push({ type, fi, length: frag.length, base: type });
+                    });
+                });
+                sortedBands.sort((a,b) => a.length - b.length);
+
+                let delay = 300;
+                sortedBands.forEach((band, i) => {
+                    const t1 = setTimeout(() => setHighlightedBand({ type: band.type, fi: band.fi }), delay);
+                    const t2 = setTimeout(() => setRevealedBases(i + 1), delay + 400);
+                    timerRef.current.push(t1, t2);
+                    delay += 700;
+                });
+                const tDone = setTimeout(() => { setHighlightedBand(null); setReadingDone(true); }, delay + 300);
+                timerRef.current.push(tDone);
+            }, [step, fragments]);
+
+            const resetAll = () => {
+                clearTimers();
+                setStep(0);
+                setTemplateDNA('');
+                setFragments({ A:[], C:[], T:[], G:[] });
+                setVisibleFragments({ A:0, C:0, T:0, G:0 });
+                setGelBandsVisible(false);
+                setHighlightedBand(null);
+                setRevealedBases(0);
+                setReadingDone(false);
+                setAnimating(false);
+                setInputError('');
+            };
+
+            useEffect(() => () => clearTimers(), []);
+
+            // Derived: complement strand (5'->3')
+            const compStrand = templateDNA.split('').map(complement).join('');
+
+            // All bands sorted by length for reading
+            const allBandsSorted = [];
+            ['A','C','T','G'].forEach(type => {
+                fragments[type].forEach((frag, fi) => {
+                    allBandsSorted.push({ type, fi, length: frag.length, base: type });
+                });
+            });
+            allBandsSorted.sort((a,b) => a.length - b.length);
+            const readSequenceStr = allBandsSorted.slice(0, revealedBases).map(b => b.base).join('');
+
+            // SVG Gel dimensions
+            const GEL_W = 320;
+            const GEL_H = 220;
+            const TOP_PAD = 20;
+            const BOT_PAD = 20;
+            const LANE_POSITIONS = { A: 40, C: 110, T: 180, G: 250 };
+            const maxLen = templateDNA.length;
+
+            return (
+                <div className="animate-fade-in space-y-5 pb-8 h-full overflow-y-auto">
+
+                    {/* ── Teil A: Eingabe ── */}
+                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100">
+                        <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                            <span className="text-2xl">🧬</span> Teil A – DNA-Template eingeben
+                        </h2>
+                        <p className="text-gray-600 text-sm mb-4">Gib eine Template-DNA (5'→3') ein oder nutze das Beispiel. Nur A, T, C, G, max. 20 Basen.</p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 bg-gray-50 border-2 border-green-200 rounded-xl px-3 py-2 focus-within:border-green-500 transition">
+                                    <span className="text-xs font-bold text-gray-400 shrink-0">5'</span>
+                                    <input
+                                        type="text"
+                                        value={templateDNA}
+                                        onChange={handleInput}
+                                        placeholder="z.B. ATCGATCGGCTA"
+                                        maxLength={20}
+                                        aria-label="Template-DNA-Sequenz eingeben"
+                                        className="flex-1 bg-transparent font-mono text-base font-bold text-green-800 outline-none tracking-widest uppercase placeholder:normal-case placeholder:font-normal placeholder:text-gray-300"
+                                    />
+                                    <span className="text-xs font-bold text-gray-400 shrink-0">3'</span>
+                                    <span className="text-xs text-gray-400 shrink-0">{templateDNA.length}/20</span>
+                                </div>
+                                {inputError && <p className="text-red-600 text-xs mt-1 font-medium">{inputError}</p>}
+                            </div>
+                            <button onClick={loadExample} className="shrink-0 px-4 py-2 rounded-xl border-2 border-green-300 text-green-700 font-bold text-sm hover:bg-green-50 transition">
+                                Beispiel laden
+                            </button>
+                        </div>
+
+                        {templateDNA.length >= 2 && (
+                            <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3 flex flex-wrap items-center gap-3 text-sm animate-fade-in">
+                                <div>
+                                    <span className="text-xs text-gray-500 font-semibold mr-1">Template 5'→3':</span>
+                                    <span className="font-mono font-bold text-green-800 tracking-widest">{templateDNA}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 font-semibold mr-1">Komplement 5'→3':</span>
+                                    <span className="font-mono font-bold text-blue-700 tracking-widest">{compStrand}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-4 flex gap-3">
+                            <button
+                                onClick={startSimulation}
+                                disabled={templateDNA.length < 2 || animating}
+                                className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 disabled:opacity-50 transition shadow-md shadow-green-200"
+                            >
+                                {animating && step === 1 ? 'Fragmente werden berechnet…' : 'Simulation starten'}
+                            </button>
+                            {step > 0 && (
+                                <button onClick={resetAll} className="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition">
+                                    Zurücksetzen
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── Teil B: Fragmente ── */}
+                    {step >= 1 && (
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 animate-fade-in">
+                            <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <span className="text-2xl">⚗️</span> Teil B – Kettenabbruch-Reaktion
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Die DNA-Polymerase synthetisiert den Komplementärstrang. Wenn ein ddNTP eingebaut wird, bricht die Kette ab – es entstehen Fragmente verschiedener Länge.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                                {['A','C','T','G'].map(type => {
+                                    const col = DD_COLORS[type];
+                                    const frags = fragments[type];
+                                    const visible = visibleFragments[type];
+                                    return (
+                                        <div key={type} className={`rounded-xl border-2 ${col.border} ${col.light} p-4`}>
+                                            <div className={`font-bold text-sm mb-3 ${col.text} flex items-center gap-1.5`}>
+                                                <span className={`w-5 h-5 rounded-full ${col.bg} inline-block`}></span>
+                                                {col.label}-Ansatz
+                                            </div>
+                                            <div className="space-y-2 min-h-[60px]">
+                                                {frags.slice(0, visible).map((frag, fi) => (
+                                                    <div
+                                                        key={fi}
+                                                        className="fragment-appear font-mono text-xs bg-white rounded-lg px-2 py-1.5 border border-gray-100 shadow-sm flex items-center gap-1 overflow-x-auto"
+                                                        style={{ animationDelay: `${fi * 0.05}s` }}
+                                                    >
+                                                        {frag.split('').map((base, bi) => (
+                                                            <span
+                                                                key={bi}
+                                                                className={`font-bold text-sm ${bi === frag.length - 1 ? `${col.text} underline` : 'text-gray-600'}`}
+                                                                title={bi === frag.length - 1 ? `dd${type}TP – Abbruch` : `d${base}TP`}
+                                                            >{base}</span>
+                                                        ))}
+                                                        <span className="ml-auto text-gray-300 text-[10px] shrink-0">{frag.length}bp</span>
+                                                    </div>
+                                                ))}
+                                                {visible < frags.length && (
+                                                    <div className="text-center text-gray-300 text-xs animate-pulse">…</div>
+                                                )}
+                                                {frags.length === 0 && visible === 0 && step >= 1 && (
+                                                    <div className="text-gray-400 text-xs italic">Kein Abbruch an {type}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {!animating && step === 1 && (
+                                <div className="mt-5 text-center animate-fade-in">
+                                    <button onClick={startGel} className="px-8 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition shadow-md shadow-green-200">
+                                        Weiter zur Gel-Elektrophorese →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Teil C: Gel ── */}
+                    {step >= 2 && (
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 animate-fade-in">
+                            <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <span className="text-2xl">🔋</span> Teil C – Gel-Elektrophorese
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Die Fragmente wandern im Gel – kurze Fragmente schneller (weiter unten), lange langsamer (weiter oben). Jede Spur enthält Fragmente eines ddNTP-Ansatzes.
+                            </p>
+
+                            <div className="overflow-x-auto flex justify-center">
+                                <div className="bg-slate-900 rounded-2xl p-4 border-4 border-slate-700 inline-block shadow-xl">
+                                    {/* Lane labels */}
+                                    <div className="flex justify-between px-2 mb-1" style={{width: GEL_W}}>
+                                        {['A','C','T','G'].map(type => (
+                                            <div key={type} className="w-14 text-center">
+                                                <span className={`text-xs font-bold ${DD_COLORS[type].text.replace('text-','text-').replace('700','400')}`}
+                                                    style={{color: DD_COLORS[type].hex}}>
+                                                    dd{type}TP
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="text-center text-[10px] text-slate-500 mb-1 tracking-widest font-bold">― KATHODE (Start) ―</div>
+
+                                    <svg
+                                        width={GEL_W}
+                                        height={GEL_H}
+                                        className="rounded-lg overflow-visible"
+                                        style={{background: 'rgba(15,23,42,0.7)'}}
+                                    >
+                                        {/* Lane separators */}
+                                        {[70,140,210].map(x => (
+                                            <line key={x} x1={x} y1={0} x2={x} y2={GEL_H} stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+                                        ))}
+
+                                        {/* Bands */}
+                                        {gelBandsVisible && ['A','C','T','G'].map(type =>
+                                            fragments[type].map((frag, fi) => {
+                                                const x = LANE_POSITIONS[type];
+                                                const y = getFragmentY(frag.length, maxLen, GEL_H, TOP_PAD, BOT_PAD);
+                                                const isHl = highlightedBand && highlightedBand.type === type && highlightedBand.fi === fi;
+                                                const delay = (frag.length * 0.08 + fi * 0.05).toFixed(2);
+                                                return (
+                                                    <g key={`${type}-${fi}`}>
+                                                        <rect
+                                                            x={x - 22}
+                                                            y={y - 4}
+                                                            width={44}
+                                                            height={8}
+                                                            rx={3}
+                                                            fill={DD_COLORS[type].hex}
+                                                            opacity={isHl ? 1 : 0.75}
+                                                            className="band-slide"
+                                                            style={{ animationDelay: `${delay}s`, filter: isHl ? `drop-shadow(0 0 6px ${DD_COLORS[type].hex})` : 'none' }}
+                                                        />
+                                                        {isHl && (
+                                                            <rect
+                                                                x={x - 24}
+                                                                y={y - 6}
+                                                                width={48}
+                                                                height={12}
+                                                                rx={4}
+                                                                fill="none"
+                                                                stroke="white"
+                                                                strokeWidth={2}
+                                                                opacity={0.9}
+                                                            />
+                                                        )}
+                                                        <text
+                                                            x={x}
+                                                            y={y - 7}
+                                                            textAnchor="middle"
+                                                            className="band-slide"
+                                                            style={{ animationDelay: `${delay}s`, fontSize: '8px', fill: '#94a3b8', fontFamily: 'monospace' }}
+                                                        >{frag.length}bp</text>
+                                                    </g>
+                                                );
+                                            })
+                                        )}
+                                    </svg>
+
+                                    <div className="text-center text-[10px] text-pink-500 mt-1 tracking-widest font-bold">― ANODE (+) ―</div>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3 text-xs text-green-800 font-medium">
+                                <strong>Leserichtung:</strong> Von unten nach oben liest man den Komplementärstrang 5'→3' ab – jede Bande entspricht der letzten eingebauten Base (dem ddNTP der jeweiligen Spur).
+                            </div>
+
+                            {step === 2 && !animating && (
+                                <div className="mt-5 text-center animate-fade-in">
+                                    <button onClick={readSequence} className="px-8 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition shadow-md shadow-green-200">
+                                        Sequenz ablesen →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── Teil D: Sequenz ablesen ── */}
+                    {step >= 3 && (
+                        <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-green-100 animate-fade-in">
+                            <h2 className="text-xl font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <span className="text-2xl">📖</span> Teil D – Sequenz ablesen
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Die Banden werden von unten (kurze Fragmente = früh abgebrochen = erste Basen) nach oben abgelesen. Jede Bande verrät die nächste Base des Komplementärstrangs.
+                            </p>
+
+                            {/* Reading display */}
+                            <div className="bg-slate-900 rounded-xl p-4 flex flex-col items-center gap-3 border-2 border-slate-700">
+                                <div className="text-xs text-slate-400 font-semibold tracking-widest">KOMPLEMENTÄRSTRANG 5' → 3'</div>
+                                <div className="flex flex-wrap gap-2 justify-center min-h-[52px]">
+                                    {readSequenceStr.split('').map((base, i) => {
+                                        const col = DD_COLORS[base];
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-xl text-white base-reveal border-2`}
+                                                style={{ backgroundColor: col.hex, borderColor: col.hex, animationDelay: `${i * 0.05}s` }}
+                                            >
+                                                {base}
+                                            </div>
+                                        );
+                                    })}
+                                    {!readingDone && (
+                                        <div className="w-10 h-10 rounded-lg border-2 border-dashed border-slate-600 animate-pulse"></div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {readingDone && (
+                                <div className="mt-4 space-y-3 animate-fade-in">
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-semibold mb-1">Abgelesener Komplementärstrang (5'→3')</div>
+                                            <div className="font-mono font-bold text-green-800 tracking-widest text-base">{readSequenceStr}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 font-semibold mb-1">Original-Template (3'→5' antiparallel)</div>
+                                            <div className="font-mono font-bold text-blue-800 tracking-widest text-base">
+                                                {readSequenceStr.split('').map(complement).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className={`rounded-xl p-3 text-sm font-bold flex items-center gap-2 ${readSequenceStr === compStrand ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+                                        {readSequenceStr === compStrand ? (
+                                            <><span>✅</span> Korrekt! Der abgelesene Komplementärstrang stimmt mit dem berechneten überein.</>
+                                        ) : (
+                                            <><span>⏳</span> Sequenz wird noch aufgedeckt…</>
+                                        )}
+                                    </div>
+                                    <div className="text-center mt-2">
+                                        <button onClick={resetAll} className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition shadow-md shadow-green-200">
+                                            Neue Simulation starten
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ── Main App Shell (Tabbed) ──────────────────────────────────────────────────
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('grundlagen');
+
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'grundlagen': return <GrundlagenTab />;
+                    case 'chemie': return <ChemieTab />;
+                    case 'simulation': return <SimulationTab />;
+                    case 'interaktiv': return <SangerSimulation />;
+                    case 'auswertung': return <AuswertungTab />;
+                    case 'quiz': return <QuizTab />;
+                    default: return <GrundlagenTab />;
+                }
+            };
+
+            return (
+                <div className="container mx-auto max-w-5xl p-2 md:p-4 h-screen flex flex-col">
+                    <header className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-2xl shadow-lg p-3 md:p-4 mb-4 flex flex-col md:flex-row justify-between items-center flex-shrink-0 z-50">
+                        <div className="flex items-center space-x-3 mb-3 md:mb-0">
+                            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm shadow-inner">
+                                <IconDna className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg md:text-xl font-bold tracking-tight">Sanger-Sequenzierung</h1>
+                                <p className="text-xs text-green-100 opacity-90 hidden sm:block">Abiturrelevantes Modul (Bio 12)</p>
+                            </div>
+                        </div>
+
+                        <nav className="flex bg-black/15 p-1 rounded-xl overflow-x-auto max-w-full no-scrollbar w-full md:w-auto">
+                            {[
+                                { id: 'grundlagen', label: 'Grundlagen', icon: IconFlask },
+                                { id: 'chemie', label: 'Chemie', icon: IconZap },
+                                { id: 'simulation', label: 'Simulation', icon: IconLayers },
+                                { id: 'interaktiv', label: '🔬 Simulation', icon: IconDna },
+                                { id: 'auswertung', label: 'Auswertung', icon: IconMonitor },
+                                { id: 'quiz', label: 'Quiz', icon: IconBrain },
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all whitespace-nowrap
+                                        ${activeTab === tab.id 
+                                            ? 'bg-white text-green-700 shadow-md transform scale-105 z-10' 
+                                            : 'text-green-50 hover:bg-white/10 hover:text-white'
+                                        }`}
+                                >
+                                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-green-600' : 'opacity-70'}`} />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </nav>
+                    </header>
+
+                    <main className="flex-grow bg-transparent overflow-hidden rounded-2xl relative min-h-[400px]">
+                        {renderContent()}
+                    </main>
+                </div>
+            );
+        };
+
+        
+    
+export default App;

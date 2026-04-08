@@ -1,0 +1,113 @@
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 2px dotted #4ade80;
+            cursor: help;
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: max-content;
+            max-width: 250px;
+            background-color: #14532d;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            position: absolute;
+            z-index: 50;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #14532d transparent transparent transparent;
+        }
+
+        @keyframes fillPeak {
+            0% { height: 0px; }
+            100% { height: var(--target-height); }
+        }
+        .chrom-peak {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            animation: fillPeak 0.5s ease-out forwards;
+            height: 0px; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+        
+        /* Better Scrollbar for horizontal tabs */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        @keyframes slideRight {
+            0% { left: 0%; opacity: 1; }
+            90% { left: 100%; opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+        .laser-scan {
+            animation: slideRight 2s linear forwards;
+        }
+
+        @keyframes fragmentAppear {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fragment-appear {
+            animation: fragmentAppear 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes bandSlide {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .band-slide {
+            animation: bandSlide 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes baseReveal {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .base-reveal {
+            animation: baseReveal 0.35s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes bandPulse {
+            0% { box-shadow: 0 0 0 0 rgba(250,204,21,0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(250,204,21,0); }
+            100% { box-shadow: 0 0 0 0 rgba(250,204,21,0); }
+        }
+        .band-highlight {
+            animation: bandPulse 0.8s ease-out forwards;
+        }
+    
