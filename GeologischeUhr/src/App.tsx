@@ -138,26 +138,6 @@ function ClockFace({
       />
     );
   }
-  // 12 main labels (standard clock face)
-  for (let i = 0; i < 12; i++) {
-    const angle = ((i / 12) * 360 - 90) * (Math.PI / 180);
-    const labelR = radius + 38;
-    const label = i === 0 ? 12 : i;
-    hourMarkers.push(
-      <text
-        key={`label-${i}`}
-        x={cx + Math.cos(angle) * labelR}
-        y={cy + Math.sin(angle) * labelR}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fill="#94a3b8"
-        fontSize="16"
-        fontWeight="700"
-      >
-        {label}
-      </text>
-    );
-  }
 
   // Milestone dots
   const milestoneDots = milestones.map((m) => {
