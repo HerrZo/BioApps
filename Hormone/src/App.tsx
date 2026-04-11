@@ -155,6 +155,8 @@
                 square: 'text-green-500', circle: 'text-blue-500', triangle: 'text-yellow-500', star: 'text-pink-500', hex: 'text-purple-500'
             };
 
+            const dockedValues = Object.values(docked);
+
             return (
                 <div className="animate-fade-in space-y-6">
                     <h2 className="text-xl md:text-2xl font-bold text-green-800 border-b pb-2">Station 2: Schlüssel-Schloss-Prinzip</h2>
@@ -168,7 +170,7 @@
                         <div className="text-xs font-bold text-red-400 uppercase tracking-widest mb-3">Blutbahn – wähle ein Hormon</div>
                         <div className="flex flex-wrap gap-3 justify-center">
                             {hormoneTypes.map((h, idx) => {
-                                const isDocked = Object.values(docked).some(arr => arr.includes(h.id));
+                                const isDocked = dockedValues.some(arr => arr.includes(h.id));
                                 const isSelected = selectedHormone?.id === h.id;
                                 return (
                                     <button
