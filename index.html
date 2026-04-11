@@ -1,301 +1,365 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Biologie Lern-Apps</title>
-    <meta name="description" content="Interaktive Biologie Lern-Apps für das Johannes-Scharrer-Gymnasium">
-    <meta name="theme-color" content="#166534">
-    
+    <meta
+      name="description"
+      content="Interaktive Biologie Lern-Apps für das Johannes-Scharrer-Gymnasium"
+    />
+    <meta name="theme-color" content="#166534" />
+
     <!-- Preload critical resources -->
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Shared Tailwind config (Forest palette + animations) -->
     <script src="shared/tailwind-config.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #f8fafc;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        
-        .bg-gradient-forest {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
-            background-attachment: fixed;
-        }
-        
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -15px rgba(22, 101, 52, 0.2);
-        }
-        
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        
-        /* Performance optimizations */
-        .will-change-transform {
-            will-change: transform;
-        }
-        
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        /* Focus styles for accessibility */
-        button:focus-visible,
-        a:focus-visible {
-            outline: 2px solid #16a34a;
-            outline-offset: 2px;
-        }
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #f8fafc;
+        font-family: "Inter", system-ui, sans-serif;
+      }
+
+      .bg-gradient-forest {
+        background: linear-gradient(
+          135deg,
+          #f0fdf4 0%,
+          #dcfce7 50%,
+          #bbf7d0 100%
+        );
+        background-attachment: fixed;
+      }
+
+      .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .card-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -15px rgba(22, 101, 52, 0.2);
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Performance optimizations */
+      .will-change-transform {
+        will-change: transform;
+      }
+
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Focus styles for accessibility */
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid #16a34a;
+        outline-offset: 2px;
+      }
     </style>
-</head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col bg-gradient-forest">
+  </head>
+  <body
+    class="text-slate-800 antialiased min-h-screen flex flex-col bg-gradient-forest"
+  >
+    <!-- Skip to main content link for accessibility -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-forest-700 text-white px-4 py-2 rounded-lg font-medium shadow-lg"
+    >
+      Zum Hauptinhalt springen
+    </a>
 
     <!-- Header Section -->
     <header class="w-full pt-16 md:pt-20 pb-8 px-4 md:px-6 text-center">
-        <div class="max-w-4xl mx-auto">
-            <span class="inline-block py-1.5 px-4 rounded-full bg-forest-100 text-forest-900 text-xs font-semibold tracking-wide uppercase mb-4 shadow-sm border border-forest-200">
-                Johannes-Scharrer-Gymnasium
-            </span>
-            <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4">
-                Biologie Lern-Apps
-            </h1>
-            <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto font-light leading-relaxed">
-                Interaktive Werkzeuge und Visualisierungen zum Verständnis biologischer Prozesse.
-            </p>
-        </div>
+      <div class="max-w-4xl mx-auto">
+        <span
+          class="inline-block py-1.5 px-4 rounded-full bg-forest-100 text-forest-900 text-xs font-semibold tracking-wide uppercase mb-4 shadow-sm border border-forest-200"
+        >
+          Johannes-Scharrer-Gymnasium
+        </span>
+        <h1
+          class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4"
+        >
+          Biologie Lern-Apps
+        </h1>
+        <p
+          class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto font-light leading-relaxed"
+        >
+          Interaktive Werkzeuge und Visualisierungen zum Verständnis
+          biologischer Prozesse.
+        </p>
+      </div>
     </header>
 
     <!-- Filter Navigation (Sticky) -->
     <div class="sticky top-2 md:top-4 z-50 px-3 md:px-4 mb-6 md:mb-8">
-        <div class="max-w-max mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-200/50 p-1.5 md:p-2 overflow-x-auto no-scrollbar">
-            <div class="flex space-x-1 min-w-max" id="filter-container">
-                <!-- Filter-Buttons werden hier per JS eingefügt -->
-            </div>
+      <nav
+        aria-label="Kategorie-Filter"
+        class="max-w-max mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-200/50 p-1.5 md:p-2 overflow-x-auto no-scrollbar"
+      >
+        <div class="flex space-x-1 min-w-max" id="filter-container">
+          <!-- Filter-Buttons werden hier per JS eingefügt -->
         </div>
+      </nav>
     </div>
 
     <!-- Main Content: App Grid -->
-    <main class="flex-grow px-4 md:px-6 pb-16 md:pb-20">
-        <div class="max-w-6xl mx-auto min-h-[300px]" id="app-grid-container">
-            <!-- Apps werden hier per JS eingefügt -->
-        </div>
+    <main
+      id="main-content"
+      class="flex-grow px-4 md:px-6 pb-16 md:pb-20"
+      aria-live="polite"
+    >
+      <div class="max-w-6xl mx-auto min-h-[300px]" id="app-grid-container">
+        <!-- Apps werden hier per JS eingefügt -->
+      </div>
     </main>
 
     <!-- Footer -->
-    <footer class="w-full py-6 md:py-8 border-t border-slate-200 bg-white/50 backdrop-blur-sm mt-auto">
-        <div class="max-w-6xl mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-xs md:text-sm text-slate-500 text-center md:text-left">
-                <span class="font-medium">Johannes-Scharrer-Gymnasium</span> • <span>Zollfrank</span> • &copy; <span id="year"></span>
-            </div>
-            <a href="https://github.com/HerrZo" target="_blank" rel="noopener noreferrer" 
-               class="flex items-center gap-2 text-slate-600 hover:text-forest-700 transition-colors text-sm">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                </svg>
-                <span class="font-medium">GitHub</span>
-            </a>
+    <footer
+      class="w-full py-6 md:py-8 border-t border-slate-200 bg-white/50 backdrop-blur-sm mt-auto"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-xs md:text-sm text-slate-500 text-center md:text-left">
+          <span class="font-medium">Johannes-Scharrer-Gymnasium</span> •
+          <span>Zollfrank</span> • &copy; <span id="year"></span>
         </div>
+        <a
+          href="https://github.com/HerrZo"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 text-slate-600 hover:text-forest-700 transition-colors text-sm"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          <span class="font-medium">GitHub</span>
+        </a>
+      </div>
     </footer>
 
     <!-- JAVASCRIPT LOGIK -->
     <script>
-        // 1. KONFIGURATION & DATEN
-        const categories = [
-            'Alle',
-            'NUT5',
-            'NUT6',
-            'Biologie 8',
-            'Biologie 9',
-            'Biologie 10',
-            'Biologie 12',
-            'Biologie 13'
-        ];
+      // 1. KONFIGURATION & DATEN
+      const categories = [
+        "Alle",
+        "NUT5",
+        "NUT6",
+        "Biologie 8",
+        "Biologie 9",
+        "Biologie 10",
+        "Biologie 12",
+        "Biologie 13",
+      ];
 
-        const projects = [
-            {
-                id: 'sanger',
-                title: "Sanger-Sequenzierung",
-                description: "Interaktive Lern-App zur Kettenabbruch-Methode inkl. Abitur-Lernkontrolle.",
-                link: "Sanger-Sequenzierung/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            },
-            {
-                id: 'dna-rep',
-                title: "DNA-Replikation",
-                description: "Lerne die DNA-Replikation kennen und verstehe die molekularen Mechanismen.",
-                link: "dna-replikations-simulator/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            },
-            {
-                id: 'TranskTransl',
-                title: "Transkription & Translation",
-                description: "Simulation der Transkription & Translation mit interaktiver Codesonne.",
-                link: "TranskriptionsTranslationsTrainer/index.html",
-                tag: "Biologie 9",
-                iconType: 'dna'
-            }, 
-            {
-                id: 'chromosomen',
-                title: "Chromosomensätze",
-                description: "Erkunde verschiedene Chromosomensätze und Ploidiegrade.",
-                link: "Chromosomensätze/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            }, 
-            {
-                id: 'gametogenese',
-                title: "Gametogenese",
-                description: "Simulation für die Spermatogenese und Oogenese.",
-                link: "Gametogenese/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            },
-            {
-                id: 'karyogramm',
-                title: "Karyogramm-Detektive",
-                description: "Lerne etwas über die Transport- und Arbeitsform der DNA.",
-                link: "Karyogramme9/index.html",
-                tag: "Biologie 9",
-                iconType: 'dna'
-            },
-            {
-                id: 'hormone',
-                title: "Hormone",
-                description: "Von der Entdeckung der Hormone und den Hormondrüsen des Körpers.",
-                link: "Hormone/index.html",
-                tag: "Biologie 8",
-                iconType: 'brain'
-            },
-            {
-                id: 'KarAna',
-                title: "Karyogramm Analyse",
-                description: "Analysiere Karyogramme auf genetische Abweichungen.",
-                link: "KaryogrammAnalse/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            },
-            {
-                id: 'SequMu',
-                title: "Sequenz Mutationen",
-                description: "Analysiere verschiedene Mutationen von DNA-Sequenzen.",
-                link: "SequenzMutation/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            },
-            {
-                id: 'Mendel',
-                title: "Klassische Genetik",
-                description: "Simuliere verschiedene Erbgänge nach Mendel.",
-                link: "Mendel/index.html",
-                tag: "Biologie 12",
-                iconType: 'dna'
-            },
-            {
-                id: 'Enzyme',
-                title: "Enzyme",
-                description: "Lerne alles über Enzyme: Geschichte, Aufbau, Wirkweise, Energetik und Einflussfaktoren.",
-                link: "Enzyme/index.html",
-                tag: "Biologie 10",
-                iconType: 'brain'
-            },
-            {
-                id: 'sinnesorgane',
-                title: "Sinnesorgane",
-                description: "Interaktive Lern-App zu Auge, Ohr, Nase, Zunge und Haut – mit SVG-Diagrammen und Quiz.",
-                link: "Sinnesorgane/index.html",
-                tag: "Biologie 8",
-                iconType: 'brain'
-            },
-            {
-                id: 'geologische-uhr',
-                title: "Geologische Uhr",
-                description: "4,6 Milliarden Jahre Erdgeschichte als interaktive 24-Stunden-Uhr – mit Meilensteinen der Evolution.",
-                link: "GeologischeUhr/index.html",
-                tag: "Biologie 10",
-                iconType: 'brain'
-            },
-            {
-                id: 'evolutionstheorien',
-                title: "Evolutionstheorien",
-                description: "Von Aristoteles bis zur Modernen Synthese – Geschichte der Evolutionstheorien mit Vergleichsmodus.",
-                link: "Evolutionstheorien/index.html",
-                tag: "Biologie 10",
-                iconType: 'brain'
-            },
-        ];
+      const projects = [
+        {
+          id: "sanger",
+          title: "Sanger-Sequenzierung",
+          description:
+            "Interaktive Lern-App zur Kettenabbruch-Methode inkl. Abitur-Lernkontrolle.",
+          link: "Sanger-Sequenzierung/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "dna-rep",
+          title: "DNA-Replikation",
+          description:
+            "Lerne die DNA-Replikation kennen und verstehe die molekularen Mechanismen.",
+          link: "dna-replikations-simulator/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "TranskTransl",
+          title: "Transkription & Translation",
+          description:
+            "Simulation der Transkription & Translation mit interaktiver Codesonne.",
+          link: "TranskriptionsTranslationsTrainer/index.html",
+          tag: "Biologie 9",
+          iconType: "dna",
+        },
+        {
+          id: "chromosomen",
+          title: "Chromosomensätze",
+          description:
+            "Erkunde verschiedene Chromosomensätze und Ploidiegrade.",
+          link: "Chromosomensätze/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "gametogenese",
+          title: "Gametogenese",
+          description: "Simulation für die Spermatogenese und Oogenese.",
+          link: "Gametogenese/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "karyogramm",
+          title: "Karyogramm-Detektive",
+          description:
+            "Lerne etwas über die Transport- und Arbeitsform der DNA.",
+          link: "Karyogramme9/index.html",
+          tag: "Biologie 9",
+          iconType: "dna",
+        },
+        {
+          id: "hormone",
+          title: "Hormone",
+          description:
+            "Von der Entdeckung der Hormone und den Hormondrüsen des Körpers.",
+          link: "Hormone/index.html",
+          tag: "Biologie 8",
+          iconType: "brain",
+        },
+        {
+          id: "KarAna",
+          title: "Karyogramm Analyse",
+          description: "Analysiere Karyogramme auf genetische Abweichungen.",
+          link: "KaryogrammAnalse/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "SequMu",
+          title: "Sequenz Mutationen",
+          description: "Analysiere verschiedene Mutationen von DNA-Sequenzen.",
+          link: "SequenzMutation/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "Mendel",
+          title: "Klassische Genetik",
+          description: "Simuliere verschiedene Erbgänge nach Mendel.",
+          link: "Mendel/index.html",
+          tag: "Biologie 12",
+          iconType: "dna",
+        },
+        {
+          id: "Enzyme",
+          title: "Enzyme",
+          description:
+            "Lerne alles über Enzyme: Geschichte, Aufbau, Wirkweise, Energetik und Einflussfaktoren.",
+          link: "Enzyme/index.html",
+          tag: "Biologie 10",
+          iconType: "brain",
+        },
+        {
+          id: "sinnesorgane",
+          title: "Sinnesorgane",
+          description:
+            "Interaktive Lern-App zu Auge, Ohr, Nase, Zunge und Haut – mit SVG-Diagrammen und Quiz.",
+          link: "Sinnesorgane/index.html",
+          tag: "Biologie 8",
+          iconType: "brain",
+        },
+        {
+          id: "geologische-uhr",
+          title: "Geologische Uhr",
+          description:
+            "4,6 Milliarden Jahre Erdgeschichte als interaktive 24-Stunden-Uhr – mit Meilensteinen der Evolution.",
+          link: "GeologischeUhr/index.html",
+          tag: "Biologie 10",
+          iconType: "brain",
+        },
+        {
+          id: "evolutionstheorien",
+          title: "Evolutionstheorien",
+          description:
+            "Von Aristoteles bis zur Modernen Synthese – Geschichte der Evolutionstheorien mit Vergleichsmodus.",
+          link: "Evolutionstheorien/index.html",
+          tag: "Biologie 10",
+          iconType: "brain",
+        },
+      ];
 
-        // Status der App
-        let currentCategory = 'Alle';
+      // Status der App
+      let currentCategory = "Alle";
 
-        // 2. HILFSFUNKTIONEN (Icons)
-        function getIconSvg(type) {
-            const className = "w-5 h-5 md:w-6 md:h-6";
-            switch (type) {
-                case 'dna':
-                    return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993M9 22c1.798-1.998 2.518-3.995 2.807-5.993M2 15c6.667-6 13.333 0 20-6M20 9c-6.667 6-13.333 0-20 6"/></svg>`;
-                case 'brain':
-                    return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`;
-                default:
-                    return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`;
-            }
+      // 2. HILFSFUNKTIONEN (Icons)
+      function getIconSvg(type) {
+        const className = "w-5 h-5 md:w-6 md:h-6";
+        switch (type) {
+          case "dna":
+            return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993M9 22c1.798-1.998 2.518-3.995 2.807-5.993M2 15c6.667-6 13.333 0 20-6M20 9c-6.667 6-13.333 0-20 6"/></svg>`;
+          case "brain":
+            return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`;
+          default:
+            return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`;
         }
+      }
 
-        // 3. RENDERING LOGIK
-        function renderFilterBar() {
-            const container = document.getElementById('filter-container');
-            container.innerHTML = '';
+      // 3. RENDERING LOGIK
+      function renderFilterBar() {
+        const container = document.getElementById("filter-container");
+        container.innerHTML = "";
 
-            categories.forEach(category => {
-                const isActive = currentCategory === category;
-                const button = document.createElement('button');
-                
-                let classes = "px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-xs md:text-sm font-medium transition-all duration-300 ease-out whitespace-nowrap ";
-                if (isActive) {
-                    classes += "bg-forest-600 text-white shadow-md transform scale-105";
-                } else {
-                    classes += "text-slate-600 hover:bg-forest-50 hover:text-forest-700";
-                }
-                
-                button.className = classes;
-                button.textContent = category;
-                button.setAttribute('aria-pressed', isActive);
-                
-                button.onclick = () => {
-                    currentCategory = category;
-                    renderFilterBar();
-                    renderGrid();
-                };
+        categories.forEach((category) => {
+          const isActive = currentCategory === category;
+          const button = document.createElement("button");
 
-                container.appendChild(button);
-            });
-        }
+          let classes =
+            "px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-xs md:text-sm font-medium transition-all duration-300 ease-out whitespace-nowrap ";
+          if (isActive) {
+            classes += "bg-forest-600 text-white shadow-md transform scale-105";
+          } else {
+            classes +=
+              "text-slate-600 hover:bg-forest-50 hover:text-forest-700";
+          }
 
-        function createCardHTML(project) {
-            return `
+          button.className = classes;
+          button.textContent = category;
+          button.setAttribute("aria-pressed", isActive);
+
+          button.onclick = () => {
+            currentCategory = category;
+            renderFilterBar();
+            renderGrid();
+          };
+
+          container.appendChild(button);
+        });
+      }
+
+      function createCardHTML(project) {
+        return `
                 <article class="bg-white rounded-2xl p-5 md:p-6 border border-slate-100 card-hover flex flex-col h-full hover:border-forest-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-fadeIn">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-2.5 md:p-3 bg-forest-50 rounded-xl text-forest-600">
@@ -305,16 +369,16 @@
                             ${project.tag}
                         </span>
                     </div>
-                    
+
                     <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-2">
                         ${project.title}
                     </h3>
-                    
+
                     <p class="text-sm md:text-base text-slate-500 mb-5 md:mb-6 flex-grow leading-relaxed">
                         ${project.description}
                     </p>
-                    
-                    <a href="${project.link}" 
+
+                    <a href="${project.link}"
                        class="inline-flex items-center justify-center w-full px-4 py-2.5 md:py-3 text-sm font-semibold text-white transition-all bg-forest-700 rounded-xl hover:bg-forest-600 group shadow-sm hover:shadow-forest-500/30"
                        aria-label="${project.title} öffnen">
                         App öffnen
@@ -324,39 +388,50 @@
                     </a>
                 </article>
             `;
-        }
+      }
 
-        function renderGrid() {
-            const container = document.getElementById('app-grid-container');
-            
-            const filteredProjects = currentCategory === 'Alle' 
-                ? projects 
-                : projects.filter(p => p.tag === currentCategory);
+      function renderGrid() {
+        const container = document.getElementById("app-grid-container");
 
-            if (filteredProjects.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-16 md:py-20 text-slate-400 animate-fadeIn">
-                        <p>Keine Apps für diese Kategorie gefunden.</p>
+        const filteredProjects =
+          currentCategory === "Alle"
+            ? projects
+            : projects.filter((p) => p.tag === currentCategory);
+
+        if (filteredProjects.length === 0) {
+          container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center text-center py-16 md:py-20 animate-fadeIn bg-white rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="bg-slate-50 p-4 rounded-full mb-4 text-slate-400">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-700 mb-2">Keine Apps gefunden</h3>
+                        <p class="text-slate-500 mb-6 max-w-md">Für die Kategorie "${currentCategory}" sind aktuell noch keine Lern-Apps verfügbar.</p>
+                        <button onclick="currentCategory = 'Alle'; renderFilterBar(); renderGrid();" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-forest-50 hover:text-forest-700 hover:border-forest-200 transition-colors shadow-sm focus-visible:ring-2 focus-visible:ring-forest-500 outline-none">
+                            Alle Apps anzeigen
+                        </button>
                     </div>
                 `;
-                return;
-            }
-
-            let gridHTML = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">';
-            filteredProjects.forEach(project => {
-                gridHTML += createCardHTML(project);
-            });
-            gridHTML += '</div>';
-
-            container.innerHTML = gridHTML;
+          return;
         }
 
-        // 4. INITIALISIERUNG
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('year').textContent = new Date().getFullYear();
-            renderFilterBar();
-            renderGrid();
+        let gridHTML =
+          '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">';
+        filteredProjects.forEach((project) => {
+          gridHTML += createCardHTML(project);
         });
+        gridHTML += "</div>";
+
+        container.innerHTML = gridHTML;
+      }
+
+      // 4. INITIALISIERUNG
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("year").textContent = new Date().getFullYear();
+        renderFilterBar();
+        renderGrid();
+      });
     </script>
-</body>
+  </body>
 </html>
