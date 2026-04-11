@@ -844,7 +844,14 @@
                 station5: false, station6: false, station7: false,
             });
 
-            const markComplete = (station) => setProgress(prev => ({ ...prev, [station]: true }));
+            let completedStations = 0;
+            let totalStations = 0;
+            for (const key in progress) {
+                totalStations++;
+                if (progress[key as keyof typeof progress]) completedStations++;
+            }
+
+            const markComplete = (station: string) => setProgress(prev => ({ ...prev, [station]: true }));
 
             const stations = [
                 { id: 'station1', title: 'Entdeckung', icon: <IconFlask className="w-6 h-6 md:w-8 md:h-8" />, desc: 'Berthold & Minkowski', num: '1' },
@@ -896,10 +903,10 @@
                                 <div className="text-xs text-gray-500 whitespace-nowrap">Fortschritt:</div>
                                 <div className="flex-1 bg-gray-100 rounded-full h-2">
                                     <div className="bg-green-500 h-2 rounded-full transition-all"
-                                        style={{ width: `${(Object.values(progress).filter(Boolean).length / Object.keys(progress).length) * 100}%` }} />
+                                        style={{ width: `${(completedStations / totalStations) * 100}%` }} />
                                 </div>
                                 <div className="text-xs font-bold text-green-700 whitespace-nowrap">
-                                    {Object.values(progress).filter(Boolean).length}/{Object.keys(progress).length}
+                                    {completedStations}/{totalStations}
                                 </div>
                             </div>
                         </div>
