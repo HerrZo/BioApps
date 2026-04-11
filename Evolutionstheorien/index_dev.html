@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geschichte der Evolutionstheorien</title>
+    <meta name="theme-color" content="#166534">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/dark-mode.css">
+    <link rel="stylesheet" href="../shared/animations.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../shared/tailwind-config.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans">
+  <nav class="sticky top-0 z-50 bg-white/90 dark:bg-green-950/90 backdrop-blur-md border-b border-green-200 dark:border-green-800 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="../index.html" class="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 transition-colors font-medium text-sm flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        Startseite
+      </a>
+      <button data-dark-toggle onclick="toggleDarkMode()" aria-label="Dark Mode umschalten" class="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-800 transition-colors">
+        <span class="dark-mode-icon">🌙</span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="root" class="flex-grow flex flex-col"></div>
+
+  <script type="module" src="/src/main.tsx"></script>
+  <script src="../shared/dark-mode.js"></script>
+</body>
+</html>

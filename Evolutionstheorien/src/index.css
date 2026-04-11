@@ -1,0 +1,58 @@
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-15px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+}
+
+@keyframes growUp {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.animate-grow-up {
+  animation: growUp 0.6s ease-out forwards;
+  transform-origin: bottom;
+}
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+.animate-draw {
+  stroke-dasharray: 1000;
+  animation: drawLine 1.5s ease-out forwards;
+}
+
+/* Timeline connector */
+.timeline-dot {
+  transition: all 0.3s ease;
+}
+.timeline-dot.active {
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
+}
+
+/* Compare card hover */
+.compare-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.compare-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+}
