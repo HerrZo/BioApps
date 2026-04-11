@@ -1,6 +1,11 @@
 
         import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+        // ── CONSTANTS FOR OPTIMIZATION ──
+        const TICK_POSITIONS_35 = Array.from({length: 35}, (_, i) => 40 + i * 20);
+        const TICK_POSITIONS_30 = Array.from({length: 30}, (_, i) => 40 + i * 24);
+        const TICK_POSITIONS_12 = Array.from({length: 12}, (_, i) => 30 + i * 22);
+
         // ── ICONS ──
         const IconHome = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
         const IconPlay = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
@@ -182,7 +187,7 @@
                         <g>
                             <line x1="20" y1={midY - 4} x2={w - 10} y2={midY - 4} stroke={C.template3} strokeWidth="6" strokeLinecap="round" />
                             <line x1="20" y1={midY + 4} x2={w - 10} y2={midY + 4} stroke={C.template5} strokeWidth="6" strokeLinecap="round" />
-                            {Array.from({length: 35}, (_, i) => 40 + i * 20).map((x, i) => (
+                            {TICK_POSITIONS_35.map((x, i) => (
                                 <line key={i} x1={x} y1={midY - 8} x2={x} y2={midY + 8} stroke="#d1d5db" strokeWidth="1.5" />
                             ))}
                             <text x="15" y={midY - 14} fill={C.template3} fontSize="11" fontWeight="bold">3'</text>
@@ -321,7 +326,7 @@
                             {/* Top double strand */}
                             <line x1="20" y1={topY - 4} x2={w - 20} y2={topY - 4} stroke={C.template3} strokeWidth="5" strokeLinecap="round" />
                             <line x1="20" y1={topY + 5} x2={w - 20} y2={topY + 5} stroke={C.newLeading} strokeWidth="5" strokeLinecap="round" />
-                            {Array.from({length: 30}, (_, i) => 40 + i * 24).map((x, i) => (
+                            {TICK_POSITIONS_30.map((x, i) => (
                                 <line key={`t${i}`} x1={x} y1={topY - 8} x2={x} y2={topY + 9} stroke="#d1d5db" strokeWidth="1" />
                             ))}
                             <text x={w / 2} y={topY - 16} textAnchor="middle" fill={C.template3} fontSize="11" fontWeight="bold">Matrize (alt) + Leitstrang (neu)</text>
@@ -329,7 +334,7 @@
                             {/* Bottom double strand */}
                             <line x1="20" y1={botY - 4} x2={w - 20} y2={botY - 4} stroke={C.newLagging} strokeWidth="5" strokeLinecap="round" />
                             <line x1="20" y1={botY + 5} x2={w - 20} y2={botY + 5} stroke={C.template5} strokeWidth="5" strokeLinecap="round" />
-                            {Array.from({length: 30}, (_, i) => 40 + i * 24).map((x, i) => (
+                            {TICK_POSITIONS_30.map((x, i) => (
                                 <line key={`b${i}`} x1={x} y1={botY - 8} x2={x} y2={botY + 9} stroke="#d1d5db" strokeWidth="1" />
                             ))}
                             <text x={w / 2} y={botY + 22} textAnchor="middle" fill={C.template5} fontSize="11" fontWeight="bold">Folgestrang (neu) + Matrize (alt)</text>
@@ -527,9 +532,12 @@
                                         <text x="5" y="28" fill={C.template3} fontSize="9" fontWeight="bold">3'</text>
                                         <text x="280" y="28" fill={C.template3} fontSize="9" fontWeight="bold">5'</text>
                                         {/* Base pairs */}
-                                        {Array.from({length: 12}, (_, i) => 30 + i * 22).filter(x => x <= leadingLen + 10).map((x, i) => (
-                                            <line key={i} x1={x} y1="38" x2={x} y2="52" stroke="#d1d5db" strokeWidth="1.5" />
-                                        ))}
+                                        {TICK_POSITIONS_12.reduce((acc, x, i) => {
+                                            if (x <= leadingLen + 10) {
+                                                acc.push(<line key={i} x1={x} y1="38" x2={x} y2="52" stroke="#d1d5db" strokeWidth="1.5" />);
+                                            }
+                                            return acc;
+                                        }, [])}
                                         {/* New strand */}
                                         <line x1="10" y1="55" x2={leadingLen} y2="55" stroke={C.newLeading} strokeWidth="5" strokeLinecap="round" style={{transition: 'all 0.1s'}} />
                                         <text x="5" y="68" fill={C.newLeading} fontSize="9" fontWeight="bold">5'</text>
@@ -590,7 +598,7 @@
                                             </g>
                                         )}
                                         {/* Base pairs for visible fragments */}
-                                        {Array.from({length: 12}, (_, i) => 30 + i * 22).map((x, i) => (
+                                        {TICK_POSITIONS_12.map((x, i) => (
                                             <line key={i} x1={x} y1="38" x2={x} y2="52" stroke="#d1d5db" strokeWidth="1.5" opacity={okaFrags > 0 && x > (290 - okaFrags * 70) ? 1 : 0.3} />
                                         ))}
                                         <text x="5" y="68" fill={C.newLagging} fontSize="9" fontWeight="bold">3'</text>
