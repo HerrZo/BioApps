@@ -313,10 +313,17 @@ export const milestones: Milestone[] = [
 ];
 
 export function hoursToTimeString(hours: number): string {
-  const h = Math.floor(hours);
-  const m = Math.floor((hours - h) * 60);
-  const s = Math.floor(((hours - h) * 60 - m) * 60);
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  // Convert directly to total seconds, avoiding intermediate floating point flooring issues
+  const totalSeconds = Math.round(hours * 3600);
+  // Math.trunc to correctly handle possible negative values though they shouldn't occur
+  const sign = totalSeconds < 0 ? '-' : '';
+  const absSeconds = Math.abs(totalSeconds);
+
+  const h = Math.floor(absSeconds / 3600);
+  const m = Math.floor((absSeconds % 3600) / 60);
+  const s = absSeconds % 60;
+
+  return `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 export function hoursToYearsAgo(hours: number): number {
