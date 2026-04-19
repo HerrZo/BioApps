@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatYearsAgo } from './data.ts';
+import { formatYearsAgo, getCurrentMilestone, milestones } from './data.ts';
 
 describe('formatYearsAgo', () => {
   it('should format >= 1000 mya as Milliarden Jahren', () => {
@@ -30,5 +30,37 @@ describe('formatYearsAgo', () => {
   it('should format <= 0 as "der Gegenwart"', () => {
     assert.strictEqual(formatYearsAgo(0), 'der Gegenwart');
     assert.strictEqual(formatYearsAgo(-1), 'der Gegenwart');
+  });
+});
+
+describe('getCurrentMilestone', () => {
+  it('should return the first milestone when hours is 0', () => {
+    const result = getCurrentMilestone(0);
+    assert.strictEqual(result?.id, 'earth-formation');
+  });
+
+  it('should return the last milestone when hours is 24', () => {
+    const result = getCurrentMilestone(24);
+    assert.strictEqual(result?.id, 'homo-sapiens');
+  });
+
+  it('should return the exact milestone when hours matches perfectly', () => {
+    for (const m of milestones) {
+      const result = getCurrentMilestone(m.timeHours);
+      assert.strictEqual(result?.id, m.id);
+    }
+  });
+
+  it('should return the closest milestone when between two milestones', () => {
+    if (milestones.length < 2) return;
+
+    const m0 = milestones[0];
+    const m1 = milestones[1];
+    const midpoint = (m0.timeHours + m1.timeHours) / 2;
+
+    // Slightly closer to m0
+    assert.strictEqual(getCurrentMilestone(midpoint - 0.0001)?.id, m0.id);
+    // Slightly closer to m1
+    assert.strictEqual(getCurrentMilestone(midpoint + 0.0001)?.id, m1.id);
   });
 });
