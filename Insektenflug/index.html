@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="de" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insektenflug - BioApps</title>
+    <meta name="theme-color" content="#166534">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../shared/tailwind-config.js"></script>
+    <link href="../shared/dark-mode.css" rel="stylesheet">
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-forest-50 text-forest-900 dark:bg-forest-950 dark:text-forest-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONS ---
+        const IconPlay = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+        const IconPause = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>;
+        const IconActivity = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
+        const IconBookOpen = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
+        const IconCheckSquare = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>;
+        const IconInfo = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>;
+        const IconBeaker = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 3h15"></path><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"></path><path d="M6 14h12"></path></svg>;
+        const IconNewspaper = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>;
+        const IconHome = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+        const IconBug = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-4"/><path d="M8 14H4"/><path d="M20 14h-4"/><path d="M9 18h-5"/><path d="M20 18h-5"/></svg>;
+
+        // --- COMPONENTS ---
+
+        const MuscleLine = ({ x1, y1, x2, y2, active, onDown, onUp, colorClass = "stroke-red-500", activeColorClass = "stroke-red-400" }) => {
+            return (
+                <g 
+                    onMouseDown={onDown} 
+                    onMouseUp={onUp} 
+                    onMouseLeave={onUp}
+                    onTouchStart={(e) => { e.preventDefault(); onDown(); }} 
+                    onTouchEnd={(e) => { e.preventDefault(); onUp(); }}
+                    className="cursor-pointer"
+                >
+                    <line 
+                        x1={x1} y1={y1} x2={x2} y2={y2} 
+                        className={`transition-all duration-100 ${active ? activeColorClass : colorClass}`}
+                        strokeWidth={active ? "14" : "8"} 
+                        strokeLinecap="round"
+                    />
+                    <line 
+                        x1={x1} y1={y1} x2={x2} y2={y2} 
+                        stroke="transparent" 
+                        strokeWidth="30" 
+                    />
+                </g>
+            )
+        };
+
+        const DirectFlightSim = () => {
+            const [lInner, setLInner] = useState(false);
+            const [lOuter, setLOuter] = useState(false);
+            const [rInner, setRInner] = useState(false);
+            const [rOuter, setROuter] = useState(false);
+
+            const leftAngle = lInner ? 30 : (lOuter ? -30 : 0);
+            const rightAngle = rInner ? -30 : (rOuter ? 30 : 0); 
+
+            const pivotLX = 120, pivotLY = 100;
+            const pivotRX = 280, pivotRY = 100;
+
+            return (
+                <div className="flex flex-col items-center bg-white dark:bg-forest-900 rounded-xl p-4 md:p-6 shadow-sm border border-forest-100 dark:border-forest-800">
+                    <h3 className="text-xl font-bold text-forest-800 dark:text-forest-100 mb-2 flex items-center gap-2">
+                        <IconBug /> Direkte Flugmuskulatur
+                    </h3>
+                    <p className="text-sm text-forest-600 dark:text-forest-300 mb-6 text-center max-w-md">
+                        Jeder Flügel wird durch eigene Muskeln gesteuert. Klicke und halte die Muskeln, um sie manuell zu kontrahieren!
+                    </p>
+
+                    <div className="relative w-full max-w-[400px] aspect-square bg-forest-50 dark:bg-forest-950 rounded-lg border border-forest-200 dark:border-forest-700 overflow-hidden mb-6 flex justify-center items-center">
+                        <svg viewBox="0 0 400 400" className="w-full h-full select-none">
+                            <defs>
+                                <radialGradient id="thoraxGradD" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                                    <stop offset="0%" stopColor="#94a3b8" />
+                                    <stop offset="100%" stopColor="#475569" />
+                                </radialGradient>
+                            </defs>
+                            
+                            {/* Thorax */}
+                            <ellipse cx="200" cy="200" rx="90" ry="120" fill="url(#thoraxGradD)" stroke="#334155" strokeWidth="4" />
+                            
+                            {/* Left Wing Group */}
+                            <g transform={`rotate(${leftAngle}, ${pivotLX}, ${pivotLY})`} className="transition-transform duration-75">
+                                {/* Wing */}
+                                <path d={`M ${pivotLX} ${pivotLY} Q ${pivotLX - 120} ${pivotLY - 60} ${pivotLX - 160} ${pivotLY} Q ${pivotLX - 120} ${pivotLY + 30} ${pivotLX} ${pivotLY}`} fill="rgba(255,255,255,0.7)" stroke="#64748b" strokeWidth="2" />
+                                <path d={`M ${pivotLX} ${pivotLY} Q ${pivotLX - 80} ${pivotLY - 30} ${pivotLX - 150} ${pivotLY}`} fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                
+                                {/* Inner / Outer points */}
+                                <circle cx={pivotLX + 25} cy={pivotLY} r="4" fill="#f8fafc" />
+                                <circle cx={pivotLX - 25} cy={pivotLY} r="4" fill="#f8fafc" />
+                                <line x1={pivotLX-25} y1={pivotLY} x2={pivotLX+25} y2={pivotLY} stroke="#1e293b" strokeWidth="4" strokeLinecap="round"/>
+                            </g>
+                            
+                            {/* Right Wing Group */}
+                            <g transform={`rotate(${rightAngle}, ${pivotRX}, ${pivotRY})`} className="transition-transform duration-75">
+                                {/* Wing */}
+                                <path d={`M ${pivotRX} ${pivotRY} Q ${pivotRX + 120} ${pivotRY - 60} ${pivotRX + 160} ${pivotRY} Q ${pivotRX + 120} ${pivotRY + 30} ${pivotRX} ${pivotRY}`} fill="rgba(255,255,255,0.7)" stroke="#64748b" strokeWidth="2" />
+                                <path d={`M ${pivotRX} ${pivotRY} Q ${pivotRX + 80} ${pivotRY - 30} ${pivotRX + 150} ${pivotRY}`} fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                
+                                {/* Inner / Outer points */}
+                                <circle cx={pivotRX - 25} cy={pivotRY} r="4" fill="#f8fafc" />
+                                <circle cx={pivotRX + 25} cy={pivotRY} r="4" fill="#f8fafc" />
+                                <line x1={pivotRX-25} y1={pivotRY} x2={pivotRX+25} y2={pivotRY} stroke="#1e293b" strokeWidth="4" strokeLinecap="round"/>
+                            </g>
+
+                            {/* Pivot Pins */}
+                            <circle cx={pivotLX} cy={pivotLY} r="6" fill="#0f172a" />
+                            <circle cx={pivotRX} cy={pivotRY} r="6" fill="#0f172a" />
+
+                            {/* Muscles Left */}
+                            {/* Inner (Elevator) */}
+                            <MuscleLine 
+                                x1={pivotLX + 25} y1={pivotLY + Math.sin(leftAngle * Math.PI / 180) * 25} 
+                                x2={145} y2={300} 
+                                active={lInner} 
+                                onDown={() => setLInner(true)} onUp={() => setLInner(false)}
+                            />
+                            {/* Outer (Depressor) */}
+                            <MuscleLine 
+                                x1={pivotLX - 25} y1={pivotLY - Math.sin(leftAngle * Math.PI / 180) * 25} 
+                                x2={110} y2={280} 
+                                active={lOuter} 
+                                onDown={() => setLOuter(true)} onUp={() => setLOuter(false)}
+                            />
+
+                            {/* Muscles Right */}
+                            {/* Inner (Elevator) */}
+                            <MuscleLine 
+                                x1={pivotRX - 25} y1={pivotRY - Math.sin(rightAngle * Math.PI / 180) * 25} 
+                                x2={255} y2={300} 
+                                active={rInner} 
+                                onDown={() => setRInner(true)} onUp={() => setRInner(false)}
+                            />
+                            {/* Outer (Depressor) */}
+                            <MuscleLine 
+                                x1={pivotRX + 25} y1={pivotRY + Math.sin(rightAngle * Math.PI / 180) * 25} 
+                                x2={290} y2={280} 
+                                active={rOuter} 
+                                onDown={() => setROuter(true)} onUp={() => setROuter(false)}
+                            />
+                        </svg>
+                    </div>
+                </div>
+            );
+        };
+
+        const IndirectFlightSim = () => {
+            const [vActive, setVActive] = useState(false);
+            const [hActive, setHActive] = useState(false);
+
+            const currentPhase = vActive ? 1 : (hActive ? -1 : 0);
+            const roofY = 60 + currentPhase * 15; 
+            const wingAngleLeft = (roofY - 60) * 2; 
+            const wingAngleRight = -(roofY - 60) * 2; 
+
+            const pivotLX = 120, pivotLY = 90;
+            const pivotRX = 280, pivotRY = 90;
+
+            return (
+                <div className="flex flex-col items-center bg-white dark:bg-forest-900 rounded-xl p-4 md:p-6 shadow-sm border border-forest-100 dark:border-forest-800">
+                    <h3 className="text-xl font-bold text-forest-800 dark:text-forest-100 mb-2 flex items-center gap-2">
+                        <IconBug /> Indirekte Flugmuskulatur
+                    </h3>
+                    <p className="text-sm text-forest-600 dark:text-forest-300 mb-6 text-center max-w-md">
+                        Die Muskeln verformen den Thoraxpanzer. Flügel bewegen sich synchron. Klicke auf die Muskeln!
+                    </p>
+
+                    <div className="relative w-full max-w-[400px] aspect-square bg-forest-50 dark:bg-forest-950 rounded-lg border border-forest-200 dark:border-forest-700 overflow-hidden mb-6 flex justify-center items-center">
+                        <svg viewBox="0 0 400 400" className="w-full h-full select-none">
+                            <defs>
+                                <radialGradient id="thoraxGradI" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                                    <stop offset="0%" stopColor="#cbd5e1" />
+                                    <stop offset="100%" stopColor="#64748b" />
+                                </radialGradient>
+                                <radialGradient id="muscleGrad" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stopColor="#fca5a5" />
+                                    <stop offset="100%" stopColor="#ef4444" />
+                                </radialGradient>
+                                <radialGradient id="muscleGradActive" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stopColor="#ef4444" />
+                                    <stop offset="100%" stopColor="#b91c1c" />
+                                </radialGradient>
+                            </defs>
+                            
+                            {/* Thorax Background */}
+                            <path d={`M 120 90 Q 100 200 150 280 L 250 280 Q 300 200 280 90 Q 200 ${roofY - 20} 120 90`} fill="url(#thoraxGradI)" stroke="#334155" strokeWidth="4" className="transition-all duration-75" />
+                            
+                            {/* Longitudinal Muscles */}
+                            <g 
+                                onMouseDown={() => setHActive(true)} 
+                                onMouseUp={() => setHActive(false)} 
+                                onMouseLeave={() => setHActive(false)}
+                                onTouchStart={(e) => { e.preventDefault(); setHActive(true); }} 
+                                onTouchEnd={(e) => { e.preventDefault(); setHActive(false); }}
+                                className="cursor-pointer"
+                            >
+                                <ellipse cx="200" cy={roofY + 50} rx={40 + currentPhase * 5} ry={30 - currentPhase * 5} fill={hActive ? "url(#muscleGradActive)" : "url(#muscleGrad)"} stroke="#7f1d1d" strokeWidth="2" className="transition-all duration-75" />
+                                <ellipse cx="200" cy={roofY + 50} rx="50" ry="40" fill="transparent" />
+                            </g>
+
+                            {/* Dorsoventral Muscles */}
+                            <MuscleLine 
+                                x1={160} y1={roofY + 20} x2={160} y2={260} 
+                                active={vActive} 
+                                onDown={() => setVActive(true)} onUp={() => setVActive(false)}
+                            />
+                            <MuscleLine 
+                                x1={240} y1={roofY + 20} x2={240} y2={260} 
+                                active={vActive} 
+                                onDown={() => setVActive(true)} onUp={() => setVActive(false)}
+                            />
+
+                            {/* Left Wing Group */}
+                            <g transform={`rotate(${wingAngleLeft}, ${pivotLX}, ${pivotLY})`} className="transition-transform duration-75">
+                                {/* Wing */}
+                                <path d={`M ${pivotLX} ${pivotLY} Q ${pivotLX - 120} ${pivotLY - 60} ${pivotLX - 160} ${pivotLY} Q ${pivotLX - 120} ${pivotLY + 30} ${pivotLX} ${pivotLY}`} fill="rgba(255,255,255,0.7)" stroke="#64748b" strokeWidth="2" />
+                                <path d={`M ${pivotLX} ${pivotLY} Q ${pivotLX - 80} ${pivotLY - 30} ${pivotLX - 150} ${pivotLY}`} fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                
+                                {/* Lever to inner attachment */}
+                                <line x1={pivotLX} y1={pivotLY} x2={pivotLX+20} y2={pivotLY+10} stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
+                                <circle cx={pivotLX+20} cy={pivotLY+10} r="4" fill="#f8fafc" />
+                            </g>
+                            
+                            {/* Right Wing Group */}
+                            <g transform={`rotate(${wingAngleRight}, ${pivotRX}, ${pivotRY})`} className="transition-transform duration-75">
+                                {/* Wing */}
+                                <path d={`M ${pivotRX} ${pivotRY} Q ${pivotRX + 120} ${pivotRY - 60} ${pivotRX + 160} ${pivotRY} Q ${pivotRX + 120} ${pivotRY + 30} ${pivotRX} ${pivotRY}`} fill="rgba(255,255,255,0.7)" stroke="#64748b" strokeWidth="2" />
+                                <path d={`M ${pivotRX} ${pivotRY} Q ${pivotRX + 80} ${pivotRY - 30} ${pivotRX + 150} ${pivotRY}`} fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                
+                                {/* Lever to inner attachment */}
+                                <line x1={pivotRX} y1={pivotRY} x2={pivotRX-20} y2={pivotRY+10} stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
+                                <circle cx={pivotRX-20} cy={pivotRY+10} r="4" fill="#f8fafc" />
+                            </g>
+
+                            {/* Pivot Pins */}
+                            <circle cx={pivotLX} cy={pivotLY} r="6" fill="#0f172a" />
+                            <circle cx={pivotRX} cy={pivotRY} r="6" fill="#0f172a" />
+                        </svg>
+                    </div>
+                </div>
+            );
+        };
+
+        const TabSimulation = () => {
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+                    <DirectFlightSim />
+                    <IndirectFlightSim />
+                </div>
+            );
+        };
+
+        const TabWissen = () => {
+            const cards = [
+                {
+                    title: "Steckbrief: Großlibelle",
+                    icon: <IconInfo />,
+                    content: "Libellen gehören zu den ältesten Fluginsekten. Ihre Flugmuskeln sind direkt an jedem der vier Flügel befestigt. Eine Libelle kann jeden Flügel einzeln bewegen – sie kann sogar rückwärts fliegen und in der Luft stehen (Schwirrflug). Allerdings benötigt sie dafür sehr viel Energie. Bei Libellen muss jede einzelne Muskelkontraktion durch einen eigenen Nervenimpuls aus dem Gehirn ausgelöst werden."
+                },
+                {
+                    title: "Steckbrief: Honigbiene",
+                    icon: <IconInfo />,
+                    content: "Bei der Honigbiene befinden sich die Flugmuskeln nicht an den Flügeln selbst, sondern verlaufen massiv im Inneren des Brustsegments. Durch abwechselndes Zusammenziehen der Längs- und Quermuskulatur wird der Chitinpanzer verformt, was alle Flügel gleichzeitig hebt und senkt. Die Biene erreicht extrem hohe Flügelschlagfrequenzen."
+                },
+                {
+                    title: "Forscher-Notiz: Energie & Nervensystem",
+                    icon: <IconBeaker />,
+                    content: "Messungen zeigen: Insekten mit direkt ansetzenden Muskeln verbrauchen im Verhältnis mehr Sauerstoff und Energie pro Flügelschlag. Die Steuerung jedes Flügels erfordert ständige, dichte Nervensignale (synchroner Muskel). Indirekt fliegende Insekten nutzen hingegen die elastische Energie ihres Chitinpanzers wie eine Feder."
+                },
+                {
+                    title: "Labor-Daten: Flügelschlagfrequenz",
+                    icon: <IconActivity />,
+                    content: (
+                        <div className="mt-2">
+                            <p className="mb-2 text-sm">Gemessene Schläge pro Sekunde (Hz):</p>
+                            <table className="w-full text-sm text-left border-collapse">
+                                <thead><tr className="border-b border-forest-200 dark:border-forest-700">
+                                    <th className="py-1">Insekt</th><th className="py-1">Frequenz</th>
+                                </tr></thead>
+                                <tbody>
+                                    <tr className="border-b border-forest-100 dark:border-forest-800"><td className="py-1">Großlibelle</td><td className="py-1">20 - 30 Hz</td></tr>
+                                    <tr className="border-b border-forest-100 dark:border-forest-800"><td className="py-1">Schmetterling</td><td className="py-1">5 - 12 Hz</td></tr>
+                                    <tr className="border-b border-forest-100 dark:border-forest-800"><td className="py-1">Honigbiene</td><td className="py-1">130 - 200 Hz</td></tr>
+                                    <tr><td className="py-1">Stubenfliege</td><td className="py-1">200 - 300 Hz</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    )
+                },
+                {
+                    title: "Exkurs: Der Dehnungsreflex",
+                    icon: <IconBookOpen />,
+                    content: "Wie schaffen Fliegen 300 Schläge pro Sekunde? Nerven können gar nicht so schnell feuern! Die Lösung: asynchrone Muskeln. Wenn sich die Längsmuskeln zusammenziehen, dehnen sie automatisch die Vertikalmuskeln. Diese Überdehnung löst sofort eine automatische Kontraktion aus – ganz ohne neuen Nervenimpuls! So entsteht eine schnelle, selbstschwingende Oszillation."
+                },
+                {
+                    title: "Zeitungsartikel: Meister der Lüfte",
+                    icon: <IconNewspaper />,
+                    content: "»Wer präzise fliegen will, zahlt einen hohen Preis«, schreibt das Magazin 'Nature'. Libellen sind die Kampfjets der Insektenwelt. Ihre enorme Manövrierfähigkeit durch separat steuerbare Flügel erkaufen sie sich mit einem Nervensystem, das ständig auf Hochtouren arbeiten muss. Weniger wendig, aber extrem effizient und schnell sind hingegen Fliegen und Bienen mit ihrem ausgeklügelten Klick-Mechanismus im Thorax."
+                }
+            ];
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                    {cards.map((card, i) => (
+                        <div key={i} className="bg-white dark:bg-forest-900 rounded-xl p-6 shadow-sm border border-forest-100 dark:border-forest-800 flex flex-col gap-3 hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-3 text-forest-700 dark:text-forest-200 border-b border-forest-100 dark:border-forest-800 pb-3">
+                                {card.icon}
+                                <h4 className="font-bold">{card.title}</h4>
+                            </div>
+                            <div className="text-forest-700 dark:text-forest-300 text-sm leading-relaxed">
+                                {card.content}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const TabCheck = () => {
+            const questions = [
+                { q: "Wo setzen die Muskeln bei der direkten Flugmuskulatur an?", options: ["Direkt an der Flügelbasis", "Am Chitinpanzer des Thorax", "An den Beinen", "Am Hinterleib"], a: 0, exp: "Richtig! Die Heber- und Senkermuskeln setzen bei der direkten Flugmuskulatur direkt am Flügelgelenk an." },
+                { q: "Wo setzen die Muskeln bei der indirekten Flugmuskulatur an?", options: ["Direkt an den Flügeln", "Am Außenskelett (Chitinpanzer) des Brustsegments", "Am Kopf", "An den Fühlern"], a: 1, exp: "Richtig! Die Muskeln verformen das Brustsegment, was indirekt die Flügel bewegt." },
+                { q: "Welches Insekt kann seine vier Flügel unabhängig voneinander bewegen?", options: ["Stubenfliege", "Honigbiene", "Libelle", "Schmetterling"], a: 2, exp: "Richtig! Libellen haben eine direkte Flugmuskulatur und können jeden Flügel einzeln ansteuern." },
+                { q: "Wie werden die Flügel bei indirekter Muskulatur bewegt?", options: ["Jeder Flügel einzeln", "Nur die Vorderflügel", "Alle Flügel werden durch Thoraxverformung gleichzeitig bewegt", "Nur durch Windströmung"], a: 2, exp: "Richtig! Da der gesamte Thorax verformt wird, bewegen sich die Flügel synchron." },
+                { q: "Was ist ein Vorteil der direkten Flugmuskulatur?", options: ["Sehr hohe Schlagfrequenz", "Große Manövrierfähigkeit (z.B. Schwirrflug, Rückwärtsflug)", "Geringer Energieverbrauch", "Leichterer Körperbau"], a: 1, exp: "Richtig! Die Einzelsteuerung ermöglicht extreme Flugmanöver." },
+                { q: "Was ist ein großer Vorteil der indirekten Flugmuskulatur?", options: ["Sehr hohe Flügelschlagfrequenzen sind möglich", "Jeder Flügel kann einzeln bewegt werden", "Lautloser Flug", "Sie funktioniert auch bei extremer Kälte"], a: 0, exp: "Richtig! Durch den Dehnungsreflex sind hunderte Schläge pro Sekunde möglich." },
+                { q: "Wie wird die direkte Flugmuskulatur vom Nervensystem gesteuert?", options: ["Automatisch ohne Nervensignale", "Ein Impuls steuert alle Schläge für eine Minute", "Jeder Muskel muss für jede Kontraktion einzeln angesteuert werden", "Über Lichtreize"], a: 2, exp: "Richtig! Sie ist synchron, jede Bewegung braucht einen eigenen Befehl vom Gehirn." },
+                { q: "Was passiert bei der indirekten Flugmuskulatur nach Überdehnung (asynchroner Muskel)?", options: ["Der Muskel reißt", "Der Muskel zieht sich automatisch wieder zusammen (Dehnungsreflex)", "Das Insekt stürzt ab", "Der Muskel verbraucht sofort seinen gesamten Sauerstoff"], a: 1, exp: "Richtig! Dieser Dehnungsreflex ermöglicht die extrem schnellen Schwingungen ohne neue Nervensignale." },
+                { q: "Welcher Muskulaturtyp hat einen verhältnismäßig höheren Energiebedarf pro Flügelschlag?", options: ["Direkte Flugmuskulatur", "Indirekte Flugmuskulatur", "Beide gleich", "Kommt auf die Tageszeit an"], a: 0, exp: "Richtig! Die ständigen Nervensignale und das Fehlen der Federwirkung des Panzers kosten viel Energie." },
+                { q: "Warum hat die indirekte Flugmuskulatur einen optimierten Energiebedarf?", options: ["Weil Fliegen nicht so schwer sind", "Weil sie den Chitinpanzer wie eine elastische Sprungfeder nutzen", "Weil sie weniger Muskeln haben", "Weil sie nur bei Sonnenschein fliegen"], a: 1, exp: "Richtig! Die elastische Energie im Panzer wird beim nächsten Schlag wieder freigesetzt." }
+            ];
+
+            const [currentQ, setCurrentQ] = useState(0);
+            const [score, setScore] = useState(0);
+            const [showExp, setShowExp] = useState(false);
+            const [selected, setSelected] = useState(null);
+            const [finished, setFinished] = useState(false);
+
+            const handleAnswer = (idx) => {
+                if (showExp) return;
+                setSelected(idx);
+                setShowExp(true);
+                if (idx === questions[currentQ].a) {
+                    setScore(s => s + 1);
+                }
+            };
+
+            const nextQuestion = () => {
+                if (currentQ < questions.length - 1) {
+                    setCurrentQ(q => q + 1);
+                    setShowExp(false);
+                    setSelected(null);
+                } else {
+                    setFinished(true);
+                }
+            };
+
+            const reset = () => {
+                setCurrentQ(0);
+                setScore(0);
+                setShowExp(false);
+                setSelected(null);
+                setFinished(false);
+            };
+
+            if (finished) {
+                return (
+                    <div className="max-w-2xl mx-auto bg-white dark:bg-forest-900 rounded-xl p-8 text-center shadow-sm border border-forest-100 dark:border-forest-800 animate-fade-in">
+                        <div className="mb-6 flex justify-center text-forest-500">
+                            <IconCheckSquare />
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4 text-forest-800 dark:text-forest-100">Quiz beendet!</h2>
+                        <p className="text-xl mb-8 text-forest-600 dark:text-forest-300">Du hast <span className="font-bold text-forest-700 dark:text-forest-200">{score}</span> von {questions.length} Fragen richtig beantwortet.</p>
+                        
+                        <div className="h-4 w-full bg-forest-100 dark:bg-forest-800 rounded-full overflow-hidden mb-8">
+                            <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${(score/questions.length)*100}%` }}></div>
+                        </div>
+
+                        <button onClick={reset} className="bg-forest-600 hover:bg-forest-700 text-white px-8 py-3 rounded-full font-medium transition-colors">
+                            Quiz wiederholen
+                        </button>
+                    </div>
+                );
+            }
+
+            const q = questions[currentQ];
+
+            return (
+                <div className="max-w-3xl mx-auto animate-fade-in">
+                    <div className="flex justify-between items-center mb-6 text-sm font-medium text-forest-500 dark:text-forest-400">
+                        <span>Frage {currentQ + 1} von {questions.length}</span>
+                        <span>Score: {score}</span>
+                    </div>
+                    
+                    <div className="w-full bg-forest-200 dark:bg-forest-800 h-2 rounded-full mb-8 overflow-hidden">
+                        <div className="bg-forest-500 h-full transition-all duration-300" style={{ width: `${(currentQ / questions.length) * 100}%` }}></div>
+                    </div>
+
+                    <div className="bg-white dark:bg-forest-900 rounded-xl p-6 md:p-8 shadow-sm border border-forest-100 dark:border-forest-800 mb-6">
+                        <h3 className="text-xl md:text-2xl font-bold text-forest-800 dark:text-forest-100 mb-8 leading-snug">
+                            {q.q}
+                        </h3>
+
+                        <div className="flex flex-col gap-3">
+                            {q.options.map((opt, idx) => {
+                                let btnClass = "text-left px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium ";
+                                
+                                if (!showExp) {
+                                    btnClass += "border-forest-100 dark:border-forest-700 hover:border-forest-300 dark:hover:border-forest-500 hover:bg-forest-50 dark:hover:bg-forest-800/50 text-forest-700 dark:text-forest-200";
+                                } else {
+                                    if (idx === q.a) {
+                                        btnClass += "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300";
+                                    } else if (idx === selected) {
+                                        btnClass += "border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300";
+                                    } else {
+                                        btnClass += "border-forest-100 dark:border-forest-800 opacity-50 text-forest-500 dark:text-forest-500";
+                                    }
+                                }
+
+                                return (
+                                    <button 
+                                        key={idx} 
+                                        onClick={() => handleAnswer(idx)}
+                                        disabled={showExp}
+                                        className={btnClass}
+                                    >
+                                        {opt}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {showExp && (
+                        <div className="bg-forest-100 dark:bg-forest-800/50 rounded-xl p-6 border border-forest-200 dark:border-forest-700 animate-fade-in flex flex-col sm:flex-row justify-between items-center gap-6">
+                            <div className="text-forest-800 dark:text-forest-200 flex-1">
+                                <span className={selected === q.a ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-bold text-red-600 dark:text-red-400"}>
+                                    {selected === q.a ? "Richtig! " : "Leider falsch. "}
+                                </span>
+                                {q.exp}
+                            </div>
+                            <button 
+                                onClick={nextQuestion}
+                                className="bg-forest-600 hover:bg-forest-700 text-white px-8 py-3 rounded-full font-medium transition-colors whitespace-nowrap shrink-0"
+                            >
+                                Weiter
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('simulation');
+
+            return (
+                <div className="min-h-screen bg-forest-50 dark:bg-forest-950 transition-colors duration-300">
+                    {/* Header */}
+                    <header className="bg-white dark:bg-forest-900 border-b border-forest-200 dark:border-forest-800 sticky top-0 z-10">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between items-center h-16">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-forest-100 dark:bg-forest-800 p-2 rounded-lg text-forest-600 dark:text-forest-300">
+                                        <IconBug />
+                                    </div>
+                                    <h1 className="text-xl font-bold text-forest-900 dark:text-forest-50">Insektenflug</h1>
+                                </div>
+                                <a href="../index.html" className="text-forest-500 hover:text-forest-700 dark:text-forest-400 dark:hover:text-forest-200 flex items-center gap-2 text-sm font-medium transition-colors">
+                                    <IconHome /> Zurück
+                                </a>
+                            </div>
+                        </div>
+                        
+                        {/* Tabs */}
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto">
+                            <nav className="flex space-x-8" aria-label="Tabs">
+                                <button 
+                                    onClick={() => setActiveTab('simulation')}
+                                    className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'simulation' ? 'border-forest-500 text-forest-600 dark:text-forest-300' : 'border-transparent text-forest-500 hover:text-forest-700 hover:border-forest-300 dark:text-forest-400 dark:hover:text-forest-200 dark:hover:border-forest-700'}`}
+                                >
+                                    <IconActivity /> Simulation
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('wissen')}
+                                    className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'wissen' ? 'border-forest-500 text-forest-600 dark:text-forest-300' : 'border-transparent text-forest-500 hover:text-forest-700 hover:border-forest-300 dark:text-forest-400 dark:hover:text-forest-200 dark:hover:border-forest-700'}`}
+                                >
+                                    <IconBookOpen /> Wissen
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('check')}
+                                    className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'check' ? 'border-forest-500 text-forest-600 dark:text-forest-300' : 'border-transparent text-forest-500 hover:text-forest-700 hover:border-forest-300 dark:text-forest-400 dark:hover:text-forest-200 dark:hover:border-forest-700'}`}
+                                >
+                                    <IconCheckSquare /> Check
+                                </button>
+                            </nav>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        {activeTab === 'simulation' && <TabSimulation />}
+                        {activeTab === 'wissen' && <TabWissen />}
+                        {activeTab === 'check' && <TabCheck />}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
