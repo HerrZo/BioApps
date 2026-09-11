@@ -67,7 +67,8 @@ export default function App() {
   const [trainerSubmitted, setTrainerSubmitted] = useState<boolean>(false);
 
   // --- STATION 2: STRAHLENOPTIK & BILDENTSTEHUNG ---
-  const [candleDist, setCandleDist] = useState<number>(180); // Distance of candle from cornea
+  const [opticsMode, setOpticsMode] = useState<'candle' | 'parallel'>('candle');
+  const [candleDist, setCandleDist] = useState<number>(180); // Distance of candle from cornea (80 to 280)
   const [accommodateState, setAccommodateState] = useState<number>(0.5); // 0 = far accommodated, 1 = near accommodated
   const [autoFocus, setAutoFocus] = useState<boolean>(true);
   const [brainInversion, setBrainInversion] = useState<boolean>(false);
@@ -91,62 +92,105 @@ export default function App() {
     return EYE_STRUCTURES.find(s => s.id === selectedStructureId) || EYE_STRUCTURES[4];
   }, [selectedStructureId]);
 
-  // Derived values for accommodation
-  // Far (10m): distanceFactor ~ 0. Near (0.15m): distanceFactor ~ 1.
+  // Derived values for accommodation in Station 1
   const distanceFactor = useMemo(() => {
-    // Logarithmic-like mapping from 10m to 0.15m
     const minD = 0.15;
     const maxD = 10;
     const clamped = Math.max(minD, Math.min(maxD, distanceMeters));
     return 1 - (Math.log10(clamped) - Math.log10(minD)) / (Math.log10(maxD) - Math.log10(minD));
   }, [distanceMeters]);
 
-  // Optical focal calculations for Station 2
-  // Let cornea at x = 240, lens center at x = 270, retina at x = 450.
-  // When candle is at x = 240 - candleDist
-  // If autoFocus is on, accommodateState matches 1 / candleDist
+  // ─── EXACT GEOMETRIC OPTICS FOR STATION 2 ───
+  // In Station 2 SVG (viewBox 0 0 720 300):
+  // Optical Axis: y = 150
+  // Lens Plane: lensX = 400
+  // Retina Wall: retinaX = 580
+  // Fixed distance from lens to retina: b0 = 580 - 400 = 180 px
+  const lensX = 400;
+  const retinaX = 580;
+  const b0 = 180;
+
+  // Candle object geometry:
+  // candleX = 380 - candleDist
+  // Object distance to lens plane: g = 400 - candleX = 20 + candleDist
+  const candleX = 380 - candleDist;
+  const g = lensX - candleX; // 100 to 300
+  const candleFlameTopY = 75; // flame tip
+  const H_obj = 150 - candleFlameTopY; // 75 px
+
+  // Required focal length f_req for candle at distance g to focus on retina at b0 = 180:
+  // 1/f_req = 1/g + 1/b0 => f_req = (g * 180) / (g + 180)
+  const fReq = useMemo(() => {
+    return (g * b0) / (g + b0);
+  }, [g, b0]);
+
+  // When autoFocus is active, keep accommodateState in sync
   useEffect(() => {
     if (autoFocus) {
-      // 180px candleDist -> moderate accommodate
-      const acc = Math.max(0, Math.min(1, (300 - candleDist) / 220));
-      setAccommodateState(acc);
+      if (opticsMode === 'parallel') {
+        setAccommodateState(0); // Relaxed for distant parallel light
+      } else {
+        // g ranges from 100 to 300. fReq ranges from ~64.3 to 112.5.
+        const acc = Math.max(0, Math.min(1, (112.5 - fReq) / (112.5 - 64.3)));
+        setAccommodateState(acc);
+      }
     }
-  }, [candleDist, autoFocus]);
+  }, [candleDist, autoFocus, opticsMode, fReq]);
 
-  // Focus point calculation
-  const focalX = useMemo(() => {
-    // Normal retina is at x = 450
-    // Brechkraft base + accommodation
-    const baseFocal = 450;
-    // Difference between needed accommodation and actual accommodation
-    const neededAcc = Math.max(0, Math.min(1, (300 - candleDist) / 220));
-    const deltaAcc = accommodateState - neededAcc;
-    // If accommodated too strongly, rays converge in front of retina (< 450)
-    // If accommodated too weakly, rays converge behind retina (> 450)
-    return baseFocal - deltaAcc * 70;
-  }, [candleDist, accommodateState]);
+  // Actual focal length of the eye f_actual:
+  const fActual = useMemo(() => {
+    if (opticsMode === 'parallel') {
+      // Resting eye: f = 180 px (focus exactly on retina)
+      // Accommodation pulls focus forward
+      return 180 - accommodateState * 40;
+    }
+    if (autoFocus) {
+      return fReq;
+    }
+    // Manual: 0 = flat (112.5 px), 1 = thick (64.3 px)
+    return 112.5 - accommodateState * (112.5 - 64.3);
+  }, [opticsMode, autoFocus, fReq, accommodateState]);
 
+  // Image distance b_actual from lens to focus point:
+  // 1/b = 1/f - 1/g => b = (g * f) / (g - f)
+  const bActual = useMemo(() => {
+    if (opticsMode === 'parallel') {
+      return fActual;
+    }
+    if (g <= fActual) return 999;
+    return (g * fActual) / (g - fActual);
+  }, [opticsMode, g, fActual]);
+
+  // Coordinates of ray convergence / Bildpunkt:
+  const focusX = useMemo(() => {
+    return lensX + bActual;
+  }, [lensX, bActual]);
+
+  const focusY = useMemo(() => {
+    if (opticsMode === 'parallel') {
+      return 150; // on optical axis
+    }
+    // Inverted image height: H_img = H_obj * (b / g)
+    return 150 + (H_obj * bActual) / g;
+  }, [opticsMode, H_obj, bActual, g]);
+
+  // Blur on retina based on distance from actual focus to retina (retinaX = 580):
   const blurAmount = useMemo(() => {
-    const delta = Math.abs(focalX - 450);
+    const delta = Math.abs(focusX - retinaX);
     return Math.min(15, delta * 0.18);
-  }, [focalX]);
+  }, [focusX, retinaX]);
 
   // Station 3: Glasses calculation
-  // Myopie: eye axis too long (effective retina at 480). Parallels converge at 450. Needs -dpt (concave) to shift to 480.
-  // Hyperopie: eye axis too short (effective retina at 420). Parallels converge behind at 450. Needs +dpt (convex) to shift to 420.
   const conditionRetinaX = eyeCondition === 'myopie' ? 485 : eyeCondition === 'hyperopie' ? 415 : 450;
   const glassesEffect = withGlasses ? (lensType === 'concave' ? diopters * 14 : diopters * 14) : 0;
-  // Natural focus of the eye without glasses at resting state: 450
   const actualOpticFocusX = 450 - glassesEffect;
   const conditionBlur = Math.abs(actualOpticFocusX - conditionRetinaX);
   const isPerfectPrescription = conditionBlur < 6;
 
   // Station 4: Pupil diameter based on lux
-  // 100000 lux -> 2mm (scale ~ 16px radius), 0.1 lux -> 8mm (scale ~ 48px radius)
   const pupilRadius = useMemo(() => {
     const logLux = Math.max(-1, Math.min(5, Math.log10(luxLevel)));
-    // logLux ranges from -1 to 5. -1 -> radius 46; 5 -> radius 16.
-    const normalized = (logLux + 1) / 6; // 0 to 1
+    const normalized = (logLux + 1) / 6;
     return 48 - normalized * 32;
   }, [luxLevel]);
 
@@ -271,7 +315,6 @@ export default function App() {
         {/* ═════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'anatomie' && (
           <div className="space-y-6">
-            {/* Header Box */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-forest-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -310,7 +353,6 @@ export default function App() {
 
             {/* Main Interactive Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
               {/* Left Column: Anatomical Cross-Section (SVG) */}
               <div className="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-forest-100 space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -331,22 +373,16 @@ export default function App() {
                     style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.04))' }}
                   >
                     <defs>
-                      {/* Gradient for Glaskörper */}
                       <radialGradient id="vitreousGrad" cx="50%" cy="50%" r="50%">
                         <stop offset="0%" stopColor="#f0fdf4" stopOpacity="0.8" />
                         <stop offset="100%" stopColor="#dcfce7" stopOpacity="0.95" />
                       </radialGradient>
-                      {/* Glow for active selection */}
-                      <filter id="glowPart" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
                     </defs>
 
                     {/* Optic axis line */}
                     <line x1="40" y1="160" x2="440" y2="160" stroke="#cbd5e1" strokeWidth="1.5" strokeDasharray="6 4" />
 
-                    {/* 1. SEHNERV (Nervus opticus) */}
+                    {/* 1. SEHNERV */}
                     <g
                       className="cursor-pointer transition-opacity"
                       onClick={() => !trainerMode && setSelectedStructureId('sehnerv')}
@@ -360,7 +396,7 @@ export default function App() {
                       <line x1="395" y1="200" x2="455" y2="220" stroke="#b91c1c" strokeWidth="1" strokeDasharray="2 2" />
                     </g>
 
-                    {/* 2. SKLERA (Lederhaut) - Außenwand */}
+                    {/* 2. SKLERA (Lederhaut) */}
                     <path
                       d="M 140 70 C 230 40, 350 70, 400 150 C 420 185, 410 230, 390 250 C 340 285, 230 280, 140 250"
                       fill="none"
@@ -371,7 +407,7 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('lederhaut')}
                     />
 
-                    {/* 3. ADERHAUT (Chorioidea) - Mittlere Wand */}
+                    {/* 3. ADERHAUT (Chorioidea) */}
                     <path
                       d="M 145 76 C 230 50, 345 78, 393 150 C 412 182, 403 224, 384 243 C 336 276, 230 272, 145 244"
                       fill="none"
@@ -382,7 +418,7 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('aderhaut')}
                     />
 
-                    {/* 4. NETZHAUT (Retina) - Innenwand */}
+                    {/* 4. NETZHAUT (Retina) */}
                     <path
                       d="M 160 88 C 235 65, 340 90, 385 152 C 400 178, 395 215, 378 232 C 330 262, 235 258, 160 232"
                       fill="none"
@@ -393,7 +429,7 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('netzhaut')}
                     />
 
-                    {/* 5. GLASKÖRPER (Corpus vitreum) */}
+                    {/* 5. GLASKÖRPER */}
                     <path
                       d="M 165 92 C 235 70, 335 95, 380 155 C 395 180, 390 210, 374 228 C 330 255, 235 252, 165 228 C 175 195, 175 125, 165 92 Z"
                       fill="url(#vitreousGrad)"
@@ -403,7 +439,7 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('glaskoerper')}
                     />
 
-                    {/* 6. GELBER FLECK (Fovea centralis) - exakt auf optischer Achse */}
+                    {/* 6. GELBER FLECK (Fovea) */}
                     <g
                       className="cursor-pointer"
                       onClick={() => !trainerMode && setSelectedStructureId('gelber_fleck')}
@@ -419,7 +455,7 @@ export default function App() {
                       <circle cx="386" cy="160" r="2.5" fill="#ffffff" />
                     </g>
 
-                    {/* 7. BLINDER FLECK (Papille) - Sehnervaustritt */}
+                    {/* 7. BLINDER FLECK */}
                     <g
                       className="cursor-pointer"
                       onClick={() => !trainerMode && setSelectedStructureId('blinder_fleck')}
@@ -438,7 +474,6 @@ export default function App() {
                     </g>
 
                     {/* 8. VORDERE AUGENKAMMER & HORNHAUT */}
-                    {/* Vordere Kammer Space */}
                     <path
                       d="M 140 70 C 80 100, 80 220, 140 250 C 130 220, 130 100, 140 70 Z"
                       fill="#e0f2fe"
@@ -446,7 +481,6 @@ export default function App() {
                       className="cursor-pointer"
                       onClick={() => !trainerMode && setSelectedStructureId('vordere_kammer')}
                     />
-                    {/* Hornhaut (Cornea) gewölbt */}
                     <path
                       d="M 140 70 C 75 105, 75 215, 140 250"
                       fill="none"
@@ -457,19 +491,17 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('hornhaut')}
                     />
 
-                    {/* 9. ZILIARMUSKEL & KÖRPER (Oben & Unten) */}
+                    {/* 9. ZILIARMUSKEL */}
                     <g
                       className="cursor-pointer"
                       onClick={() => !trainerMode && setSelectedStructureId('ziliarmuskel')}
                     >
-                      {/* Upper ciliary muscle */}
                       <path
                         d={`M 140 70 Q 155 75, 168 ${78 + distanceFactor * 6} Q 155 92, 140 85 Z`}
                         fill={selectedStructureId === 'ziliarmuskel' ? '#ea580c' : '#f97316'}
                         stroke="#c2410c"
                         strokeWidth="2"
                       />
-                      {/* Lower ciliary muscle */}
                       <path
                         d={`M 140 250 Q 155 245, 168 ${242 - distanceFactor * 6} Q 155 228, 140 235 Z`}
                         fill={selectedStructureId === 'ziliarmuskel' ? '#ea580c' : '#f97316'}
@@ -478,19 +510,17 @@ export default function App() {
                       />
                     </g>
 
-                    {/* 10. IRIS (Oben & Unten mit Pupillenöffnung) */}
+                    {/* 10. IRIS */}
                     <g
                       className="cursor-pointer"
                       onClick={() => !trainerMode && setSelectedStructureId('iris')}
                     >
-                      {/* Upper Iris */}
                       <path
                         d="M 145 82 L 158 128 L 152 130 L 140 85 Z"
                         fill={selectedStructureId === 'iris' ? '#047857' : '#10b981'}
                         stroke="#065f46"
                         strokeWidth="1.5"
                       />
-                      {/* Lower Iris */}
                       <path
                         d="M 145 238 L 158 192 L 152 190 L 140 235 Z"
                         fill={selectedStructureId === 'iris' ? '#047857' : '#10b981'}
@@ -499,7 +529,7 @@ export default function App() {
                       />
                     </g>
 
-                    {/* PUPILLE (Lücke zwischen oberer und unterer Iris) */}
+                    {/* PUPILLE */}
                     <line
                       x1="156"
                       y1="130"
@@ -512,14 +542,12 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('pupille')}
                     />
 
-                    {/* 11. ZONULAFASERN (Verbindung Ziliarkörper -> Linse) */}
+                    {/* 11. ZONULAFASERN */}
                     <g
                       className="cursor-pointer"
                       onClick={() => !trainerMode && setSelectedStructureId('zonulafasern')}
                     >
-                      {/* Upper fibers */}
                       {distanceFactor > 0.6 ? (
-                        // Wavy/slacked when near vision
                         <path
                           d={`M 166 ${84 + distanceFactor * 6} Q 163 100, 166 112 Q 170 120, 168 126`}
                           fill="none"
@@ -527,7 +555,6 @@ export default function App() {
                           strokeWidth="2"
                         />
                       ) : (
-                        // Tense/straight when far vision
                         <line
                           x1="166"
                           y1={84 + distanceFactor * 6}
@@ -538,7 +565,6 @@ export default function App() {
                         />
                       )}
 
-                      {/* Lower fibers */}
                       {distanceFactor > 0.6 ? (
                         <path
                           d={`M 166 ${236 - distanceFactor * 6} Q 163 220, 166 208 Q 170 200, 168 194`}
@@ -558,8 +584,7 @@ export default function App() {
                       )}
                     </g>
 
-                    {/* 12. AUGENLINSE (Phakos) - dynamische Krümmung / Wölbung */}
-                    {/* Linse rx verändert sich von 8 (Fernsicht) bis 17 (Nahsicht) */}
+                    {/* 12. AUGENLINSE */}
                     <ellipse
                       cx="168"
                       cy="160"
@@ -572,7 +597,7 @@ export default function App() {
                       onClick={() => !trainerMode && setSelectedStructureId('linse')}
                     />
 
-                    {/* INTERACTIVE MARKERS & HOTSPOTS */}
+                    {/* MARKERS */}
                     {!trainerMode && (
                       <>
                         {EYE_STRUCTURES.map((s) => {
@@ -599,7 +624,7 @@ export default function App() {
                       </>
                     )}
 
-                    {/* TRAINER MODE MARKERS (NUMBERS 1 to 10) */}
+                    {/* TRAINER MODE MARKERS */}
                     {trainerMode && (
                       <>
                         {EYE_STRUCTURES.slice(0, 10).map((s, idx) => {
@@ -654,7 +679,6 @@ export default function App() {
               {/* Right Column: Structure Detail Card OR Trainer Panel */}
               <div className="lg:col-span-5 space-y-4">
                 {!trainerMode ? (
-                  /* STRUCTURE DETAIL CARD */
                   <div className="bg-white rounded-2xl p-5 shadow-sm border border-forest-100 space-y-4">
                     <div className="flex items-start justify-between">
                       <div>
@@ -686,7 +710,6 @@ export default function App() {
                     )}
                   </div>
                 ) : (
-                  /* INTERACTIVE TRAINER PANEL */
                   <div className="bg-white rounded-2xl p-5 shadow-sm border border-forest-100 space-y-4">
                     <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                       <h3 className="font-bold text-gray-900 text-sm">
@@ -788,18 +811,15 @@ export default function App() {
                   {/* Enlarged Ciliary Body SVG Zoom */}
                   <div className="relative w-full aspect-[280/140] bg-slate-950 rounded-xl border border-forest-700/60 overflow-hidden flex items-center justify-center p-2">
                     <svg viewBox="0 0 280 140" className="w-full h-full">
-                      {/* Grid background */}
                       <pattern id="zoomGrid" width="10" height="10" patternUnits="userSpaceOnUse">
                         <line x1="0" y1="0" x2="10" y2="0" stroke="#1e293b" strokeWidth="0.5" />
                         <line x1="0" y1="0" x2="0" y2="10" stroke="#1e293b" strokeWidth="0.5" />
                       </pattern>
                       <rect width="280" height="140" fill="url(#zoomGrid)" />
 
-                      {/* Sclera & Choroid base */}
                       <path d="M 10 20 Q 140 10, 270 20" fill="none" stroke="#64748b" strokeWidth="8" />
 
                       {/* ZILIARMUSKEL in Zoom */}
-                      {/* Kontrahiert: wölbt sich nach unten/innen (y vergrößert sich) */}
                       <path
                         d={`M 50 24 Q 90 ${32 + distanceFactor * 16}, 130 ${38 + distanceFactor * 22} Q 80 50, 50 24 Z`}
                         fill="#ea580c"
@@ -813,13 +833,11 @@ export default function App() {
 
                       {/* ZONULAFASERN in Zoom */}
                       {distanceFactor > 0.6 ? (
-                        // Schlaff / wellig
                         <g stroke="#fbbf24" strokeWidth="2.5" fill="none">
                           <path d={`M 125 ${38 + distanceFactor * 22} Q 140 70, 155 76 Q 170 82, 185 82`} strokeDasharray="2 1" />
                           <path d={`M 115 ${35 + distanceFactor * 20} Q 135 65, 150 72 Q 165 78, 180 78`} strokeDasharray="2 1" />
                         </g>
                       ) : (
-                        // Straff gespannt
                         <g stroke="#fbbf24" strokeWidth="2.5">
                           <line x1={`125`} y1={38 + distanceFactor * 22} x2="185" y2="82" />
                           <line x1={`115`} y1={35 + distanceFactor * 20} x2="180" y2="78" />
@@ -827,7 +845,6 @@ export default function App() {
                       )}
 
                       {/* LINSENÄQUATOR in Zoom */}
-                      {/* Bei Nahsicht wird die Linse dick/gewölbt (rx groß) */}
                       <ellipse
                         cx="220"
                         cy="110"
@@ -844,7 +861,6 @@ export default function App() {
                       </text>
                     </svg>
 
-                    {/* Status Overlays */}
                     <div className="absolute bottom-2 left-2 right-2 flex justify-between text-[10px] font-semibold bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
                       <div>
                         Muskel:{' '}
@@ -867,7 +883,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Paradoxon Didactic Explanation */}
                   <div className="p-3 bg-amber-950/40 rounded-xl border border-amber-500/40 text-xs text-amber-200 leading-relaxed">
                     <span className="font-bold text-amber-300">💡 Das Akkommodations-Paradoxon:</span> Beim Lesen spannt sich der Ziliarmuskel aktiv an. Dadurch wird der Ringdurchmesser <em>kleiner</em>, die Zonulafasern <em>erschlaffen</em> und die Linse kugelt sich aufgrund ihrer <em>Eigenelastizität</em> ab. Langes Lesen ermüdet, weil der Ziliarmuskel Dauerarbeit leistet!
                   </div>
@@ -893,7 +908,7 @@ export default function App() {
                   </h2>
                 </div>
                 <p className="text-sm text-gray-600 mt-1 max-w-3xl">
-                  Verfolge den Strahlengang des Lichts (Parallelstrahl, Mittelpunktstrahl, Brennpunktstrahl) von einer brennenden Kerze bis zur Netzhaut. Beobachte das reelle, verkleinerte und umgekehrte Bild im Retina-Monitor!
+                  Verfolge den Strahlengang des Lichts (Parallelstrahl, Mittelpunktstrahl, Brennpunktstrahl) von einer brennenden Kerze bis zur Netzhaut. Beobachte, wie die Lichtstrahlen im scharfen Zustand <strong>exakt auf der Netzhaut</strong> konvergieren!
                 </p>
               </div>
 
@@ -914,27 +929,54 @@ export default function App() {
             {/* Interactive Ray Tracing Canvas */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-forest-100 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                <div className="flex items-center gap-4 text-xs font-medium text-gray-700">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-red-500 rounded"></span> Parallelstrahl
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-blue-500 rounded"></span> Mittelpunktsstrahl
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-emerald-500 rounded"></span> Brennpunktstrahl
-                  </span>
-                </div>
+                {/* Ray Legend */}
+                {opticsMode === 'candle' ? (
+                  <div className="flex items-center gap-4 text-xs font-medium text-gray-700">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-red-500 rounded"></span> Parallelstrahl
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-blue-500 rounded"></span> Mittelpunktsstrahl
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-emerald-500 rounded"></span> Brennpunktstrahl
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                    <span className="w-3 h-0.5 bg-red-500 rounded"></span> Parallele Fernlicht-Strahlen (vereinigen sich im Brennpunkt F' auf der Netzhaut)
+                  </div>
+                )}
 
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                {/* Mode Selectors */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 text-xs">
+                    <button
+                      onClick={() => setOpticsMode('candle')}
+                      className={`px-2.5 py-1 rounded font-semibold transition-all ${
+                        opticsMode === 'candle' ? 'bg-white shadow-sm text-forest-900' : 'text-gray-600'
+                      }`}
+                    >
+                      🕯️ Kerze (Divergent)
+                    </button>
+                    <button
+                      onClick={() => setOpticsMode('parallel')}
+                      className={`px-2.5 py-1 rounded font-semibold transition-all ${
+                        opticsMode === 'parallel' ? 'bg-white shadow-sm text-forest-900' : 'text-gray-600'
+                      }`}
+                    >
+                      ☀️ Fernlicht (Parallel)
+                    </button>
+                  </div>
+
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 cursor-pointer ml-2">
                     <input
                       type="checkbox"
                       checked={autoFocus}
                       onChange={(e) => setAutoFocus(e.target.checked)}
                       className="rounded text-forest-600 focus:ring-forest-500"
                     />
-                    <span>Automatische Akkommodation (Fokussierung)</span>
+                    <span>Auto-Fokus</span>
                   </label>
                 </div>
               </div>
@@ -983,6 +1025,7 @@ export default function App() {
                     stroke="#10b981"
                     strokeWidth="2.5"
                   />
+
                   {/* Retina wall at x = 580 */}
                   <path
                     d="M 580 80 C 610 120, 610 180, 580 220"
@@ -995,31 +1038,30 @@ export default function App() {
                     Netzhaut
                   </text>
 
-                  {/* CANDLE OBJECT at x = 380 - candleDist */}
-                  {(() => {
-                    const candleX = 380 - candleDist;
-                    const candleHeight = 60;
-                    const candleTopY = 150 - candleHeight;
-                    const candleFlameTopY = candleTopY - 24;
+                  {/* MODE A: CANDLE OBJECT & RAYS */}
+                  {opticsMode === 'candle' && (() => {
+                    const candleHeight = 50;
+                    const candleTopY = 150 - candleHeight; // 100
+                    const candleFlameTopY = 75;
 
-                    // Light rays originate from candleFlameTopY
-                    // 1. Parallel Ray (Red):
-                    //   From (candleX, candleFlameTopY) to (400, candleFlameTopY)
-                    //   Bends through focalX towards retina (580)
-                    const lensX = 400;
-                    const retinaX = 580;
-                    const slopePar = (150 - candleFlameTopY) / (focalX - lensX);
-                    const parRetinaY = 150 + slopePar * (retinaX - focalX);
+                    // Slopes & Intersection calculations
+                    // Parallel ray slope after lens:
+                    const slopePar = (150 - candleFlameTopY) / fActual;
+                    const parRetinaY = candleFlameTopY + slopePar * (retinaX - lensX);
 
-                    // 2. Central Ray (Blue): passes straight through lens center (400, 150)
-                    const slopeCen = (150 - candleFlameTopY) / (lensX - candleX);
+                    // Central ray slope:
+                    const slopeCen = (150 - candleFlameTopY) / g;
                     const cenRetinaY = 150 + slopeCen * (retinaX - lensX);
 
-                    // 3. Focal Ray (Green): passes through front focal point, then parallel
-                    const frontFocalX = lensX - (focalX - lensX);
-                    const slopeFoc = (150 - candleFlameTopY) / (frontFocalX - candleX);
-                    const focLensY = candleFlameTopY + slopeFoc * (lensX - candleX);
-                    const focRetinaY = focLensY;
+                    // Focal ray: after lens runs horizontally at focusY
+                    const focRetinaY = focusY;
+
+                    // Inverted candle dimensions on retina
+                    const imgHeight = Math.max(10, Math.min(80, (candleHeight * bActual) / g));
+                    const imgBaseY = 150;
+                    const imgFlameTipY = 150 + (H_obj * bActual) / g;
+
+                    const isSharp = blurAmount < 2.0;
 
                     return (
                       <g>
@@ -1029,14 +1071,14 @@ export default function App() {
 
                         {/* Candle Flame */}
                         <path
-                          d={`M ${candleX} ${candleFlameTopY} Q ${candleX + 7} ${candleTopY - 12}, ${candleX} ${candleTopY - 6} Q ${candleX - 7} ${candleTopY - 12}, ${candleX} ${candleFlameTopY} Z`}
+                          d={`M ${candleX} ${candleFlameTopY} Q ${candleX + 7} ${candleTopY - 10}, ${candleX} ${candleTopY - 5} Q ${candleX - 7} ${candleTopY - 10}, ${candleX} ${candleFlameTopY} Z`}
                           fill="url(#flameGrad)"
                           className="animate-flame"
                         />
-                        <circle cx={candleX} cy={candleTopY - 14} r="14" fill="#fbbf24" opacity="0.15" filter="url(#flameBlur)" />
+                        <circle cx={candleX} cy={candleTopY - 12} r="12" fill="#fbbf24" opacity="0.15" filter="url(#flameBlur)" />
 
                         {/* --- RAYS --- */}
-                        {/* 1. Parallel Ray (Red) */}
+                        {/* 1. Parallel Ray (Red): Horizontal to lens, then through rear focal point and image point */}
                         <path
                           d={`M ${candleX} ${candleFlameTopY} L ${lensX} ${candleFlameTopY} L ${retinaX} ${parRetinaY}`}
                           fill="none"
@@ -1045,7 +1087,7 @@ export default function App() {
                           className="animate-ray"
                         />
 
-                        {/* 2. Central Ray (Blue) */}
+                        {/* 2. Central Ray (Blue): Straight through lens center */}
                         <path
                           d={`M ${candleX} ${candleFlameTopY} L ${retinaX} ${cenRetinaY}`}
                           fill="none"
@@ -1054,38 +1096,108 @@ export default function App() {
                           className="animate-ray"
                         />
 
-                        {/* 3. Focal Ray (Green) */}
+                        {/* 3. Focal Ray (Green): Through front focal point, then parallel to axis */}
                         <path
-                          d={`M ${candleX} ${candleFlameTopY} L ${lensX} ${focLensY} L ${retinaX} ${focRetinaY}`}
+                          d={`M ${candleX} ${candleFlameTopY} L ${lensX} ${focusY} L ${retinaX} ${focRetinaY}`}
                           fill="none"
                           stroke="#10b981"
                           strokeWidth="2"
                           className="animate-ray"
                         />
 
-                        {/* Intersection / Focus Point Indicator */}
-                        <circle cx={focalX} cy="150" r="4" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" />
-                        <text x={focalX - 18} y="168" fill="#fbbf24" fontSize="9">
-                          Brennpunkt F'
-                        </text>
+                        {/* LENS REAR FOCAL POINT F' ON OPTICAL AXIS */}
+                        <g>
+                          <circle cx={lensX + fActual} cy="150" r="3.5" fill="#f97316" stroke="#ffffff" strokeWidth="1.5" />
+                          <text x={lensX + fActual - 8} y="142" fill="#fb923c" fontSize="9" fontWeight="bold">
+                            F'
+                          </text>
+                        </g>
 
-                        {/* IMAGE ON RETINA (Inverted candle image) */}
-                        {/* Scaled inverted candle height */}
-                        {(() => {
-                          const imgHeight = (candleHeight * (retinaX - lensX)) / (lensX - candleX);
-                          const imgY = 150 + imgHeight;
-                          return (
-                            <g opacity={Math.max(0.2, 1 - blurAmount / 8)}>
-                              {/* Inverted candle */}
-                              <rect x={retinaX - 4} y="150" width="8" height={imgHeight} fill="#f8fafc" stroke="#94a3b8" />
-                              <line x1={retinaX} y1={imgY} x2={retinaX} y2={imgY + 4} stroke="#475569" strokeWidth="1.5" />
-                              <path
-                                d={`M ${retinaX} ${imgY + 14} Q ${retinaX + 4} ${imgY + 8}, ${retinaX} ${imgY + 4} Q ${retinaX - 4} ${imgY + 8}, ${retinaX} ${imgY + 14} Z`}
-                                fill="url(#flameGrad)"
-                              />
-                            </g>
-                          );
-                        })()}
+                        {/* CONVERGENCE POINT (BILDPUNKT / FOKUS DER STRAHLEN) */}
+                        <g>
+                          <circle
+                            cx={focusX}
+                            cy={focusY}
+                            r="5"
+                            fill={isSharp ? '#22c55e' : '#f59e0b'}
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          <text
+                            x={Math.min(580, focusX - 40)}
+                            y={focusY + 18}
+                            fill={isSharp ? '#4ade80' : '#fbbf24'}
+                            fontSize="9"
+                            fontWeight="bold"
+                          >
+                            {isSharp ? 'Scharfer Fokus (Netzhaut)' : focusX < retinaX ? 'Fokus VOR Netzhaut' : 'Fokus HINTER Netzhaut'}
+                          </text>
+                        </g>
+
+                        {/* INVERTED IMAGE ON RETINA */}
+                        <g opacity={Math.max(0.2, 1 - blurAmount / 8)}>
+                          {/* Inverted candle on retina wall */}
+                          <rect
+                            x={retinaX - 4}
+                            y={imgBaseY}
+                            width="8"
+                            height={Math.max(6, imgHeight - 16)}
+                            fill="#f8fafc"
+                            stroke="#94a3b8"
+                          />
+                          <line
+                            x1={retinaX}
+                            y1={imgBaseY + imgHeight - 16}
+                            x2={retinaX}
+                            y2={imgBaseY + imgHeight - 10}
+                            stroke="#475569"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d={`M ${retinaX} ${imgFlameTipY} Q ${retinaX + 4} ${imgBaseY + imgHeight - 12}, ${retinaX} ${imgBaseY + imgHeight - 8} Q ${retinaX - 4} ${imgBaseY + imgHeight - 12}, ${retinaX} ${imgFlameTipY} Z`}
+                            fill="url(#flameGrad)"
+                          />
+                        </g>
+                      </g>
+                    );
+                  })()}
+
+                  {/* MODE B: PARALLEL DISTANT LIGHT RAYS */}
+                  {opticsMode === 'parallel' && (() => {
+                    const raysY = [105, 125, 175, 195];
+                    const isSharp = Math.abs(focusX - retinaX) < 4;
+
+                    return (
+                      <g>
+                        {raysY.map((y, idx) => (
+                          <path
+                            key={idx}
+                            d={`M 40 ${y} L ${lensX} ${y} L ${focusX} 150`}
+                            fill="none"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            className="animate-ray"
+                          />
+                        ))}
+
+                        {/* Brennpunkt F' indicator */}
+                        <circle
+                          cx={focusX}
+                          cy="150"
+                          r="6"
+                          fill={isSharp ? '#22c55e' : '#f59e0b'}
+                          stroke="#ffffff"
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={focusX - 35}
+                          y="172"
+                          fill={isSharp ? '#4ade80' : '#fbbf24'}
+                          fontSize="10"
+                          fontWeight="bold"
+                        >
+                          {isSharp ? 'Brennpunkt F\' exakt auf Netzhaut' : 'Brennpunkt VOR Netzhaut'}
+                        </text>
                       </g>
                     );
                   })()}
@@ -1096,25 +1208,31 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Distance & Accommodation Controls */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4 text-xs">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between font-semibold text-gray-800">
-                      <span>Kerzenabstand zum Auge:</span>
-                      <span className="font-mono text-forest-700">{candleDist} px</span>
+                  {opticsMode === 'candle' ? (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between font-semibold text-gray-800">
+                        <span>Kerzenabstand zum Auge:</span>
+                        <span className="font-mono text-forest-700">{candleDist} px ({((candleDist / 280) * 10).toFixed(1)} m)</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="80"
+                        max="280"
+                        value={candleDist}
+                        onChange={(e) => setCandleDist(parseInt(e.target.value))}
+                        className="w-full accent-forest-600 cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-gray-500">
+                        <span>Nahsicht (80 px)</span>
+                        <span>Mittlere Entfernung</span>
+                        <span>Fernsicht (280 px)</span>
+                      </div>
                     </div>
-                    <input
-                      type="range"
-                      min="80"
-                      max="280"
-                      value={candleDist}
-                      onChange={(e) => setCandleDist(parseInt(e.target.value))}
-                      className="w-full accent-forest-600 cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-500">
-                      <span>Sehr nah am Auge</span>
-                      <span>Mittlere Entfernung</span>
-                      <span>Weit entfernt</span>
+                  ) : (
+                    <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl text-sky-900">
+                      <strong>Modus Paralleles Fernlicht:</strong> Das Licht stammt von einem sehr weit entfernten Objekt (Sonne, Berggipfel im Unendlichen). Parallele Lichtstrahlen schneiden sich im entspannten Auge <strong>im Brennpunkt F' exakt auf der Netzhaut</strong>.
                     </div>
-                  </div>
+                  )}
 
                   {!autoFocus && (
                     <div className="space-y-1.5 pt-2 border-t border-gray-200">
@@ -1132,8 +1250,8 @@ export default function App() {
                         className="w-full accent-emerald-600 cursor-pointer"
                       />
                       <div className="flex justify-between text-[10px] text-gray-500">
-                        <span>Flache Linse (Fernsicht)</span>
-                        <span>Stark gekrümmt (Nahsicht)</span>
+                        <span>Flache Linse (Ferne)</span>
+                        <span>Stark gekrümmt (Nähe)</span>
                       </div>
                     </div>
                   )}
@@ -1165,7 +1283,6 @@ export default function App() {
                             <feGaussianBlur stdDeviation={blurAmount} />
                           </filter>
                         </defs>
-                        {/* Candle in Monitor */}
                         <g filter="url(#perceptionBlur)">
                           <rect x="42" y="45" width="16" height="40" fill="#f1f5f9" rx="2" stroke="#64748b" />
                           <line x1="50" y1="45" x2="50" y2="38" stroke="#334155" strokeWidth="2" />
@@ -1182,11 +1299,11 @@ export default function App() {
                   <div className="text-[11px] text-center text-slate-300">
                     {blurAmount < 1.5 ? (
                       <span className="text-emerald-400 font-semibold">
-                        ✅ Perfekter Fokus! Das Bild liegt exakt auf der Netzhaut.
+                        ✅ Perfekter Fokus! Der Bildpunkt liegt exakt auf der Netzhaut.
                       </span>
                     ) : (
                       <span className="text-amber-400">
-                        ⚠️ Bild unscharf! Der Brennpunkt liegt {focalX < 580 ? 'VOR' : 'HINTER'} der Netzhaut.
+                        ⚠️ Bild unscharf! Der Fokus liegt {focusX < retinaX ? 'VOR' : 'HINTER'} der Netzhaut.
                       </span>
                     )}
                   </div>
@@ -1283,7 +1400,6 @@ export default function App() {
                     <line x1="20" y1="140" x2="620" y2="140" stroke="#475569" strokeWidth="1" strokeDasharray="6 4" />
 
                     {/* EYE OUTLINE WITH DYNAMIC RETINA POSITION */}
-                    {/* Cornea at x = 260. Normal retina at x = 450. Myopie retina at x = 485. Hyperopie retina at x = 415. */}
                     <path
                       d={`M 260 60 C 320 40, ${conditionRetinaX - 20} 50, ${conditionRetinaX} 140 C ${conditionRetinaX - 20} 230, 320 240, 260 220`}
                       fill="none"
@@ -1317,7 +1433,6 @@ export default function App() {
                     {withGlasses && (
                       <g>
                         {lensType === 'concave' ? (
-                          // Zerstreuungslinse (Konkav - dünn in der Mitte, dick am Rand)
                           <path
                             d="M 185 70 Q 192 140, 185 210 L 195 210 Q 188 140, 195 70 Z"
                             fill="#38bdf8"
@@ -1326,7 +1441,6 @@ export default function App() {
                             strokeWidth="2"
                           />
                         ) : (
-                          // Sammellinse (Konvex - dick in der Mitte, dünn am Rand)
                           <path
                             d="M 185 70 Q 178 140, 185 210 L 195 210 Q 202 140, 195 70 Z"
                             fill="#38bdf8"
@@ -1352,13 +1466,11 @@ export default function App() {
                       let eyeLensY2 = rayY2;
 
                       if (withGlasses) {
-                        // Concave diverges beams slightly; Convex converges beams slightly
                         const div = lensType === 'concave' ? diopters * 2.5 : diopters * 2.5;
                         eyeLensY1 = rayY1 + div;
                         eyeLensY2 = rayY2 - div;
                       }
 
-                      // Intersection point inside eye
                       const focusPointX = actualOpticFocusX;
 
                       return (
@@ -1558,7 +1670,6 @@ export default function App() {
                 {/* Frontal View of Pupil & Iris */}
                 <div className="relative w-full aspect-[320/220] bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center p-2 overflow-hidden select-none">
                   <svg viewBox="0 0 320 220" className="w-full h-full">
-                    {/* Sclera white oval */}
                     <path
                       d="M 40 110 Q 160 30, 280 110 Q 160 190, 40 110 Z"
                       fill="#f8fafc"
@@ -1568,7 +1679,6 @@ export default function App() {
 
                     {/* Iris Circle */}
                     <circle cx="160" cy="110" r="64" fill="#047857" stroke="#065f46" strokeWidth="3" />
-                    {/* Iris texture lines */}
                     {[...Array(24)].map((_, i) => (
                       <line
                         key={i}
@@ -1582,7 +1692,7 @@ export default function App() {
                       />
                     ))}
 
-                    {/* Pupil Circle (Dynamic Radius based on Lux) */}
+                    {/* Pupil Circle */}
                     <circle
                       cx="160"
                       cy="110"
@@ -1598,7 +1708,6 @@ export default function App() {
                     <circle cx="152" cy="102" r="3" fill="#ffffff" opacity="0.4" />
                   </svg>
 
-                  {/* Pupil Diameter Info Overlay */}
                   <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[11px] text-slate-300 flex justify-between border border-white/10">
                     <span>Pupillendurchmesser: <strong className="text-white">~{(pupilRadius / 4).toFixed(1)} mm</strong></span>
                     <span>Aktiver Muskel: <strong className="text-yellow-400">{luxLevel > 1000 ? 'M. sphincter (Ring)' : 'M. dilatator (Fächer)'}</strong></span>
@@ -1655,10 +1764,8 @@ export default function App() {
                       </p>
                     </div>
 
-                    {/* SVG Cone Schema */}
                     <div className="w-full h-32 bg-slate-900 rounded-xl border border-slate-800 p-2 flex items-center justify-center">
                       <svg viewBox="0 0 300 100" className="w-full h-full">
-                        {/* 3 Cones: Red, Green, Blue */}
                         <g transform="translate(60, 10)">
                           <polygon points="20,10 10,60 30,60" fill="#ef4444" stroke="#b91c1c" strokeWidth="1.5" />
                           <rect x="15" y="60" width="10" height="20" fill="#fca5a5" />
@@ -1695,13 +1802,11 @@ export default function App() {
                       </p>
                     </div>
 
-                    {/* SVG Rod Schema */}
                     <div className="w-full h-32 bg-slate-900 rounded-xl border border-slate-800 p-2 flex items-center justify-center">
                       <svg viewBox="0 0 300 100" className="w-full h-full">
                         {[50, 110, 170, 230].map((x, i) => (
                           <g key={i} transform={`translate(${x}, 10)`}>
                             <rect x="15" y="10" width="10" height="50" rx="3" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="1.5" />
-                            {/* Discs */}
                             {[16, 24, 32, 40, 48].map((y, di) => (
                               <line key={di} x1="16" y1={y} x2="24" y2={y} stroke="#64748b" strokeWidth="1" />
                             ))}
@@ -1714,7 +1819,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Perceptual simulation image */}
                 <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-700 flex items-center justify-between">
                   <div>
                     <span className="font-semibold block">Simulierter Seheindruck aktuell:</span>
@@ -1774,7 +1878,7 @@ export default function App() {
               {QUIZ_QUESTIONS.map((q) => {
                 const selectedOptIndex = quizAnswers[q.id];
                 const isAnswered = selectedOptIndex !== undefined;
-                const isCorrect = isAnswered && q.options[selectedOptIndex].isCorrect;
+                const isCorrect = isAnswered && q.options[selectedOptIndex]?.isCorrect;
 
                 return (
                   <div

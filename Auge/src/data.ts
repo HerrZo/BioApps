@@ -178,24 +178,24 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     context: 'Akkommodationsmechanismus nach Helmholtz (LehrplanPLUS B8 2)',
     options: [
       {
-        text: 'Der Ziliarmuskel spannt sich an, der Muskelring wird enger, die Zonulafasern erschlaffen und die Linse krümmt sich elastisch kugelförmig.',
-        isCorrect: true,
-        feedback: 'Hervorragend und fachlich exakt! Bei Anspannung verringert der Ziliarmuskel seinen Durchmesser. Die Haltefasern lockern sich und die elastische Linse kann sich abkugeln.'
-      },
-      {
         text: 'Der Ziliarmuskel zieht kräftig an den Zonulafasern, wodurch die Linse flach und dünn gestreckt wird.',
         isCorrect: false,
         feedback: 'Häufiges Fehlkonzept! Wenn an den Fasern gezogen wird, wird die Linse flach (Fernsicht mit geringer Brechkraft). Für die Nahsicht muss sie aber dick und kugelig werden!'
       },
       {
-        text: 'Der Ziliarmuskel entspannt sich vollkommen, wodurch die Linse durch Blutdruck nach vorne gewölbt wird.',
-        isCorrect: false,
-        feedback: 'Falsch. Der entspannte Ziliarmuskel liegt bei der Fernsicht vor. Für die Nahsicht muss der Muskel aktiv Arbeit leisten, weshalb langes Lesen ermüden kann.'
+        text: 'Der Ziliarmuskel spannt sich an, der Muskelring wird enger, die Zonulafasern erschlaffen und die Linse krümmt sich elastisch kugelförmig.',
+        isCorrect: true,
+        feedback: 'Hervorragend und fachlich exakt! Bei Anspannung verringert der Ziliarmuskel seinen Durchmesser. Die Haltefasern lockern sich und die elastische Linse kann sich abkugeln.'
       },
       {
         text: 'Die Hornhaut verändert ihre Krümmung und übernimmt die zusätzliche Brechkraft.',
         isCorrect: false,
         feedback: 'Falsch. Die Hornhaut hat eine starre Form und ändert ihre Krümmung niemals aktiv. Nur die Linse akkommodiert!'
+      },
+      {
+        text: 'Der Ziliarmuskel entspannt sich vollkommen, wodurch die Linse durch Blutdruck nach vorne gewölbt wird.',
+        isCorrect: false,
+        feedback: 'Falsch. Der entspannte Ziliarmuskel liegt bei der Fernsicht vor. Für die Nahsicht muss der Muskel aktiv Arbeit leisten, weshalb langes Lesen ermüden kann.'
       }
     ],
     misconceptionAlert: 'Merke dir das Paradoxon: Muskuläre Anstrengung = Zonulafasern locker = Linse dick & kugelig (hohe Brechkraft)!',
@@ -207,11 +207,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     context: 'Geometrische Optik der Bildentstehung (LehrplanPLUS B8 2)',
     options: [
       {
-        text: 'Es ist reell, steht auf dem Kopf (umgekehrt) und ist stark verkleinert.',
-        isCorrect: true,
-        feedback: 'Richtig! Wie bei einer Sammellinse oder Fotokamera mit Gegenstandsweite g > 2f ist das Bild reell, umgekehrt und verkleinert. Erst das Großhirn dreht es für unser Bewusstsein wieder um!'
-      },
-      {
         text: 'Es ist virtuell, steht aufrecht und ist maßstabsgetreu vergrößert.',
         isCorrect: false,
         feedback: 'Falsch. Ein virtuelles Bild kann man nicht auf einem Schirm (der Netzhaut) auffangen. Sammellinsen erzeugen ein reelles Bild.'
@@ -220,6 +215,11 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         text: 'Es ist reell, steht bereits aufrecht und ist genauso groß wie das Originalobjekt.',
         isCorrect: false,
         feedback: 'Falsch. Lichtstrahlen kreuzen sich im Auge, weshalb das Bild auf dem Kopf steht. Zudem ist das Auge nur wenige Zentimeter groß, das Bild muss also verkleinert sein.'
+      },
+      {
+        text: 'Es ist reell, steht auf dem Kopf (umgekehrt) und ist stark verkleinert.',
+        isCorrect: true,
+        feedback: 'Richtig! Wie bei einer Sammellinse oder Fotokamera mit Gegenstandsweite g > 2f ist das Bild reell, umgekehrt und verkleinert. Erst das Großhirn dreht es für unser Bewusstsein wieder um!'
       },
       {
         text: 'Es ist spiegelverkehrt, steht aber senkrecht aufrecht.',
@@ -265,14 +265,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     context: 'Brillenoptik & Strahlenbrechung',
     options: [
       {
-        text: 'Weil der Augapfel zu kurz ist und der Brennpunkt naher Gegenstände HINTER der Netzhaut läge. Die Sammellinse bündelt das Licht zusätzlich.',
-        isCorrect: true,
-        feedback: 'Ganz genau! Die Sammellinse (Konvexlinse) hat positive Dioptrien (+dpt), bündelt das einfallende Licht vorab und rückt den Brennpunkt nach vorne auf die Netzhaut.'
-      },
-      {
         text: 'Weil die Netzhaut zu wenige Stäbchen besitzt, bündelt die Sammellinse mehr Photonen.',
         isCorrect: false,
         feedback: 'Falsch. Weitsichtigkeit ist ein rein geometrisch-optisches Problem des Augapfels und der Brechkraft, kein Rezeptordefekt.'
+      },
+      {
+        text: 'Weil der Ziliarmuskel bei Weitsichtigen dauerhaft verkrampft ist und gelöst werden muss.',
+        isCorrect: false,
+        feedback: 'Falsch. Die Linse kann zwar anfangs durch Dauerkontraktion kompensieren (was zu Kopfschmerzen führt), die Sammellinse entlastet aber optisch durch Vorbündelung.'
       },
       {
         text: 'Weil eine Sammellinse das Bild im Auge auf den Kopf dreht, damit die Netzhaut es verarbeiten kann.',
@@ -280,9 +280,9 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         feedback: 'Falsch. Das Bild wird bereits durch das normale Auge auf den Kopf gestellt.'
       },
       {
-        text: 'Weil der Ziliarmuskel bei Weitsichtigen dauerhaft verkrampft ist und gelöst werden muss.',
-        isCorrect: false,
-        feedback: 'Falsch. Die Linse kann zwar anfangs durch Dauerkontraktion kompensieren (was zu Kopfschmerzen führt), die Sammellinse entlastet aber optisch durch Vorbündelung.'
+        text: 'Weil der Augapfel zu kurz ist und der Brennpunkt naher Gegenstände HINTER der Netzhaut läge. Die Sammellinse bündelt das Licht zusätzlich.',
+        isCorrect: true,
+        feedback: 'Ganz genau! Die Sammellinse (Konvexlinse) hat positive Dioptrien (+dpt), bündelt das einfallende Licht vorab und rückt den Brennpunkt nach vorne auf die Netzhaut.'
       }
     ],
     misconceptionAlert: 'Weitsichtig = Augapfel zu kurz = Brennpunkt HINTER der Netzhaut = Plusglas (Sammellinse bündelt nach innen)!',
@@ -294,14 +294,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     context: 'Netzhautanatomie & Sehverarbeitung',
     options: [
       {
-        text: 'Dort bündeln sich alle Nervenfasern zum Sehnerv und treten aus dem Augapfel aus – es gibt an dieser Stelle keine Fotorezeptoren.',
-        isCorrect: true,
-        feedback: 'Exzellent! An der Sehnervpapille müssen über 1 Million Nervenfasern und Blutgefäße durch die Augenwand. Für Sinneszellen (Stäbchen/Zapfen) ist dort schlicht kein Platz.'
-      },
-      {
         text: 'Dort befinden sich ausschließlich Stäbchen, die nur bei völliger Dunkelheit ansprechen.',
         isCorrect: false,
         feedback: 'Falsch. Am Blinden Fleck gibt es überhaupt keine Fotorezeptoren – weder Stäbchen noch Zapfen!'
+      },
+      {
+        text: 'Dort bündeln sich alle Nervenfasern zum Sehnerv und treten aus dem Augapfel aus – es gibt an dieser Stelle keine Fotorezeptoren.',
+        isCorrect: true,
+        feedback: 'Exzellent! An der Sehnervpapille müssen über 1 Million Nervenfasern und Blutgefäße durch die Augenwand. Für Sinneszellen (Stäbchen/Zapfen) ist dort schlicht kein Platz.'
       },
       {
         text: 'Dort wird das Licht von der schwarzen Aderhaut so stark verschluckt, dass keine Signale entstehen.',
@@ -323,11 +323,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     context: 'Fotorezeptoren: Stäbchen vs. Zapfen (LehrplanPLUS B8 2)',
     options: [
       {
-        text: 'Bei Dämmerung und Dunkelheit sind nur die hochlichtempfindlichen Stäbchen aktiv, die keine Farben unterscheiden können. Die Zapfen arbeiten erst bei Helligkeit.',
-        isCorrect: true,
-        feedback: 'Brillant erklärt! Zapfen benötigen viel Licht (photopisches Sehen) und ermöglichen mit 3 Typen (Rot/Grün/Blau) das Farbsehen. Stäbchen sind 1000-mal lichtempfindlicher, besitzen aber nur ein Sehpigment (Rhodopsin) für Graustufen (skotopisches Sehen).'
-      },
-      {
         text: 'Die Hornhaut filtert bei Nacht alle bunten Lichtwellen heraus, damit die Netzhaut geschont wird.',
         isCorrect: false,
         feedback: 'Falsch. Die Hornhaut bricht Licht aller sichtbaren Wellenlängen gleichmäßig und filtert keine Farben.'
@@ -336,6 +331,11 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         text: 'Die Pupille schließt sich bei Dunkelheit so stark, dass nur noch graues Licht hindurchpasst.',
         isCorrect: false,
         feedback: 'Falsch. Im Gegenteil: Die Pupille weitet sich bei Dunkelheit maximal (Mydriasis), um jedes Photon einzufangen!'
+      },
+      {
+        text: 'Bei Dämmerung und Dunkelheit sind nur die hochlichtempfindlichen Stäbchen aktiv, die keine Farben unterscheiden können. Die Zapfen arbeiten erst bei Helligkeit.',
+        isCorrect: true,
+        feedback: 'Brillant erklärt! Zapfen benötigen viel Licht (photopisches Sehen) und ermöglichen mit 3 Typen (Rot/Grün/Blau) das Farbsehen. Stäbchen sind 1000-mal lichtempfindlicher, besitzen aber nur ein Sehpigment (Rhodopsin) für Graustufen (skotopisches Sehen).'
       },
       {
         text: 'Die Zapfen im Gelben Fleck schlafen nachts und wachen erst bei Sonnenaufgang auf.',
