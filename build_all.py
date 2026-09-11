@@ -27,6 +27,10 @@ for d in dirs:
     full_path = os.path.join(base_dir, d)
     print(f"--- Building {d} ---")
     try:
+        backup_html = os.path.join(full_path, "index_dev.html")
+        main_html = os.path.join(full_path, "index.html")
+        if os.path.exists(backup_html):
+            shutil.copy2(backup_html, main_html)
         subprocess.run([npm_path, "run", "build"], cwd=full_path, check=True, shell=True)
         dist_html = os.path.join(full_path, "dist", "index.html")
         if os.path.exists(dist_html):
