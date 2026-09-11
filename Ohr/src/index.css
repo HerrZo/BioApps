@@ -1,0 +1,52 @@
+/* Das Ohr – Akustik, Schallleitung & Tonotopie Styles */
+
+@keyframes soundWaveMove {
+  0% { transform: translateX(0); opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { transform: translateX(18px); opacity: 0.2; }
+}
+
+@keyframes eardrumVibrate {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+
+@keyframes ossicleLever {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+@keyframes fluidPulse {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.08); }
+}
+
+.animate-wave-move {
+  animation: soundWaveMove 0.8s linear infinite;
+}
+
+.animate-eardrum {
+  animation: eardrumVibrate 0.15s ease-in-out infinite alternate;
+}
+
+.animate-ossicle {
+  transform-origin: 50% 10%;
+  animation: ossicleLever 0.15s ease-in-out infinite alternate;
+}
+
+.animate-fluid {
+  transform-origin: 50% 50%;
+  animation: fluidPulse 0.3s ease-in-out infinite alternate;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
