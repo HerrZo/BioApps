@@ -1,0 +1,50 @@
+/* Das Auge – Optik, Akkommodation & Anatomie Styles */
+
+@keyframes rayFlow {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes flameFlicker {
+  0%, 100% { transform: scale(1) rotate(-1deg); opacity: 0.95; }
+  25% { transform: scale(1.04, 0.96) rotate(1deg); opacity: 1; }
+  50% { transform: scale(0.97, 1.05) rotate(-2deg); opacity: 0.9; }
+  75% { transform: scale(1.03, 0.98) rotate(1.5deg); opacity: 0.98; }
+}
+
+@keyframes pupilPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.animate-flame {
+  transform-origin: 50% 90%;
+  animation: flameFlicker 0.45s ease-in-out infinite alternate;
+}
+
+.animate-ray {
+  stroke-dasharray: 6 3;
+  animation: rayFlow 1.2s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pupilPulse 3s ease-in-out infinite;
+}
+
+/* Custom scrollbars and utility classes */
+* {
+  box-sizing: border-box;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Transitions for SVG lens, muscle and fibers */
+.lens-morph {
+  transition: d 0.25s ease-out, rx 0.25s ease-out, ry 0.25s ease-out;
+}
