@@ -5,10 +5,9 @@ You are an AI coding assistant helping with the BioApps project.
 CRITICAL: Before making any modifications to the codebase or generating new code, you MUST read the `AI_README.md` file located at the root of this repository. 
 
 Key architectural points to remember instantly:
-1. **Zero-Build Ecosystem:** This project uses ZERO build tools. There is no Node.js, Webpack, or Vite. Everything is client-side.
-2. **React via CDN:** React is written inside `index.html` files using `<script type="text/babel">`. Do not create `.jsx` files or use standard ES modules for React components.
-3. **No Imports:** Do not use `import React from 'react'`. React hooks are destructured globally: `const { useState, useEffect } = React;`.
-4. **Tailwind CDN:** Styling uses the Tailwind CDN and a custom theme located in `shared/tailwind-config.js` with primary colors belonging to the `forest` palette.
-5. **Dark Mode:** Dark mode overrides are handled centrally via `shared/dark-mode.css` utilizing standard CSS overriding Tailwind's `.dark` class.
-
-Whenever the user asks you to fix a bug or add a feature, respect this strict zero-build, CDN-only pattern. Do not break the `file://` local preview capability.
+1. **Modular Self-Contained Apps:** Each app folder is independent with its own `package.json`, `vite.config.ts`, `tsconfig.json`, and `src/` directory.
+2. **DO NOT Create a Root package.json:** Keep app folders modular and independent so new apps can be easily added without monorepo overhead.
+3. **Pre-Bundled Standalone HTML (`vite-plugin-singlefile`):** Source code lives in `src/App.tsx` (and `src/data.ts`). Builds generate a standalone `index.html` where JS and CSS are inlined, ensuring instant zero-latency loading on GitHub Pages and full offline compatibility via `file://`.
+4. **Never Rename App Folders:** Folders like `KaryogrammAnalse` must keep their exact names to preserve bookmarks, QR codes, and existing student links.
+5. **Tailwind & Dark Mode:** Styling uses Tailwind with custom `forest` theme in `shared/tailwind-config.js` and centralized dark mode via `shared/dark-mode.js` and `shared/dark-mode.css`.
+6. **Hub Registration:** New apps must be added to the `projects` list in `BioApps/index.html`.

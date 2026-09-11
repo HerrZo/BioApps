@@ -1,6 +1,12 @@
 node_modules/
 dist/
-build_all.py
+*.tsbuildinfo
+*.log
+.claude/
+.DS_Store
+Thumbs.db
+
+# Helper scripts
 convert.js
 convert.py
 split_enzyme.py

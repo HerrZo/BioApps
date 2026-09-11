@@ -1083,7 +1083,7 @@
                     <Shape node={g1}/><Shape node={g2}/><Shape node={g3}/>
 
                     {/* Labels */}
-                    <text x={W/2} y={gen1y} textAnchor="middle" fontSize={9} fill="#888" dominantBaseline="middle" x={10} textAnchor="start">I</text>
+                    <text x={10} y={gen1y} textAnchor="start" fontSize={9} fill="#888" dominantBaseline="middle">I</text>
                     <text x={10} y={gen2y} textAnchor="start" fontSize={9} fill="#888" dominantBaseline="middle">II</text>
                     <text x={10} y={gen3y} textAnchor="start" fontSize={9} fill="#888" dominantBaseline="middle">III</text>
                 </svg>

@@ -903,7 +903,7 @@
                                     </div>
 
                                     <div>
-                                        <h4 className={`text-lg font-bold \${result.status === 'correct' ? 'text-green-800' : 'text-red-800'}`}>
+                                        <h4 className={`text-lg font-bold ${result.status === 'correct' ? 'text-green-800' : 'text-red-800'}`}>
                                             {result.status === 'correct' ? 'Richtig!' : 'Leider falsch'}
                                         </h4>
                                         <p className="text-gray-600 mt-1 text-sm">
@@ -964,6 +964,17 @@
             );
         };
 
+        const NavButton = ({ id, icon: Icon, label, activeTab, onSelect }) => (
+            <button
+                onClick={() => onSelect(id)}
+                className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition-all font-medium text-xs md:text-sm whitespace-nowrap
+                    ${activeTab === id ? 'bg-white text-green-700 shadow-md' : 'text-green-100 hover:bg-green-700/50'}`}
+            >
+                <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                {label}
+            </button>
+        );
+
         // ─── App shell ────────────────────────────────────────────────────────────
         const App = () => {
             const [activeTab, setActiveTab] = useState('wissen');
@@ -976,17 +987,6 @@
                     default: return <SectionWissen onNext={() => setActiveTab('labor')} />;
                 }
             };
-
-            const NavButton = ({ id, icon: Icon, label }) => (
-                <button
-                    onClick={() => setActiveTab(id)}
-                    className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition-all font-medium text-xs md:text-sm whitespace-nowrap
-                        ${activeTab === id ? 'bg-white text-green-700 shadow-md' : 'text-green-100 hover:bg-green-700/50'}`}
-                >
-                    <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    {label}
-                </button>
-            );
 
             return (
                 <div className="max-w-5xl mx-auto min-h-screen bg-white shadow-2xl flex flex-col my-0 md:my-4 md:rounded-2xl overflow-hidden">
@@ -1003,9 +1003,9 @@
                             </div>
 
                             <nav className="flex bg-green-800/30 p-1 rounded-full backdrop-blur-sm overflow-x-auto">
-                                <NavButton id="wissen" icon={IconBook} label="Wissen" />
-                                <NavButton id="labor" icon={IconExperiment} label="Labor" />
-                                <NavButton id="training" icon={IconTarget} label="Was bin ich?" />
+                                <NavButton id="wissen" icon={IconBook} label="Wissen" activeTab={activeTab} onSelect={setActiveTab} />
+                                <NavButton id="labor" icon={IconExperiment} label="Labor" activeTab={activeTab} onSelect={setActiveTab} />
+                                <NavButton id="training" icon={IconTarget} label="Was bin ich?" activeTab={activeTab} onSelect={setActiveTab} />
                             </nav>
                         </div>
                     </header>

@@ -600,8 +600,8 @@
 
                         {selectedOption !== null && (
                             <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col justify-end animate-fade-in">
-                                <div className={`p-4 rounded-xl text-left border mb-4 \${selectedOption === question.correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                                    <div className={`font-bold text-lg mb-2 \${selectedOption === question.correct ? 'text-green-700' : 'text-red-700'}`}>
+                                <div className={`p-4 rounded-xl text-left border mb-4 ${selectedOption === question.correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                    <div className={`font-bold text-lg mb-2 ${selectedOption === question.correct ? 'text-green-700' : 'text-red-700'}`}>
                                         {selectedOption === question.correct ? '✅ Richtig!' : '❌ Leider falsch.'}
                                     </div>
                                     <p className="text-sm text-gray-700">{question.explanation}</p>
