@@ -353,6 +353,15 @@
           tag: "Biologie 9",
           iconType: "paw",
         },
+        {
+          id: "bakterien",
+          title: "Bakterien – Wachstum & Bioreaktor",
+          description:
+            "Exponentielles Wachstum, Fermenter-Simulation mit Live-Zellteilung, Joghurt-Gärung & Konservierungs-Labor.",
+          link: "Bakterien/index.html",
+          tag: "Biologie 9",
+          iconType: "flask",
+        },
       ];
 
       // Status der App
@@ -374,6 +383,8 @@
             return `<svg class="${className}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v2a2 2 0 0 0 4 0"/></svg>`;
           case "paw":
             return `<svg class="${className}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="4" cy="9" r="2"/><path d="M12 20c4.5 0 7-3 7-5.5 0-2.5-2-4.5-4.5-4.5-1.5 0-2 .5-2.5.5s-1-.5-2.5-.5C7 10 5 12 5 14.5 5 17 7.5 20 12 20Z"/></svg>`;
+          case "flask":
+            return `<svg class="${className}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 5h6m-6 0v7l-4 8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1l-4-8V5"/><circle cx="12" cy="16" r="1.5"/></svg>`;
           default:
             return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`;
         }
