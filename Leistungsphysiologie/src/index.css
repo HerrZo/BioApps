@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Range slider styling */
+input[type=range] {
+  accent-color: #166534;
+}
+
+/* Pulsing heart animation */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.15);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.15);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartBeat 0.8s infinite ease-in-out;
+}
+
+/* Pedal wheel rotation */
+@keyframes spinPedal {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pedal {
+  animation: spinPedal 0.6s infinite linear;
+}

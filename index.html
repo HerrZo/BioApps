@@ -371,6 +371,15 @@
           tag: "Biologie 10",
           iconType: "shield",
         },
+        {
+          id: "leistungsphysiologie",
+          title: "Leistungsphysiologie – Ergometer & Energiebereitstellung",
+          description:
+            "Ergometer-Labor, Hämodynamik & Atmung, Laktatschwellen (2 & 4 mmol/l), ATP-Resynthese-Zoom und Sauerstoffschuld (EPOC).",
+          link: "Leistungsphysiologie/index.html",
+          tag: "Biologie 10",
+          iconType: "activity",
+        },
       ];
 
       // Status der App
@@ -396,6 +405,8 @@
             return `<svg class="${className}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 5h6m-6 0v7l-4 8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1l-4-8V5"/><circle cx="12" cy="16" r="1.5"/></svg>`;
           case "shield":
             return `<svg class="${className}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+          case "activity":
+            return `<svg class="${className}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
           default:
             return `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`;
         }
