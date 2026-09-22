@@ -39,6 +39,23 @@ for d in dirs:
             if os.path.exists(main_html) and not os.path.exists(backup_html):
                 shutil.copy2(main_html, backup_html)
             shutil.copy2(dist_html, main_html)
+
+            # Ensure shared dark-mode assets remain injected in deployed index.html
+            with open(main_html, 'r', encoding='utf-8', errors='ignore') as f:
+                html_content = f.read()
+            html_changed = False
+            if 'shared/dark-mode.css' not in html_content:
+                if '</head>' in html_content:
+                    html_content = html_content.replace('</head>', '  <link rel="stylesheet" href="../shared/dark-mode.css">\n</head>', 1)
+                    html_changed = True
+            if 'shared/dark-mode.js' not in html_content:
+                if '</body>' in html_content:
+                    html_content = html_content.replace('</body>', '  <script src="../shared/dark-mode.js"></script>\n</body>', 1)
+                    html_changed = True
+            if html_changed:
+                with open(main_html, 'w', encoding='utf-8') as f:
+                    f.write(html_content)
+
             print(f"[OK] Deployed {d}/index.html\n")
             success_count += 1
         else:

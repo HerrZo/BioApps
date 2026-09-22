@@ -457,6 +457,38 @@ const TabCheck = () => {
 
 const App = () => {
     const [activeTab, setActiveTab] = useState<'simulation' | 'wissen' | 'check'>('simulation');
+    const [darkMode, setDarkMode] = useState<boolean>(() => {
+        try {
+            return document.documentElement.classList.contains('dark') || localStorage.getItem('bioApps_darkMode') === 'dark';
+        } catch {
+            return false;
+        }
+    });
+
+    React.useEffect(() => {
+        const handleThemeChange = (e: any) => {
+            setDarkMode(e.detail?.isDark ?? document.documentElement.classList.contains('dark'));
+        };
+        window.addEventListener('bioApps_theme_change', handleThemeChange);
+        return () => window.removeEventListener('bioApps_theme_change', handleThemeChange);
+    }, []);
+
+    const toggleDarkMode = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (typeof (window as any).toggleDarkMode === 'function') {
+            (window as any).toggleDarkMode();
+        } else {
+            const next = !darkMode;
+            setDarkMode(next);
+            if (next) {
+                document.documentElement.classList.add('dark');
+                try { localStorage.setItem('bioApps_darkMode', 'dark'); } catch {}
+            } else {
+                document.documentElement.classList.remove('dark');
+                try { localStorage.setItem('bioApps_darkMode', 'light'); } catch {}
+            }
+        }
+    };
 
     return (
         <div className="min-h-screen bg-forest-50 dark:bg-forest-950 transition-colors duration-300">
@@ -469,12 +501,13 @@ const App = () => {
                     <span>Startseite</span>
                 </a>
                 <button
+                    type="button"
                     data-dark-toggle
-                    onClick={() => (window as any).toggleDarkMode?.()}
-                    aria-pressed="false"
-                    title="Dunkles Design"
-                    aria-label="Dark Mode umschalten">
-                    <span className="dark-mode-icon">🌙</span>
+                    onClick={toggleDarkMode}
+                    aria-pressed={darkMode}
+                    title={darkMode ? "Helles Design" : "Dunkles Design"}
+                    aria-label={darkMode ? "Helles Design aktivieren" : "Dunkles Design aktivieren"}>
+                    <span className="dark-mode-icon">{darkMode ? '☀️' : '🌙'}</span>
                 </button>
             </nav>
 

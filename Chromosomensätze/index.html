@@ -8,7 +8,9 @@
     <meta name="description" content="Lerne Chromosomen-Zustände und Ploidiegrade interaktiv kennen">
     <meta name="theme-color" content="#166534">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../shared/tailwind-config.js"></script>
     
@@ -99,6 +101,7 @@ Error generating stack: `+l.message+`
                                                         ${i===w?"border-green-500 bg-green-50 text-green-700 shadow-sm":"border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50/50"}`,children:[w,"n"]},w))})]}),s.jsxs("div",{children:[s.jsx("p",{className:"font-bold text-gray-800 mb-2 text-sm",children:"2. Welcher Chromatid-Zustand liegt vor?"}),s.jsx("div",{className:"grid grid-cols-2 gap-3",children:[{val:"1cc",label:"1-Chromatid",icon:s.jsx(ir,{type:"1cc",color:c==="1cc"?"#15803d":"#9ca3af",size:30})},{val:"2cc",label:"2-Chromatid",icon:s.jsx(ir,{type:"2cc",color:c==="2cc"?"#2563eb":"#9ca3af",size:30})}].map(w=>s.jsxs("button",{onClick:()=>g(w.val),className:`py-2 px-2 rounded-lg border-2 text-xs font-medium transition flex flex-col items-center gap-1
                                                         ${c===w.val?w.val==="1cc"?"border-green-500 bg-green-50 text-green-700":"border-blue-500 bg-blue-50 text-blue-700":"border-gray-200 text-gray-600 hover:border-gray-300"}`,children:[w.icon,w.label]},w.val))})]}),i&&c&&s.jsxs("div",{className:"bg-green-50 text-green-800 text-xs px-3 py-2 rounded-lg border border-green-200 animate-fade-in",children:["Deine Antwort: ",s.jsxs("strong",{children:[i,"n"]}),", ",s.jsx("strong",{children:c==="1cc"?"1-Chromatid-Chromosomen":"2-Chromatid-Chromosomen"})]}),s.jsx("button",{onClick:S,disabled:!i||!c,className:"w-full bg-green-600 disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow-lg shadow-green-200/50 transition text-sm",children:"Überprüfen"})]})})]}),s.jsxs("div",{className:"bg-white rounded-xl p-3 border border-green-100 shadow-sm",children:[s.jsxs("p",{className:"text-xs text-gray-500 text-center",children:[s.jsx("strong",{children:"8 mögliche Kombinationen"})," (4 Ploidiegrade × 2 Chromatid-Zustände) — Erkennst du alle?"]}),s.jsx("div",{className:"flex flex-wrap gap-1.5 justify-center mt-2",children:[1,2,3,4].map(w=>["1cc","2cc"].map(T=>{const z=Gr[`${w}-${T}`],K=Le[z==null?void 0:z.color]||Le.green;return s.jsxs("span",{className:`text-xs px-2 py-0.5 rounded font-mono ${K.badge}`,children:[w,"n ",T==="1cc"?"1C":"2C"]},`${w}-${T}`)}))})]})]})},qf=()=>{const[e,n]=I.useState("wissen"),r=()=>{switch(e){case"wissen":return s.jsx(Qi,{onNext:()=>n("labor")});case"labor":return s.jsx(Kf,{});case"training":return s.jsx(Zf,{});default:return s.jsx(Qi,{onNext:()=>n("labor")})}},t=({id:a,icon:l,label:o})=>s.jsxs("button",{onClick:()=>n(a),className:`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition-all font-medium text-xs md:text-sm whitespace-nowrap
                         ${e===a?"bg-white text-green-700 shadow-md":"text-green-100 hover:bg-green-700/50"}`,children:[s.jsx(l,{className:"w-3.5 h-3.5 md:w-4 md:h-4"}),o]});return s.jsxs("div",{className:"max-w-5xl mx-auto min-h-screen bg-white shadow-2xl flex flex-col my-0 md:my-4 md:rounded-2xl overflow-hidden",children:[s.jsx("header",{className:"bg-gradient-to-r from-green-700 to-emerald-600 text-white p-3 md:p-4 shadow-md",children:s.jsxs("div",{className:"flex flex-col md:flex-row justify-between items-center gap-3",children:[s.jsxs("div",{className:"flex items-center gap-3",children:[s.jsx("div",{className:"bg-white/20 p-2 rounded-lg backdrop-blur-sm",children:s.jsx(ta,{className:"w-5 h-5 md:w-6 md:h-6"})}),s.jsxs("div",{children:[s.jsx("h1",{className:"text-lg md:text-xl font-bold leading-tight",children:"Bio-Labor"}),s.jsx("p",{className:"text-green-100 text-xs opacity-80",children:"Chromosomen & Ploidie"})]})]}),s.jsxs("nav",{className:"flex bg-green-800/30 p-1 rounded-full backdrop-blur-sm overflow-x-auto",children:[s.jsx(t,{id:"wissen",icon:Af,label:"Wissen"}),s.jsx(t,{id:"labor",icon:ta,label:"Labor"}),s.jsx(t,{id:"training",icon:oc,label:"Was bin ich?"})]})]})}),s.jsx("main",{className:"flex-grow p-4 md:p-8 bg-green-50 overflow-y-auto",children:r()}),s.jsxs("footer",{className:"bg-gray-50 border-t border-gray-200 p-3 text-center text-xs text-gray-500",children:["Johannes-Scharrer-Gymnasium • Zollfrank • © ",new Date().getFullYear()]})]})};qa.createRoot(document.getElementById("root")).render(s.jsx(jc.StrictMode,{children:s.jsx(qf,{})}));</script>
+  <link rel="stylesheet" href="../shared/dark-mode.css">
 </head>
 
 <body class="bg-green-50 text-gray-900 min-h-screen font-sans selection:bg-green-200">
@@ -119,7 +122,8 @@ Error generating stack: `+l.message+`
   </button>
 </nav>
     <div id="root"></div>
-
+
+
 <script src="../shared/dark-mode.js"></script>
 </body>
 

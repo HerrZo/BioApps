@@ -1,18 +1,16 @@
-/* Dark Mode Overrides für alle BioApps */
+/* Dark Mode Overrides für alle BioApps (Forest Theme) */
 /* Nutzt Tailwind's 'dark' Klasse am <html> Element */
 
 /* ===== BASIS-FARBEN ===== */
-/* body hat keine Tailwind-Utility-Konkurrenz → !important als Absicherung */
 .dark body {
   background-color: #052e16 !important;
   color: #dcfce7 !important;
 }
 
 /* ===== KARTEN & CONTAINER ===== */
-/* .dark + Klasse = Spezifität (0,2,0) > Tailwind-Utility (0,1,0) → kein !important nötig */
 .dark .bg-white {
-  background-color: #14532d;
-  color: #dcfce7;
+  background-color: #14532d !important;
+  color: #dcfce7 !important;
 }
 .dark .bg-gray-50,
 .dark .bg-gray-100,
@@ -22,6 +20,16 @@
   background-color: #0b381d !important;
   color: #dcfce7 !important;
 }
+.dark .bg-slate-950,
+.dark .bg-slate-900,
+.dark .bg-slate-800,
+.dark .bg-slate-700 {
+  background-color: #0b381d !important;
+  color: #dcfce7 !important;
+}
+.dark .bg-slate-200 {
+  background-color: #166534 !important;
+}
 .dark .bg-green-50,
 .dark .bg-emerald-50 {
   background-color: #14532d !important;
@@ -30,19 +38,45 @@
 .dark .bg-forest-100 {
   background-color: #166534 !important;
 }
+.dark .bg-forest-800 {
+  background-color: #022c22 !important;
+}
+.dark .bg-forest-900 {
+  background-color: #011d17 !important;
+}
 
 /* ===== GRADIENT HINTERGRÜNDE ===== */
 .dark .from-green-50,
 .dark .via-emerald-50,
 .dark .to-teal-50,
-.dark .from-green-50\/80,
-.dark .from-forest-50 {
+.dark .from-forest-50,
+.dark .from-sky-50,
+.dark .from-slate-900 {
   --tw-gradient-from: #052e16 !important;
-  --tw-gradient-via: #14532d !important;
-  --tw-gradient-to: #166534 !important;
+}
+.dark .via-slate-100,
+.dark .via-slate-950 {
+  --tw-gradient-via: #0b381d !important;
+}
+.dark .to-amber-50,
+.dark .to-slate-900 {
+  --tw-gradient-to: #052e16 !important;
 }
 
 /* ===== TEXT ===== */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-forest-900,
+.dark .text-forest-800,
+.dark .text-slate-100,
+.dark .text-slate-200,
+.dark .text-slate-300 {
+  color: #dcfce7 !important;
+}
 .dark .text-gray-600,
 .dark .text-gray-500,
 .dark .text-slate-600,
@@ -50,16 +84,6 @@
 .dark .text-slate-400,
 .dark .text-forest-600 {
   color: #86efac !important;
-}
-.dark .text-gray-700,
-.dark .text-gray-800,
-.dark .text-gray-900,
-.dark .text-slate-700,
-.dark .text-slate-800,
-.dark .text-slate-900,
-.dark .text-forest-800,
-.dark .text-forest-900 {
-  color: #dcfce7 !important;
 }
 .dark .text-green-800,
 .dark .text-green-700,
@@ -73,37 +97,45 @@
 .dark .border-green-200,
 .dark .border-slate-100,
 .dark .border-slate-200,
+.dark .border-slate-700,
+.dark .border-slate-800,
 .dark .border-forest-100,
-.dark .border-forest-200 {
+.dark .border-forest-200,
+.dark .border-gray-100,
+.dark .border-gray-200 {
   border-color: #166534 !important;
 }
 .dark .border-gray-200 {
   border-color: #15803d !important;
 }
+.dark .divide-slate-800\/60 > * + * {
+  border-color: #166534 !important;
+}
 
 /* ===== HEADER & NAV ===== */
 .dark header,
 .dark nav {
-  background-color: #052e16;
-  border-color: #166534;
+  background-color: #052e16 !important;
+  border-color: #166534 !important;
 }
 
 /* ===== INPUTS & BUTTONS ===== */
-.dark input,
+.dark input:not([type="range"]),
 .dark select,
 .dark textarea {
-  background-color: #14532d;
-  color: #dcfce7;
-  border-color: #15803d;
+  background-color: #14532d !important;
+  color: #dcfce7 !important;
+  border-color: #15803d !important;
 }
-.dark input::placeholder { color: #86efac; }
+.dark input::placeholder {
+  color: #86efac !important;
+}
 
 /* ===== HOVER STATES ===== */
-.dark .hover\:bg-green-50:hover { background-color: #14532d; }
-.dark .hover\:bg-green-100:hover { background-color: #166534; }
+.dark .hover\:bg-green-50:hover { background-color: #14532d !important; }
+.dark .hover\:bg-green-100:hover { background-color: #166534 !important; }
 
 /* ===== SCROLLBAR ===== */
-/* Pseudo-Elemente haben unklare Browser-Spezifität → !important behalten */
 .dark ::-webkit-scrollbar-track { background: #052e16 !important; }
 .dark ::-webkit-scrollbar-thumb { background: #15803d !important; }
 
@@ -119,7 +151,7 @@
   cursor: pointer;
   font-size: 18px;
   background: rgba(22, 101, 52, 0.15);
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
   padding: 0;
 }
 [data-dark-toggle]:hover {

@@ -2109,6 +2109,16 @@ const App: React.FC = () => {
     } catch {}
   }, [darkMode]);
 
+  useEffect(() => {
+    const onThemeChange = (e: any) => {
+      if (e?.detail?.isDark !== undefined) {
+        setDarkMode(e.detail.isDark);
+      }
+    };
+    window.addEventListener('bioApps_theme_change', onThemeChange);
+    return () => window.removeEventListener('bioApps_theme_change', onThemeChange);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<TabType>('simulation');
   const [termMode, setTermMode] = useState<TermMode>('bio8');
 
@@ -2147,8 +2157,12 @@ const App: React.FC = () => {
 
           {/* Dark Mode Toggle Button */}
           <button
+            type="button"
             data-dark-toggle
-            onClick={() => setDarkMode(prev => !prev)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDarkMode(prev => !prev);
+            }}
             aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
             title={darkMode ? 'Helles Design' : 'Dunkles Design'}
             className="p-2 rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"

@@ -381,7 +381,13 @@ export default function App() {
   const [completed, setCompleted] = useState(new Set());
   const [score, setScore] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      return document.documentElement.classList.contains('dark') || localStorage.getItem('bioApps_darkMode') === 'dark';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     try {
@@ -389,15 +395,30 @@ export default function App() {
       if (savedProg) setCompleted(new Set(JSON.parse(savedProg)));
       const savedScore = localStorage.getItem('enzyme-score');
       if (savedScore) setScore(parseInt(savedScore));
-      const savedTheme = localStorage.getItem('bioApps_darkMode');
-      if (savedTheme === 'dark') { setDarkMode(true); document.documentElement.classList.add('dark'); }
     } catch(e) {}
+
+    const handleThemeChange = (e: any) => {
+      setDarkMode(e.detail?.isDark ?? document.documentElement.classList.contains('dark'));
+    };
+    window.addEventListener('bioApps_theme_change', handleThemeChange);
+    return () => window.removeEventListener('bioApps_theme_change', handleThemeChange);
   }, []);
 
-  const toggleTheme = () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    setDarkMode(isDark);
-    try { localStorage.setItem('bioApps_darkMode', isDark ? 'dark' : 'light'); } catch(e) {}
+  const toggleTheme = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (typeof (window as any).toggleDarkMode === 'function') {
+      (window as any).toggleDarkMode();
+    } else {
+      const next = !darkMode;
+      setDarkMode(next);
+      if (next) {
+        document.documentElement.classList.add('dark');
+        try { localStorage.setItem('bioApps_darkMode', 'dark'); } catch(err) {}
+      } else {
+        document.documentElement.classList.remove('dark');
+        try { localStorage.setItem('bioApps_darkMode', 'light'); } catch(err) {}
+      }
+    }
   };
 
   const markDone = (id) => {
@@ -416,8 +437,8 @@ export default function App() {
       {sidebarOpen && <div className="sidebar-overlay show" onClick={() => setSidebarOpen(false)}></div>}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <a href="#" className="sidebar-logo">
-            <span>Enzyme</span>
+          <a href="../index.html" className="sidebar-logo" title="Zurück zur BioApps-Übersicht">
+            <span>← BioApps · Enzyme</span>
           </a>
         </div>
         <nav className="sidebar-nav">
@@ -428,8 +449,16 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <button className="theme-toggle" onClick={toggleTheme}>
-            <span className="dark-mode-icon">{darkMode ? '☀️' : '🌙'}</span> Dunkles Design
+          <button
+            type="button"
+            data-dark-toggle
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-pressed={darkMode}
+            title={darkMode ? "Helles Design" : "Dunkles Design"}
+            aria-label={darkMode ? "Helles Design aktivieren" : "Dunkles Design aktivieren"}
+          >
+            <span className="dark-mode-icon">{darkMode ? '☀️' : '🌙'}</span> {darkMode ? 'Helles Design' : 'Dunkles Design'}
           </button>
         </div>
       </aside>

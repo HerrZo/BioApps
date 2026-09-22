@@ -177,6 +177,14 @@ export default function App() {
     } catch {}
   }, [darkMode]);
 
+  useEffect(() => {
+    const handleThemeChange = (e: any) => {
+      setDarkMode(e.detail?.isDark ?? document.documentElement.classList.contains('dark'));
+    };
+    window.addEventListener('bioApps_theme_change', handleThemeChange);
+    return () => window.removeEventListener('bioApps_theme_change', handleThemeChange);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<TabType>('simulation');
 
   return (
@@ -217,8 +225,13 @@ export default function App() {
                 data-dark-toggle
                 onClick={(e) => {
                   e.stopPropagation();
-                  setDarkMode(prev => !prev);
+                  if (typeof (window as any).toggleDarkMode === 'function') {
+                    (window as any).toggleDarkMode();
+                  } else {
+                    setDarkMode(prev => !prev);
+                  }
                 }}
+                aria-pressed={darkMode}
                 aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
                 title={darkMode ? 'Helles Design' : 'Dunkles Design'}
                 className="p-2 rounded-xl text-forest-200 hover:text-white hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"

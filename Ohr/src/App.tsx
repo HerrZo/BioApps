@@ -71,6 +71,16 @@ export default function App() {
     } catch {}
   }, [darkMode]);
 
+  useEffect(() => {
+    const onThemeChange = (e: any) => {
+      if (e?.detail?.isDark !== undefined) {
+        setDarkMode(e.detail.isDark);
+      }
+    };
+    window.addEventListener('bioApps_theme_change', onThemeChange);
+    return () => window.removeEventListener('bioApps_theme_change', onThemeChange);
+  }, []);
+
   // Navigation
   const [activeTab, setActiveTab] = useState<'schall' | 'tonotopie' | 'audio' | 'laerm' | 'quiz'>('schall');
 
@@ -338,13 +348,17 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               data-dark-toggle
-              onClick={() => setDarkMode(prev => !prev)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDarkMode(prev => !prev);
+              }}
               aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
               title={darkMode ? 'Helles Design' : 'Dunkles Design'}
               className="p-2 rounded-xl text-forest-200 hover:text-white hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
             >
-              {darkMode ? '☀️' : '🌙'}
+              <span className="dark-mode-icon">{darkMode ? '☀️' : '🌙'}</span>
             </button>
           </div>
         </div>
