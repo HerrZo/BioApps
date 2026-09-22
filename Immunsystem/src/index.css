@@ -46,3 +46,115 @@ input[type=range] {
 .animate-bleb {
   animation: blebCell 1.8s infinite ease-in-out;
 }
+
+/* ==========================================================================
+   BioApps Forest Dark Mode Theme (Bundled)
+   ========================================================================== */
+.dark body {
+  background-color: #052e16 !important;
+  color: #dcfce7 !important;
+}
+
+.dark .bg-white {
+  background-color: #14532d !important;
+  color: #dcfce7 !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-forest-50 {
+  background-color: #0b381d !important;
+  color: #dcfce7 !important;
+}
+
+.dark .bg-green-50,
+.dark .bg-emerald-50 {
+  background-color: #14532d !important;
+}
+
+.dark .bg-green-100,
+.dark .bg-forest-100 {
+  background-color: #166534 !important;
+}
+
+.dark .bg-forest-800 {
+  background-color: #022c22 !important;
+}
+
+.dark .bg-forest-900 {
+  background-color: #011d17 !important;
+}
+
+.dark .from-green-50,
+.dark .via-emerald-50,
+.dark .to-teal-50,
+.dark .from-forest-50 {
+  --tw-gradient-from: #052e16 !important;
+  --tw-gradient-via: #14532d !important;
+  --tw-gradient-to: #166534 !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-forest-900,
+.dark .text-forest-800 {
+  color: #dcfce7 !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-400,
+.dark .text-forest-600 {
+  color: #86efac !important;
+}
+
+.dark .text-green-800,
+.dark .text-green-700,
+.dark .text-emerald-700,
+.dark .text-emerald-800 {
+  color: #4ade80 !important;
+}
+
+.dark .border-green-100,
+.dark .border-green-200,
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-forest-100,
+.dark .border-forest-200,
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: #166534 !important;
+}
+
+.dark header,
+.dark nav {
+  background-color: #052e16 !important;
+  border-color: #166534 !important;
+}
+
+.dark input:not([type="range"]),
+.dark select,
+.dark textarea {
+  background-color: #14532d !important;
+  color: #dcfce7 !important;
+  border-color: #15803d !important;
+}
+
+.dark input::placeholder {
+  color: #86efac !important;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #052e16 !important;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #15803d !important;
+}

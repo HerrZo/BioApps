@@ -22,6 +22,23 @@ interface MicrobeCell {
 }
 
 export default function App() {
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('bioApps_darkMode');
+      if (saved !== null) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    try {
+      localStorage.setItem('bioApps_darkMode', darkMode ? 'dark' : 'light');
+    } catch {}
+  }, [darkMode]);
+
   const [activeTab, setActiveTab] = useState<'fermenter' | 'growth' | 'parameters' | 'challenge' | 'quiz'>('fermenter');
 
   // --- PARAMETER & REACTOR STATE ---
@@ -396,7 +413,7 @@ export default function App() {
     });
 
     // 2. Grid lines & Y-Axis labels
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = darkMode ? '#166534' : '#e2e8f0';
     ctx.lineWidth = 1;
 
     if (isLogScale) {
@@ -408,7 +425,7 @@ export default function App() {
         ctx.lineTo(padLeft + plotW, y);
         ctx.stroke();
 
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = darkMode ? '#86efac' : '#475569';
         ctx.font = '10px Inter, sans-serif';
         ctx.fillText(`10^${exp}`, 20, y + 4);
       }
@@ -421,7 +438,7 @@ export default function App() {
         ctx.lineTo(padLeft + plotW, y);
         ctx.stroke();
 
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = darkMode ? '#86efac' : '#475569';
         ctx.font = '10px Inter, sans-serif';
         const val = i === 4 ? '1 Mrd.' : i === 2 ? '500 Mio.' : `${i * 250} Mio.`;
         ctx.fillText(val, 10, y + 4);
@@ -436,7 +453,7 @@ export default function App() {
       ctx.lineTo(x, 20 + plotH);
       ctx.stroke();
 
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = darkMode ? '#86efac' : '#475569';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(`${hr} h`, x - 8, h - 15);
     }
@@ -494,7 +511,7 @@ export default function App() {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
-  }, [simHours, currentCount, isLogScale, temperature, growthMetrics]);
+  }, [simHours, currentCount, isLogScale, temperature, growthMetrics, darkMode]);
 
   // --- FOOD CHALLENGE STATE ---
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('milk');
@@ -635,12 +652,12 @@ export default function App() {
           <div className="flex items-center space-x-2">
             <button
               data-dark-toggle
-              aria-label="Dark Mode umschalten"
-              className="p-2 rounded-xl text-forest-700 hover:bg-forest-100 transition-colors"
+              onClick={() => setDarkMode(prev => !prev)}
+              aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
+              title={darkMode ? 'Helles Design' : 'Dunkles Design'}
+              className="p-2 rounded-xl text-forest-700 hover:bg-forest-100 dark:text-forest-200 dark:hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
+              {darkMode ? '☀️' : '🌙'}
             </button>
           </div>
         </div>

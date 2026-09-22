@@ -56,6 +56,23 @@ const IconFlame = ({ className = 'w-5 h-5' }: { className?: string }) => (
 );
 
 export default function App() {
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('bioApps_darkMode');
+      if (saved !== null) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    try {
+      localStorage.setItem('bioApps_darkMode', darkMode ? 'dark' : 'light');
+    } catch {}
+  }, [darkMode]);
+
   // Navigation
   const [activeTab, setActiveTab] = useState<'anatomie' | 'optik' | 'fehlsichtig' | 'adaption' | 'quiz'>('anatomie');
 
@@ -232,13 +249,12 @@ export default function App() {
           <div className="flex items-center gap-2">
             <button
               data-dark-toggle
-              aria-label="Dunkelmodus umschalten"
-              className="p-2 rounded-lg text-forest-300 hover:text-white hover:bg-forest-800 transition-colors"
-              title="Dark Mode umschalten"
+              onClick={() => setDarkMode(prev => !prev)}
+              aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
+              title={darkMode ? 'Helles Design' : 'Dunkles Design'}
+              className="p-2 rounded-xl text-forest-200 hover:text-white hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
+              {darkMode ? '☀️' : '🌙'}
             </button>
           </div>
         </div>

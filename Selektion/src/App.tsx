@@ -35,6 +35,23 @@ interface GenerationHistory {
 }
 
 export default function App() {
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('bioApps_darkMode');
+      if (saved !== null) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    try {
+      localStorage.setItem('bioApps_darkMode', darkMode ? 'dark' : 'light');
+    } catch {}
+  }, [darkMode]);
+
   const [activeTab, setActiveTab] = useState<'habitat' | 'diagrams' | 'speciation' | 'theories' | 'quiz'>('habitat');
 
   // --- HABITAT SIMULATION STATE ---
@@ -402,7 +419,7 @@ export default function App() {
     const barWidth = (w - 60) / numBins;
 
     // Draw background grid lines
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = darkMode ? '#166534' : '#e2e8f0';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const gy = h - 35 - (i / 4) * (h - 60);
@@ -411,7 +428,7 @@ export default function App() {
       ctx.lineTo(w - 10, gy);
       ctx.stroke();
 
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = darkMode ? '#86efac' : '#64748b';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(Math.round((i / 4) * maxCount).toString(), 15, gy + 3);
     }
@@ -429,7 +446,7 @@ export default function App() {
       ctx.strokeRect(x + 2, y, barWidth - 4, barH);
 
       // Label at bottom
-      ctx.fillStyle = '#334155';
+      ctx.fillStyle = darkMode ? '#86efac' : '#334155';
       ctx.font = '9px Inter, sans-serif';
       ctx.fillText(`${Math.round(i * 10)}%`, x + 3, h - 20);
     });
@@ -448,7 +465,7 @@ export default function App() {
     ctx.fillStyle = '#dc2626';
     ctx.font = 'bold 11px Inter, sans-serif';
     ctx.fillText('🎯 Bodenfarbe', Math.min(groundX - 35, w - 85), 12);
-  }, [mice, groundBrightness]);
+  }, [mice, groundBrightness, darkMode]);
 
   // --- RENDER TIMELINE HISTORY CANVAS ---
   useEffect(() => {
@@ -469,7 +486,7 @@ export default function App() {
     }
 
     // Grid
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = darkMode ? '#166534' : '#e2e8f0';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const gy = 25 + (i / 4) * (h - 55);
@@ -478,7 +495,7 @@ export default function App() {
       ctx.lineTo(w - 15, gy);
       ctx.stroke();
 
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = darkMode ? '#86efac' : '#64748b';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(`${100 - i * 25}%`, 10, gy + 3);
     }
@@ -514,7 +531,7 @@ export default function App() {
     ctx.stroke();
 
     // Draw Dark Allele Frequency Line (Dark Gray / Black)
-    ctx.strokeStyle = '#0f172a';
+    ctx.strokeStyle = darkMode ? '#f8fafc' : '#0f172a';
     ctx.lineWidth = 2;
     ctx.beginPath();
     history.forEach((hist, i) => {
@@ -543,11 +560,11 @@ export default function App() {
     });
 
     // X Axis Labels
-    ctx.fillStyle = '#475569';
+    ctx.fillStyle = darkMode ? '#86efac' : '#475569';
     ctx.font = '10px Inter, sans-serif';
     ctx.fillText('Gen 1', 45, h - 10);
     ctx.fillText(`Gen ${maxGen}`, w - 45, h - 10);
-  }, [history]);
+  }, [history, darkMode]);
 
   // --- ALLOPATRIC SPECIATION EXPERIMENT STATE ---
   const [canyonOpen, setCanyonOpen] = useState<boolean>(false);
@@ -725,12 +742,12 @@ export default function App() {
           <div className="flex items-center space-x-2">
             <button
               data-dark-toggle
-              aria-label="Dark Mode umschalten"
-              className="p-2 rounded-xl text-forest-700 hover:bg-forest-100 transition-colors"
+              onClick={() => setDarkMode(prev => !prev)}
+              aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
+              title={darkMode ? 'Helles Design' : 'Dunkles Design'}
+              className="p-2 rounded-xl text-forest-700 hover:bg-forest-100 dark:text-forest-200 dark:hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
+              {darkMode ? '☀️' : '🌙'}
             </button>
           </div>
         </div>

@@ -10,6 +10,23 @@ import {
 } from './data';
 
 export default function App() {
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('bioApps_darkMode');
+      if (saved !== null) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    try {
+      localStorage.setItem('bioApps_darkMode', darkMode ? 'dark' : 'light');
+    } catch {}
+  }, [darkMode]);
+
   const [activeTab, setActiveTab] = useState<'arena' | 'titer' | 'vaccine' | 'antibodies' | 'quiz'>('arena');
 
   // --- ARENA STATE ---
@@ -153,7 +170,7 @@ export default function App() {
     ctx.fillText('2. Zweitkontakt (Sekundärantwort / Immun!)', xMid + 10, 20);
 
     // 2. Grid & Axis Labels
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = darkMode ? '#166534' : '#e2e8f0';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const y = 25 + (1 - i / 4) * plotH;
@@ -162,7 +179,7 @@ export default function App() {
       ctx.lineTo(padLeft + plotW, y);
       ctx.stroke();
 
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = darkMode ? '#86efac' : '#64748b';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(`${i * 25} %`, 15, y + 3);
     }
@@ -175,7 +192,7 @@ export default function App() {
       ctx.lineTo(x, 25 + plotH);
       ctx.stroke();
 
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = darkMode ? '#86efac' : '#475569';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(`T${day}`, x - 8, h - 15);
     }
@@ -236,7 +253,7 @@ export default function App() {
     ctx.arc(curX, curYPath, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-  }, [titerDay, currentTiter]);
+  }, [titerDay, currentTiter, darkMode]);
 
   // --- VACCINATION SIMULATOR STATE ---
   const [selectedVaccineId, setSelectedVaccineId] = useState<string>('tetanus_active');
@@ -293,7 +310,7 @@ export default function App() {
     const plotH = h - padBottom - 25;
 
     // Grid
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = darkMode ? '#166534' : '#e2e8f0';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const y = 20 + (1 - i / 4) * plotH;
@@ -302,7 +319,7 @@ export default function App() {
       ctx.lineTo(padLeft + plotW, y);
       ctx.stroke();
 
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = darkMode ? '#86efac' : '#64748b';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(`${i * 25} %`, 15, y + 3);
     }
@@ -315,7 +332,7 @@ export default function App() {
       ctx.lineTo(x, 20 + plotH);
       ctx.stroke();
 
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = darkMode ? '#86efac' : '#475569';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(`Tag ${day}`, x - 12, h - 15);
     }
@@ -359,7 +376,7 @@ export default function App() {
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
-  }, [selectedVaccineId]);
+  }, [selectedVaccineId, darkMode]);
 
   // --- ANTIBODY LAB MECHANISM SELECTOR ---
   const [selectedMechanism, setSelectedMechanism] = useState<'neutralization' | 'agglutination' | 'opsonization'>('agglutination');
@@ -430,12 +447,12 @@ export default function App() {
           <div className="flex items-center space-x-2">
             <button
               data-dark-toggle
-              aria-label="Dark Mode umschalten"
-              className="p-2 rounded-xl text-forest-700 hover:bg-forest-100 transition-colors"
+              onClick={() => setDarkMode(prev => !prev)}
+              aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
+              title={darkMode ? 'Helles Design' : 'Dunkles Design'}
+              className="p-2 rounded-xl text-forest-700 hover:bg-forest-100 dark:text-forest-200 dark:hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
+              {darkMode ? '☀️' : '🌙'}
             </button>
           </div>
         </div>

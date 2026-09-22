@@ -41,4 +41,12 @@
       else html.classList.remove('dark');
     }
   });
+
+  // Globaler Delegierter Click-Listener für alle data-dark-toggle Buttons
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target && target.closest && target.closest('[data-dark-toggle]')) {
+      window.toggleDarkMode();
+    }
+  });
 })();

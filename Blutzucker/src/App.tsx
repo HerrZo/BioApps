@@ -2092,6 +2092,23 @@ const WissenView: React.FC = () => {
 // MAIN APPLICATION ROOT COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 const App: React.FC = () => {
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('bioApps_darkMode');
+      if (saved !== null) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    try {
+      localStorage.setItem('bioApps_darkMode', darkMode ? 'dark' : 'light');
+    } catch {}
+  }, [darkMode]);
+
   const [activeTab, setActiveTab] = useState<TabType>('simulation');
   const [termMode, setTermMode] = useState<TermMode>('bio8');
 
@@ -2131,15 +2148,12 @@ const App: React.FC = () => {
           {/* Dark Mode Toggle Button */}
           <button
             data-dark-toggle
-            onClick={() => {
-              // @ts-ignore
-              if (window.toggleDarkMode) window.toggleDarkMode();
-            }}
-            aria-pressed="false"
-            title="Dunkles Design"
-            className="p-2 rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center"
+            onClick={() => setDarkMode(prev => !prev)}
+            aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
+            title={darkMode ? 'Helles Design' : 'Dunkles Design'}
+            className="p-2 rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
           >
-            <span className="dark-mode-icon text-lg">🌙</span>
+            <span className="dark-mode-icon">{darkMode ? '☀️' : '🌙'}</span>
           </button>
         </div>
 
