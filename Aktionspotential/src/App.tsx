@@ -180,31 +180,31 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('simulation');
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen bg-forest-50 text-gray-900 flex flex-col font-sans">
       {/* ── HEADER ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-forest-200/60 dark:border-forest-900/40 shadow-xs">
+      <header className="bg-forest-900 text-white shadow-md border-b border-forest-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Linke Seite: Zurück-Button + Titel */}
             <div className="flex items-center space-x-3 sm:space-x-4">
               <a
                 href="../index.html"
-                className="flex items-center justify-center w-9 h-9 rounded-lg bg-forest-50 dark:bg-forest-950/60 text-forest-700 dark:text-forest-400 hover:bg-forest-100 dark:hover:bg-forest-900/80 border border-forest-200/80 dark:border-forest-800 transition-colors shadow-2xs"
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-forest-800 text-forest-200 hover:text-white hover:bg-forest-700 border border-forest-700 transition-colors shadow-2xs"
                 title="Zurück zur BioApps-Übersicht"
               >
                 <IconHome c="w-5 h-5" />
               </a>
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-forest-100 dark:bg-forest-900/60 text-forest-800 dark:text-forest-300 border border-forest-300/60 dark:border-forest-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-forest-800 text-forest-200 border border-forest-700">
                     Biologie 13 · Oberstufe
                   </span>
-                  <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500">|</span>
-                  <span className="hidden sm:inline text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <span className="hidden sm:inline text-xs text-forest-400">|</span>
+                  <span className="hidden sm:inline text-xs font-medium text-forest-300">
                     Neurobiologie
                   </span>
                 </div>
-                <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                <h1 className="text-base sm:text-lg font-bold text-white leading-tight">
                   Aktionspotential & Erregungsleitung
                 </h1>
               </div>
@@ -215,24 +215,27 @@ export default function App() {
               <button
                 type="button"
                 data-dark-toggle
-                onClick={() => setDarkMode(prev => !prev)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDarkMode(prev => !prev);
+                }}
                 aria-label={darkMode ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
                 title={darkMode ? 'Helles Design' : 'Dunkles Design'}
-                className="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer text-lg active:scale-95"
+                className="p-2 rounded-xl text-forest-200 hover:text-white hover:bg-forest-800 transition-colors flex items-center justify-center text-lg active:scale-95 cursor-pointer"
               >
-                {darkMode ? '☀️' : '🌙'}
+                <span className="dark-mode-icon">{darkMode ? '☀️' : '🌙'}</span>
               </button>
             </div>
           </div>
 
           {/* ── TAB NAVIGATION ─────────────────────────────────────────────────── */}
-          <nav className="flex space-x-1 sm:space-x-3 overflow-x-auto py-2 border-t border-slate-100 dark:border-slate-800/80 no-scrollbar">
+          <nav className="flex space-x-1 sm:space-x-3 overflow-x-auto py-2 border-t border-forest-800/80 no-scrollbar">
             <button
               onClick={() => setActiveTab('simulation')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                 activeTab === 'simulation'
-                  ? 'bg-forest-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-forest-700 text-white shadow-xs'
+                  : 'text-forest-200 hover:text-white hover:bg-forest-800'
               }`}
             >
               <IconZap c="w-4 h-4" />
@@ -243,8 +246,8 @@ export default function App() {
               onClick={() => setActiveTab('refraktaer')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                 activeTab === 'refraktaer'
-                  ? 'bg-forest-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-forest-700 text-white shadow-xs'
+                  : 'text-forest-200 hover:text-white hover:bg-forest-800'
               }`}
             >
               <IconClock c="w-4 h-4" />
@@ -255,8 +258,8 @@ export default function App() {
               onClick={() => setActiveTab('codierung')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                 activeTab === 'codierung'
-                  ? 'bg-forest-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-forest-700 text-white shadow-xs'
+                  : 'text-forest-200 hover:text-white hover:bg-forest-800'
               }`}
             >
               <IconActivity c="w-4 h-4" />
@@ -267,8 +270,8 @@ export default function App() {
               onClick={() => setActiveTab('glossar')}
               className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
                 activeTab === 'glossar'
-                  ? 'bg-forest-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-forest-700 text-white shadow-xs'
+                  : 'text-forest-200 hover:text-white hover:bg-forest-800'
               }`}
             >
               <IconBook c="w-4 h-4" />
@@ -287,7 +290,7 @@ export default function App() {
       </main>
 
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="mt-auto py-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 text-center text-xs text-slate-500 dark:text-slate-400">
+      <footer className="mt-auto py-6 border-t border-forest-200 bg-white/50 text-center text-xs text-forest-700">
         <p>Biologie 13 · Johannes-Scharrer-Gymnasium · Themen 1.4 Ruhepotential, 1.5 Aktionspotential & 1.6 Refraktärphase</p>
       </footer>
     </div>
@@ -360,12 +363,12 @@ function SimulationTab() {
   return (
     <div className="space-y-6">
       {/* ── KONTROLLLEISTE & REIZ-GENERATOR ────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-forest-200/80 dark:border-forest-900/60 shadow-xs">
+      <div className="bg-white rounded-xl p-4 sm:p-5 border border-forest-100 shadow-xs">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
           {/* Reizstrom-Steuerung */}
-          <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="lg:col-span-5 bg-forest-50/70 p-3.5 rounded-lg border border-slate-200">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <label className="text-xs sm:text-sm font-semibold text-slate-700 flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                 Reizelektrode: Stromstärke
               </label>
@@ -405,7 +408,7 @@ function SimulationTab() {
 
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg transition-colors border border-slate-200 cursor-pointer"
               title={isPlaying ? "Pause" : "Abspielen"}
             >
               {isPlaying ? <IconPause c="w-5 h-5" /> : <IconPlay c="w-5 h-5" />}
@@ -413,7 +416,7 @@ function SimulationTab() {
 
             <button
               onClick={() => handleStep(true)}
-              className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg transition-colors border border-slate-200 cursor-pointer"
               title="Einzelschritt vorwärts (+0.08 ms)"
             >
               <IconStep c="w-5 h-5" />
@@ -421,7 +424,7 @@ function SimulationTab() {
 
             <button
               onClick={() => { setIsPlaying(false); setTime(0.0); }}
-              className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg transition-colors border border-slate-200 cursor-pointer"
               title="Zurücksetzen"
             >
               <IconRefresh c="w-5 h-5" />
@@ -439,7 +442,7 @@ function SimulationTab() {
                   className={`px-2 py-1 rounded font-semibold text-[11px] cursor-pointer ${
                     speed === s
                       ? 'bg-forest-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
                   }`}
                 >
                   {s}x
@@ -452,7 +455,7 @@ function SimulationTab() {
               className={`px-2.5 py-1 rounded font-medium flex items-center justify-center gap-1.5 border cursor-pointer ${
                 showVectors
                   ? 'bg-forest-50 dark:bg-forest-950/60 border-forest-300 dark:border-forest-700 text-forest-700 dark:text-forest-300'
-                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 text-slate-500'
               }`}
             >
               <IconEye c="w-3.5 h-3.5" />
@@ -462,8 +465,8 @@ function SimulationTab() {
         </div>
 
         {/* Zeit-Slider (Scrubber) */}
-        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+        <div className="mt-4 pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
             <span className="font-mono font-bold text-forest-700 dark:text-forest-400">
               Zeit: {time.toFixed(2)} ms / 4.00 ms
             </span>
@@ -500,7 +503,7 @@ function SimulationTab() {
                 className={`text-[10px] sm:text-xs py-1 px-1.5 rounded truncate font-medium border text-center transition-all cursor-pointer ${
                   currentValues.phaseIndex === idx
                     ? 'bg-forest-100 dark:bg-forest-900 border-forest-500 text-forest-800 dark:text-forest-200 font-bold shadow-2xs'
-                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                    : 'bg-forest-50/70 border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 {p.label}
@@ -513,14 +516,14 @@ function SimulationTab() {
       {/* ── DUAL VIEW: OSZILLOSKOP & MEMBRANSCHNITT ──────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Linke Spalte: Live-Oszilloskop */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
+        <div className="lg:col-span-6 bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-forest-500"></span>
                 Digitales Live-Oszilloskop
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Membranpotential U<sub>m</sub> in mV über die Zeit t in ms
               </p>
             </div>
@@ -534,7 +537,7 @@ function SimulationTab() {
           </div>
 
           {/* Oszilloskop-Legende */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-600">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-0.5 bg-emerald-400"></span>
               <span>Ruhe (-70 mV)</span>
@@ -555,14 +558,14 @@ function SimulationTab() {
         </div>
 
         {/* Rechte Spalte: Animierter Membranschnitt */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
+        <div className="lg:col-span-6 bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                 Biomembran & Ionenkanäle
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 Molekulare Tor-Zustände (Tor 1 & Tor 2) und Ionenströme
               </p>
             </div>
@@ -572,7 +575,7 @@ function SimulationTab() {
           </div>
 
           {/* Membran-SVG-Canvas */}
-          <div className="flex-1 w-full bg-gradient-to-b from-sky-50 via-slate-100 to-amber-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-lg p-2 relative overflow-hidden border border-slate-200 dark:border-slate-800 min-h-[300px]">
+          <div className="flex-1 w-full bg-gradient-to-b from-sky-50 via-slate-100 to-amber-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-lg p-2 relative overflow-hidden border border-slate-200 min-h-[300px]">
             <MembraneSVG
               values={currentValues}
               phase={activePhase}
@@ -581,29 +584,29 @@ function SimulationTab() {
           </div>
 
           {/* Statusübersicht der Kanäle */}
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-center">
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded border border-slate-200 dark:border-slate-700">
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-200 text-xs text-center">
+            <div className="bg-forest-50/70 p-2 rounded border border-slate-200">
               <span className="text-[10px] text-slate-500 block">K⁺-Leckkanal</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">Immer offen</span>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded border border-slate-200 dark:border-slate-700">
+            <div className="bg-forest-50/70 p-2 rounded border border-slate-200">
               <span className="text-[10px] text-slate-500 block">Na⁺-Kanal (Tor 1 / Tor 2)</span>
               <span className={`font-bold ${
                 activePhase.naOverall === 'geöffnet'
                   ? 'text-red-600 dark:text-red-400 animate-pulse'
                   : activePhase.naOverall === 'inaktiviert'
                   ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-slate-600 dark:text-slate-400'
+                  : 'text-slate-600'
               }`}>
                 {activePhase.naOverall}
               </span>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded border border-slate-200 dark:border-slate-700">
+            <div className="bg-forest-50/70 p-2 rounded border border-slate-200">
               <span className="text-[10px] text-slate-500 block">K⁺-Kanal (Spannung)</span>
               <span className={`font-bold ${
                 currentValues.kGateOpen > 0.3
                   ? 'text-blue-600 dark:text-blue-400 animate-pulse'
-                  : 'text-slate-600 dark:text-slate-400'
+                  : 'text-slate-600'
               }`}>
                 {currentValues.kGateOpen > 0.5 ? 'Offen' : currentValues.kGateOpen > 0 ? 'Schließt träge' : 'Geschlossen'}
               </span>
@@ -613,8 +616,8 @@ function SimulationTab() {
       </div>
 
       {/* ── ERKLÄRUNGSBOX ZUR AKTUELLEN PHASE ──────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-forest-200/80 dark:border-forest-900/60 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
+      <div className="bg-white rounded-xl p-5 border border-forest-100 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-3">
           <div className="flex items-center gap-2">
             <span className={`px-2.5 py-1 rounded text-xs font-bold border ${activePhase.badgeClass}`}>
               {activePhase.name}
@@ -628,15 +631,15 @@ function SimulationTab() {
           </span>
         </div>
 
-        <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed mb-3">
+        <p className="text-sm text-slate-700 leading-relaxed mb-3">
           {activePhase.description}
         </p>
 
-        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-xs flex items-start gap-2">
+        <div className="bg-forest-50/70 p-3 rounded-lg border border-slate-200 text-xs flex items-start gap-2">
           <IconInfo c="w-4 h-4 text-forest-600 mt-0.5 shrink-0" />
           <div>
             <strong className="text-slate-800 dark:text-slate-200">Ionenfluss auf Teilchenebene: </strong>
-            <span className="text-slate-600 dark:text-slate-400">{activePhase.ionFlow}</span>
+            <span className="text-slate-600">{activePhase.ionFlow}</span>
           </div>
         </div>
       </div>
@@ -1116,14 +1119,14 @@ function RefractoryTab() {
   return (
     <div className="space-y-6">
       {/* ── KONTROLLEN & PARAMETER ────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-forest-200/80 dark:border-forest-900/60 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+      <div className="bg-white rounded-xl p-5 border border-forest-100 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <IconClock c="w-5 h-5 text-forest-600" />
               Doppelreiz-Experiment (Schulbuch S. 34 M1 / B1)
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               Untersuche den Einfluss des zeitlichen Abstands (Δt) und der Reizstärke auf das zweite Aktionspotential
             </p>
           </div>
@@ -1142,9 +1145,9 @@ function RefractoryTab() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Regler 1: Zeitabstand Delta t */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-forest-50/70 p-4 rounded-lg border border-slate-200">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <label className="text-xs sm:text-sm font-semibold text-slate-700">
                 Zeitabstand zweiter Reiz (Δt):
               </label>
               <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-forest-100 dark:bg-forest-900 text-forest-800 dark:text-forest-200">
@@ -1168,9 +1171,9 @@ function RefractoryTab() {
           </div>
 
           {/* Regler 2: Stärke des 2. Reizes */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-forest-50/70 p-4 rounded-lg border border-slate-200">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <label className="text-xs sm:text-sm font-semibold text-slate-700">
                 Stromstärke 2. Reiz:
               </label>
               <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
@@ -1188,7 +1191,7 @@ function RefractoryTab() {
             />
             <div className="flex justify-between text-[11px] text-slate-500 mt-1">
               <span>5 nA (unterschwellig)</span>
-              <span className="font-medium text-slate-600 dark:text-slate-400">
+              <span className="font-medium text-slate-600">
                 Nötig: {thresholdNeeded === Infinity ? '∞ (blockiert)' : `${thresholdNeeded.toFixed(1)} nA`}
               </span>
               <span>35 nA (sehr stark)</span>
@@ -1197,7 +1200,7 @@ function RefractoryTab() {
         </div>
 
         {/* Schnellauswahl-Presets */}
-        <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs">
+        <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-200 text-xs">
           <span className="text-slate-500 self-center font-medium">Presets:</span>
           <button
             onClick={() => { setDeltaT(1.0); setStimulus2(35); }}
@@ -1227,8 +1230,8 @@ function RefractoryTab() {
       </div>
 
       {/* ── GRAFIK: DOPPELREIZ OSZILLOSKOP-DIAGRAMM ──────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+      <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs">
+        <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-forest-500"></span>
           Reaktionskurve der Axonmembran bei Doppelreiz
         </h3>
@@ -1246,21 +1249,21 @@ function RefractoryTab() {
       </div>
 
       {/* ── DIDAKTISCHE VERTIEFUNG: WARUM EINBAHNSTRASSE? ─────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs">
         <div className="flex items-center gap-2 mb-3">
           <IconArrowRight c="w-5 h-5 text-forest-600" />
-          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
             Didaktische Bedeutung: Die "Einbahnstraße" der Erregungsleitung (Unidirektionalität)
           </h3>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
           Warum laufen Aktionspotentiale im Körper immer nur in eine Richtung – vom Axonhügel in Richtung der Synapsen – und niemals zurück?
           Die Ursache liegt unmittelbar im molekularen Mechanismus der <strong>absoluten Refraktärphase</strong>:
         </p>
 
         {/* Interaktive Axon-Strecke */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-forest-50/70 p-4 rounded-lg border border-slate-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="p-3 rounded-md bg-red-100/80 dark:bg-red-950/60 border border-red-300 dark:border-red-800">
               <span className="text-[11px] font-bold text-red-800 dark:text-red-300 uppercase block mb-1">
@@ -1528,14 +1531,14 @@ function CodingTab() {
   return (
     <div className="space-y-6">
       {/* ── KONTROLLLEISTE REIZSTÄRKE & DAUER ─────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-forest-200/80 dark:border-forest-900/60 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+      <div className="bg-white rounded-xl p-5 border border-forest-100 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <IconActivity c="w-5 h-5 text-forest-600" />
               Signalcodierung & Frequenzmodulation (Schulbuch S. 34 M3 / B3)
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               Wie kontinuierliche Reizstärken in diskrete Folgen uniformer Aktionspotentiale übersetzt werden
             </p>
           </div>
@@ -1546,9 +1549,9 @@ function CodingTab() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Regler: Reizstärke */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-forest-50/70 p-4 rounded-lg border border-slate-200">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <label className="text-xs sm:text-sm font-semibold text-slate-700">
                 Reizstärke (Intensität):
               </label>
               <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
@@ -1572,9 +1575,9 @@ function CodingTab() {
           </div>
 
           {/* Regler: Reizdauer */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-forest-50/70 p-4 rounded-lg border border-slate-200">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <label className="text-xs sm:text-sm font-semibold text-slate-700">
                 Reizdauer:
               </label>
               <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
@@ -1599,7 +1602,7 @@ function CodingTab() {
         </div>
 
         {/* Biologische Presets */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3 border-t border-slate-200 text-xs">
           {CODING_PRESETS.map((p) => (
             <button
               key={p.id}
@@ -1609,7 +1612,7 @@ function CodingTab() {
               className={`p-2 rounded text-left border transition-all cursor-pointer ${
                 currentPreset.id === p.id
                   ? 'bg-forest-50 dark:bg-forest-950 border-forest-500 font-bold text-forest-800 dark:text-forest-200 shadow-2xs'
-                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                  : 'bg-forest-50/70 border-slate-200 text-slate-600 hover:bg-slate-100'
               }`}
             >
               <span className="block truncate font-semibold">{p.title}</span>
@@ -1620,9 +1623,9 @@ function CodingTab() {
       </div>
 
       {/* ── GRAFIK: REIZ- UND AP-SALVE ────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-forest-500"></span>
             Oszilloskop-Spur der AP-Salve über 80 ms
           </h3>
@@ -1643,23 +1646,23 @@ function CodingTab() {
 
       {/* ── DIDAKTISCHE ZUSAMMENFASSUNG ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm">
-          <h4 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5 text-forest-700 dark:text-forest-400">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 text-xs sm:text-sm">
+          <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-1.5 text-forest-700 dark:text-forest-400">
             <IconZap c="w-4 h-4" />
             1. Codierung der Reizstärke (Frequenz)
           </h4>
-          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-slate-600 leading-relaxed">
             Weil alle Aktionspotentiale nach dem Alles-oder-Nichts-Prinzip immer die gleiche Höhe (~100 mV) besitzen, kann das Gehirn die Reizstärke nicht an der Amplitude ablesen.
             Stattdessen gilt: <strong>Je stärker der Reiz, desto höher die Frequenz der Aktionspotentiale pro Zeiteinheit (Frequenzmodulation).</strong>
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm">
-          <h4 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 text-xs sm:text-sm">
+          <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
             <IconClock c="w-4 h-4" />
             2. Codierung der Reizdauer & Obergrenze
           </h4>
-          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-slate-600 leading-relaxed">
             Die <strong>Reizdauer</strong> wird schlicht über die zeitliche Länge der AP-Salve codiert: Solange der Reiz überschwellig anliegt, feuert das Neuron.
             Die <strong>maximale Impulsfrequenz</strong> (ca. 400–500 Hz) wird strikt durch die Dauer der <em>absoluten Refraktärphase</em> begrenzt!
           </p>
@@ -1815,19 +1818,19 @@ function GlossaryTab() {
   return (
     <div className="space-y-6">
       {/* ── TABELLE: IONENKONZENTRATIONEN & GLEICHGEWICHTSPOTENTIALE ─────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-forest-200/80 dark:border-forest-900/60 shadow-xs">
-        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+      <div className="bg-white rounded-xl p-5 border border-forest-100 shadow-xs">
+        <h2 className="text-base font-bold text-slate-900 mb-2 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-forest-500"></span>
           Ionenverteilung an der Axonmembran (Schulbuch S. 30 M2)
         </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        <p className="text-xs text-slate-500 mb-4">
           Die Grundlage für Ruhepotential und Aktionspotential sind die ungleichen Ionenkonzentrationen innen vs. außen.
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300">
+              <tr className="border-b border-slate-200 bg-forest-50/70 text-slate-700 dark:text-slate-300">
                 <th className="py-2.5 px-3 font-bold">Ion</th>
                 <th className="py-2.5 px-3 font-bold">Zellinneres (Axoplasma)</th>
                 <th className="py-2.5 px-3 font-bold">Extrazellularraum</th>
@@ -1848,8 +1851,8 @@ function GlossaryTab() {
                   <td className="py-2.5 px-3 font-mono font-bold" style={{ color: ion.equilibriumPotential < 0 ? '#34d399' : '#f87171' }}>
                     {ion.equilibriumPotential !== 0 ? `${ion.equilibriumPotential > 0 ? '+' : ''}${ion.equilibriumPotential} mV` : '—'}
                   </td>
-                  <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">{ion.permeabilityRest}</td>
-                  <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400">{ion.role}</td>
+                  <td className="py-2.5 px-3 text-slate-600">{ion.permeabilityRest}</td>
+                  <td className="py-2.5 px-3 text-slate-500">{ion.role}</td>
                 </tr>
               ))}
             </tbody>
@@ -1858,7 +1861,7 @@ function GlossaryTab() {
       </div>
 
       {/* ── GLOSSAR-FILTER & SUCHE ────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs">
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between mb-5">
           {/* Suchleiste */}
           <div className="relative w-full sm:w-72">
@@ -1868,7 +1871,7 @@ function GlossaryTab() {
               placeholder="Fachbegriff oder Stichwort suchen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-forest-500"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 bg-forest-50/70 focus:outline-none focus:ring-2 focus:ring-forest-500"
             />
           </div>
 
@@ -1881,7 +1884,7 @@ function GlossaryTab() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
                   selectedCat === c
                     ? 'bg-forest-600 text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 {c}
@@ -1895,21 +1898,21 @@ function GlossaryTab() {
           {filteredEntries.map((item, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-forest-400 dark:hover:border-forest-700 transition-all flex flex-col justify-between"
+              className="p-4 rounded-xl border border-slate-200 bg-forest-50/60 hover:border-forest-400 dark:hover:border-forest-700 transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-bold text-slate-900">
                     {item.term}
                   </h3>
                   <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-forest-100 dark:bg-forest-900/60 text-forest-800 dark:text-forest-300">
                     {item.category}
                   </span>
                 </div>
-                <p className="text-xs text-slate-700 dark:text-slate-200 font-medium mb-2">
+                <p className="text-xs text-slate-700 font-medium mb-2">
                   {item.definition}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+                <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
                   {item.details}
                 </p>
               </div>

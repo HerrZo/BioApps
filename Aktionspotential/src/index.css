@@ -12,6 +12,11 @@
   }
 }
 
+/* Range slider styling */
+input[type=range] {
+  accent-color: #166534;
+}
+
 /* ==========================================================================
    BioApps Forest Dark Mode Theme (Bundled)
    ========================================================================== */
@@ -32,6 +37,18 @@
 .dark .bg-forest-50 {
   background-color: #0b381d !important;
   color: #dcfce7 !important;
+}
+
+.dark .bg-slate-950,
+.dark .bg-slate-900,
+.dark .bg-slate-800,
+.dark .bg-slate-700 {
+  background-color: #0b381d !important;
+  color: #dcfce7 !important;
+}
+
+.dark .bg-slate-200 {
+  background-color: #166534 !important;
 }
 
 .dark .bg-green-50,
@@ -55,10 +72,20 @@
 .dark .from-green-50,
 .dark .via-emerald-50,
 .dark .to-teal-50,
-.dark .from-forest-50 {
+.dark .from-forest-50,
+.dark .from-sky-50,
+.dark .from-slate-900 {
   --tw-gradient-from: #052e16 !important;
-  --tw-gradient-via: #14532d !important;
-  --tw-gradient-to: #166534 !important;
+}
+
+.dark .via-slate-100,
+.dark .via-slate-950 {
+  --tw-gradient-via: #0b381d !important;
+}
+
+.dark .to-amber-50,
+.dark .to-slate-900 {
+  --tw-gradient-to: #052e16 !important;
 }
 
 .dark .text-gray-900,
@@ -68,7 +95,10 @@
 .dark .text-slate-800,
 .dark .text-slate-700,
 .dark .text-forest-900,
-.dark .text-forest-800 {
+.dark .text-forest-800,
+.dark .text-slate-100,
+.dark .text-slate-200,
+.dark .text-slate-300 {
   color: #dcfce7 !important;
 }
 
@@ -92,10 +122,16 @@
 .dark .border-green-200,
 .dark .border-slate-100,
 .dark .border-slate-200,
+.dark .border-slate-700,
+.dark .border-slate-800,
 .dark .border-forest-100,
 .dark .border-forest-200,
 .dark .border-gray-100,
 .dark .border-gray-200 {
+  border-color: #166534 !important;
+}
+
+.dark .divide-slate-800\/60 > * + * {
   border-color: #166534 !important;
 }
 
@@ -122,4 +158,9 @@
 }
 .dark ::-webkit-scrollbar-thumb {
   background: #15803d !important;
+}
+
+[data-dark-toggle] {
+  cursor: pointer;
+  transition: all 0.2s;
 }
